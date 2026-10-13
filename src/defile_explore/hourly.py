@@ -4,6 +4,30 @@ import pandas as pd
 
 from defile_explore.release import MAIN_CATEGORY, TIMEZONE, TREKTELLEN_ERA
 
+BLOCK_DAYS = 7
+BLOCK_FOLDS = 3
+MIN_GAP_DAY_INTERVALS = 5
+COUNTED_SCOPES = ("priority_target", "user_confirmed")
+
+
+def validation_masks(frame: pd.DataFrame) -> pd.DataFrame:
+    """Count-independent week masks and a short gap confined to uninterrupted observed effort."""
+    out = frame.sort_values(["english_name", "date", "start"]).copy()
+    out["block_fold"] = (
+        (out["doy"] - 1) // BLOCK_DAYS + out["year"] - out["year"].min()
+    ) % BLOCK_FOLDS
+    out["hidden_hours"] = False
+    for _, day in out.groupby(["english_name", "date"]):
+        if len(day) < MIN_GAP_DAY_INTERVALS:
+            continue
+        run = day["start"].ne(day["end"].shift()).cumsum().to_numpy()
+        center = (
+            day["rain_mm"].to_numpy().argmax() if day["rain_mm"].gt(0).any() else len(day) // 2
+        )
+        selected = (abs(pd.RangeIndex(len(day)) - center) <= 1) & (run == run[center])
+        out.loc[day.index[selected], "hidden_hours"] = True
+    return out
+
 
 def survey_hours(surveys: pd.DataFrame) -> pd.DataFrame:
     """Split complete observed surveys at UTC hour boundaries, including empty/partial hours."""
@@ -74,3 +98,25 @@ def species_hours(hours: pd.DataFrame, timing: pd.DataFrame, taxa: pd.DataFrame)
     frame["hourly_complete"] = frame["unresolved_entries"].eq(0)
     frame["count"] = frame["count"].where(frame["hourly_complete"])
     return frame
+
+
+def recording_scope(frame: pd.DataFrame, scope: pd.DataFrame) -> pd.DataFrame:
+    """Keep species counts unknown outside an explicitly accepted recording period.
+
+    A complete survey is effort evidence, not evidence that every species was counted. Supported
+    recorded birds remain in timed_count even where model counts are unknown.
+    """
+    out = frame.merge(
+        scope[["english_name", "recording_scope", "scope_from", "scope_to"]],
+        on="english_name",
+        how="left",
+        validate="many_to_one",
+    )
+    years = pd.to_datetime(out["date"]).dt.year
+    out["scope_available"] = (
+        out["recording_scope"].isin(COUNTED_SCOPES)
+        & years.ge(out["scope_from"])
+        & years.le(out["scope_to"])
+    )
+    out["count"] = out["count"].where(out["scope_available"])
+    return out

@@ -1,0 +1,926 @@
+<title>Hierarchical Gap-Filling Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a technical report. Sticky contents rail on wide screens, one reading column, figures
+   a little wider than the text. Palette from the pass: slate for production, kite rust for the
+   final model, rain blue for wet days. */
+:root {
+  --paper: #f5f6f3;
+  --panel: #ffffff;
+  --ink: #1c2320;
+  --muted: #5a6762;
+  --rule: #d3d9d5;
+  --faint: #e8ece9;
+  --kite: #b4532a;
+  --kite-soft: #b4532a33;
+  --prod: #5f7489;
+  --prod-soft: #5f748933;
+  --rain: #2d6ca5;
+  --sun: #b98a1f;
+  --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --label: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121614; --panel: #181e1b; --ink: #e3e8e5; --muted: #97a59f; --rule: #2e3834;
+    --faint: #202825; --kite: #e27d4f; --kite-soft: #e27d4f40; --prod: #94a9be;
+    --prod-soft: #94a9be40; --rain: #6eaae0; --sun: #e0b850; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121614; --panel: #181e1b; --ink: #e3e8e5; --muted: #97a59f; --rule: #2e3834;
+  --faint: #202825; --kite: #e27d4f; --kite-soft: #e27d4f40; --prod: #94a9be;
+  --prod-soft: #94a9be40; --rain: #6eaae0; --sun: #e0b850; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--serif);
+  font-size: 17px; line-height: 1.6; padding-inline: 16px; padding-block: 0 64px;
+}
+.wrap {
+  max-width: 1180px; margin: 0 auto; display: grid; gap: 48px;
+  grid-template-columns: 210px minmax(0, 1fr);
+}
+@media (max-width: 900px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 0; } nav.toc { display: none; } }
+nav.toc {
+  position: sticky; top: env(safe-area-inset-top, 0px); align-self: start;
+  padding-block: 40px 24px; font-family: var(--label); font-size: 14px; max-height: 100vh; overflow-y: auto;
+}
+nav.toc ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; counter-reset: s; }
+nav.toc li { counter-increment: s; }
+nav.toc a { color: var(--muted); text-decoration: none; display: grid; grid-template-columns: 22px 1fr; }
+nav.toc a::before { content: counter(s); font-family: var(--mono); font-size: 12px; padding-top: 2px; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--kite); }
+main { min-width: 0; max-width: 820px; }
+header.top { padding-block: 44px 20px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+.eyebrow { font-family: var(--label); text-transform: uppercase; letter-spacing: .08em; font-size: 13px; color: var(--kite); font-weight: 600; }
+h1 { font-size: clamp(32px, 5vw, 46px); line-height: 1.1; margin: 8px 0 14px; font-weight: 700; text-wrap: balance; letter-spacing: -.01em; }
+.lede { font-size: 19px; color: var(--muted); max-width: 64ch; margin: 0; }
+h2 { font-size: 28px; line-height: 1.2; margin: 56px 0 10px; text-wrap: balance; font-weight: 700; display: flex; gap: 14px; align-items: baseline; }
+h2 .n { font-family: var(--mono); font-size: 15px; color: var(--kite); font-weight: 500; }
+h3 { font-family: var(--label); font-size: 15px; text-transform: uppercase; letter-spacing: .06em; margin: 30px 0 4px; color: var(--muted); font-weight: 600; }
+p, li { max-width: 68ch; }
+a { color: var(--kite); }
+code { font-family: var(--mono); font-size: .84em; background: var(--faint); padding: 1px 5px; border-radius: 3px; }
+.eq { overflow-x: auto; overflow-y: hidden; margin: 14px 0; padding: 6px 0; }
+.eqbox { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 18px; margin: 18px 0; overflow-x: auto; }
+.eqbox .eq { margin: 6px 0; }
+.note { font-size: 15px; color: var(--muted); }
+figure { margin: 26px 0 30px; }
+.fig { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 14px 8px; }
+.chart { width: 100%; min-height: 60px; }
+figcaption { font-size: 15px; color: var(--muted); margin-top: 8px; max-width: 72ch; line-height: 1.5; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--label); font-size: 13.5px; color: var(--muted); margin: 2px 0 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+.sw.line { height: 3px; }
+.sw.dot { width: 9px; height: 9px; border-radius: 50%; }
+.k { background: var(--kite); } .p { background: var(--prod); } .r { background: var(--rain); } .i { background: var(--ink); } .s { background: var(--sun); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.grid2 > * { min-width: 0; }
+.tw { overflow-x: auto; margin: 16px 0; }
+table { border-collapse: collapse; font-size: 15px; width: 100%; font-variant-numeric: tabular-nums; }
+th { font-family: var(--label); font-weight: 600; text-align: left; color: var(--muted); font-size: 13.5px; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--ink); padding: 6px 10px 6px 0; }
+td { border-bottom: 1px solid var(--rule); padding: 6px 10px 6px 0; vertical-align: top; }
+td.num, th.num { text-align: right; font-family: var(--mono); font-size: 14px; }
+tr.final td { background: var(--kite-soft); }
+.steps { display: grid; gap: 0; margin: 18px 0; counter-reset: st; }
+.steps > div { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--rule); counter-increment: st; }
+.steps > div::before { content: counter(st); font-family: var(--mono); color: var(--kite); font-size: 15px; padding-top: 4px; }
+.steps .t { font-family: var(--label); font-weight: 600; font-size: 15px; }
+.steps .eq { margin: 2px 0; }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 16px 0; }
+.flow > div { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; min-width: 0; font-size: 15px; }
+.flow .t { font-family: var(--label); font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--kite); font-weight: 600; }
+.flow .eq { overflow-x: auto; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0; }
+.kv > div { border-top: 2px solid var(--ink); padding-top: 6px; }
+.kv .v { font-family: var(--mono); font-size: 24px; font-variant-numeric: tabular-nums; }
+.kv .v small { font-size: 14px; color: var(--muted); }
+.kv .l { font-family: var(--label); font-size: 13.5px; color: var(--muted); line-height: 1.35; }
+.kv .v.good { color: var(--kite); }
+.ctrl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-family: var(--label); font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+.ctrl input[type=range] { width: min(320px, 60vw); accent-color: var(--kite); }
+.ctrl output { font-family: var(--mono); color: var(--ink); min-width: 70px; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+.seg button { font: inherit; background: none; border: 0; padding: 4px 10px; color: var(--muted); cursor: pointer; }
+.seg button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
+.seg button:focus-visible, .ctrl input:focus-visible { outline: 2px solid var(--kite); outline-offset: 2px; }
+svg text { font-family: var(--label); }
+.axis text { fill: var(--muted); font-size: 12px; font-family: var(--label); }
+.axis path, .axis line { stroke: var(--rule); }
+.grid line { stroke: var(--faint); }
+.grid path { stroke: none; }
+.lab { fill: var(--muted); font-size: 12.5px; }
+.lab-ink { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.tier { fill: var(--kite); font-size: 13px; letter-spacing: .02em; font-weight: 600; }
+.callout { border-left: 3px solid var(--kite); padding: 4px 0 4px 14px; margin: 18px 0; }
+footer { margin-top: 64px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--muted); }
+pre { background: var(--faint); padding: 12px 14px; border-radius: 6px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+mjx-container[display="true"] { margin: 0 !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]], tags: "ams" },
+  svg: { fontCache: "global" },
+  startup: { typeset: true },
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script type="application/json" id="data">/*__DATA__*/</script>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <ol>
+    <li><a href="#problem">The problem</a></li>
+    <li><a href="#data">Data</a></li>
+    <li><a href="#profile">Profile and coverage</a></li>
+    <li><a href="#daily">The daily model</a></li>
+    <li><a href="#process">The daily process</a></li>
+    <li><a href="#fitting">Fitting</a></li>
+    <li><a href="#year">One season, decomposed</a></li>
+    <li><a href="#filling">Filling the gaps</a></li>
+    <li><a href="#missing">Why it is valid</a></li>
+    <li><a href="#assessment">Assessment</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#rejected">Tried, not kept</a></li>
+    <li><a href="#limits">Limitations</a></li>
+    <li><a href="#reproduce">Reproduce</a></li>
+  </ol>
+</nav>
+<main>
+<header class="top">
+  <div class="eyebrow">Défilé de l'Écluse · migration count · research line <code>scripts/hierarchical</code></div>
+  <h1>A hierarchical model for the hours nobody counted</h1>
+  <p class="lede">How model <b>D</b> estimates the birds that passed while no one was counting: a negative binomial model of each day's passage, with daily weather and a day-to-day AR(1) process, read through the time-of-day profile of the hours that were counted. It is production's trend GAM with two changes. Each step below is drawn from the real fits.</p>
+  <div class="kv" id="headline"></div>
+</header>
+
+<!-- 1 ------------------------------------------------------------------------------------- -->
+<h2 id="problem"><span class="n">1</span>The problem</h2>
+<p>The count records migrating birds hour by hour, but not every hour of every day of the season. Whole days are missed (rain, a poor forecast, no observer), and counted days start late and end early. To give a season total, a daily series or a passage date, we have to estimate the birds that passed in the uncounted hours, with their uncertainty.</p>
+<p>Two facts shape the model. <b>Gaps are not random</b>: missing days follow rain and dark skies, and observers leave once passage dies down. A model that fills a gap with the typical passage for that date therefore over-fills it. <b>Passage is lumpy at every scale</b>: some days carry ten times as many birds as their neighbours, and within a day birds come in flocks. The filling has to keep both kinds of variation.</p>
+<p>So the model works at two levels. The upper level models each day's passage: its level from season, year, weather and a day-to-day process. The lower level spreads that day over its hours with the time-of-day profile, and the counted hours are read through it.</p>
+<figure>
+  <div class="fig"><div class="chart" id="figHier"></div></div>
+  <figcaption><b>Figure 1. The three levels, Black Kite 2020.</b> Top: the season's shape (production's smooth, a multiplier on the day's level). Middle: each day's expected passage <i>Λ</i> under model D. Season, year, weather and the daily process move it, and a day can be ten times its neighbours. Bottom: one of those days, 2 August, spread over the hours by the time-of-day profile. Bars are the birds counted per hour; the shaded area is the share of the day's passage that was counted, the coverage <i>c</i>.</figcaption>
+</figure>
+
+<!-- 2 ------------------------------------------------------------------------------------- -->
+<h2 id="data"><span class="n">2</span>Data</h2>
+<p><b>Species.</b> The research's ten core species: Black Kite, Common Buzzard, Common Kestrel, Eurasian Sparrowhawk, European Honey Buzzard, Red Kite, Western Marsh Harrier, White Stork, Great Cormorant and Grey Heron. Each species has its own model; nothing is shared between species.</p>
+<p><b>Counts and effort, 1993–2025.</b> These are the research's frozen inputs. For each species, an observation is an interval of counted time with its count of birds flying in the main direction, split into UTC hours.</p>
+<div class="tw"><table>
+  <thead><tr><th>era</th><th>years</th><th>what one observation is</th></tr></thead>
+  <tbody>
+    <tr><td>notebook</td><td>1993–2013</td><td>a day's counted interval and its total (about 8 hours)</td></tr>
+    <tr><td>spreadsheet</td><td>2014–2016</td><td>one hour</td></tr>
+    <tr><td>naturalist</td><td>2017–2021</td><td>one hour</td></tr>
+    <tr><td>Trektellen</td><td>2022–2025</td><td>one hour (birds timed to the minute, grouped by hour)</td></tr>
+  </tbody>
+</table></div>
+<p>An absent species in a counted interval is a zero only within its recording scope. Documented weather closures and days with no record are unknown, never zeros. The season modelled is production's window, 18 July to 18 November, cut to the days of the year the species' data span.</p>
+<p><b>Weather.</b> ERA5 at the Défilé, hourly: rain, surface solar radiation, low-cloud fraction, and the east (<i>u</i>) and north (<i>v</i>) components of the 10 m wind. An hour \([t, t+1)\) takes the accumulations reported at \(t+1\) (rain in mm, radiation in W/m²) and the mean of the instantaneous values at \(t\) and \(t+1\) (cloud, wind).</p>
+<h3>Notation</h3>
+<div class="tw"><table>
+  <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(y,\ d,\ s\)</td><td>year, day of the season (day of a non-leap year), five-minute solar slot</td></tr>
+    <tr><td>\(\pi(d,s)\)</td><td>time-of-day profile: the share of a day's passage in slot \(s\), with \(\sum_s \pi(d,s)=1\)</td></tr>
+    <tr><td>\(c_{yd}\)</td><td>coverage: the share of the day's expected passage that falls in the time counted</td></tr>
+    <tr><td>\(Y_{yd}\)</td><td>birds counted on day \(d\) of year \(y\)</td></tr>
+    <tr><td>\(\Lambda_{yd}\)</td><td>expected birds over the whole day (\(c=1\))</td></tr>
+    <tr><td>\(\theta\)</td><td>negative binomial shape of a day's passage (small means very variable days)</td></tr>
+    <tr><td>\(\kappa\)</td><td>within-day (flock) over-dispersion per full day of coverage</td></tr>
+    <tr><td>\(w_{j,yd}\)</td><td>the day's six daily weather terms, \(j = 1,\dots,6\)</td></tr>
+    <tr><td>\(\eta_{yd}\)</td><td>the daily process: an AR(1) value for each day, within each year</td></tr>
+  </tbody>
+</table></div>
+
+<!-- 3 ------------------------------------------------------------------------------------- -->
+<h2 id="profile"><span class="n">3</span>The time-of-day profile and coverage</h2>
+<p>Counted hours tell us a known share of the day's passage only once we know how passage is spread over the day. The profile \(\pi(d,s)\) is production's estimator, applied to the retained observations.</p>
+<div class="steps">
+  <div><div><div class="t">Samples</div>We use every retained observation timed to one hour from 2014–2025. An hour counted for at least half its length, on a day with at least two such hours and some birds, gives the ratio of its rate to the day's rate over those hours. Each ratio is weighted by the day's birds to the power 0.5.
+    <div class="eq">\[ r_{h} = \frac{Y_h / e_h}{\sum_{h'} Y_{h'} / \sum_{h'} e_{h'}}, \qquad \text{weight } \big(\textstyle\sum_{h'} Y_{h'}\big)^{1/2} \]</div></div></div>
+  <div><div><div class="t">Surface</div>The ratios are smoothed over the day of the season (1 July–2 December) and over \(\tau_s\), the share of the day's light already elapsed (0 at civil dawn, 1 at civil dusk), with 16 splines in \(\tau\). Dawn and dusk keep their place as the days shorten.</div></div>
+  <div><div><div class="t">Profile</div>The surface is read at each five-minute solar slot, multiplied by the slot's daylight fraction \(\delta_s\), and normalised to sum to one each day.
+    <div class="eq">\[ \pi(d,s) = \frac{\hat r(d,\tau_s)\,\delta_s}{\sum_{s'} \hat r(d,\tau_{s'})\,\delta_{s'}} \]</div></div></div>
+</div>
+<figure>
+  <div class="fig">
+    <div class="grid2"><div class="chart" id="figProfileHeat"></div><div class="chart" id="figProfileCurves"></div></div>
+  </div>
+  <figcaption><b>Figure 2. Black Kite's time-of-day profile.</b> Left: the share of the day's passage in each solar hour, across the season. Right: the same profile on four dates, in share per hour. The curve keeps its shape and moves with dawn and dusk as the days shorten.</figcaption>
+</figure>
+<p>The <b>coverage</b> of an observation is the profile mass of the time it counted, where \(m_{o,s}\) is the fraction of slot \(s\) counted by observation \(o\). A day's coverage is the sum over its retained observations:</p>
+<div class="eq">\[ c_{yd} = \sum_{o \in (y,d)} \sum_{s} m_{o,s}\,\pi(d,s) \;\in [0, 1]. \]</div>
+<p>A day with \(c &lt; 0.1\) tells us nothing about its rate, because a few minutes can hold one flock. It is not fitted, and its birds are added to the day's total as counted (<code>extra</code>).</p>
+<figure>
+  <div class="fig"><div class="chart" id="figCoverage"></div></div>
+  <figcaption><b>Figure 3. Coverage on one day.</b> On 2 August 2020, eight hours were counted (bars). The curve is the profile scaled to the day's full passage. The counted hours hold <span id="covC"></span> of it, so <span id="covY"></span> birds counted stand for about <span id="covL"></span> birds over the whole day (the model's rate, before it is shrunk towards the model's expected passage). The counts peak two hours after the profile: within a day, flocks make passage lumpy. That lumpiness is <i>κ</i> (section 7).</figcaption>
+</figure>
+
+<!-- 4 ------------------------------------------------------------------------------------- -->
+<h2 id="daily"><span class="n">4</span>The daily model</h2>
+<p>For each species, the birds counted on day \(d\) of year \(y\) are negative binomial around the day's expected passage times its coverage:</p>
+<div class="eqbox">
+<div class="eq">\[ Y_{yd} \sim \operatorname{NegBin}\!\big(\text{mean } c_{yd}\,\Lambda_{yd},\ \text{shape } \theta\big), \qquad \operatorname{Var}(Y_{yd}) = c\Lambda + \frac{(c\Lambda)^2}{\theta} \label{eq:nb} \]</div>
+<div class="eq">\[ \log \Lambda_{yd} = \underbrace{a}_{\text{intercept}} + \underbrace{f_{\text{trend}}(y)}_{\text{12 splines}} + \underbrace{\alpha_y}_{\text{year}} + \underbrace{f_{\text{season}}(d)}_{\text{20 splines}} + \underbrace{f_{\text{shift}}(y,d)}_{6\times 8\ \text{tensor}} + \underbrace{\textstyle\sum_{j=1}^{6} \beta_j\, w_{j,yd}}_{\text{daily weather}} + \underbrace{\eta_{yd}}_{\text{AR(1)}} \label{eq:lp} \]</div>
+</div>
+<p>The negative binomial is a gamma-distributed daily rate seen through a Poisson count. Writing it this way is what the gap filling uses:</p>
+<div class="eq">\[ \lambda_{yd} \sim \operatorname{Gamma}\!\big(\theta,\ \theta/\Lambda_{yd}\big), \qquad Y_{yd}\mid\lambda_{yd} \sim \operatorname{Poisson}(c_{yd}\,\lambda_{yd}). \]</div>
+<p>Variation from day to day beyond everything in \(\log\Lambda\) goes into \(\theta\). For Black Kite, \(\hat\theta\) rises from <span id="thetaP"></span> under production to <span id="thetaD"></span> under D, because the weather and the daily process explain part of what production left as noise.</p>
+
+<h3>Smooth components</h3>
+<p>These are production's components, unchanged. They are P-splines: cubic B-splines on equally spaced knots, each with a difference penalty and its own smoothing parameter:</p>
+<div class="eq">\[ f(x) = \sum_{k} B_k(x)\,b_k, \qquad \text{penalty } \tfrac{\lambda}{2}\, \mathbf b^{\top} \mathbf D_m^{\top} \mathbf D_m\, \mathbf b, \]</div>
+<p>where \(\mathbf D_m\) takes \(m\)-th differences of neighbouring coefficients.</p>
+<div class="tw"><table>
+  <thead><tr><th>component</th><th>basis</th><th>penalty</th></tr></thead>
+  <tbody>
+    <tr><td>\(f_{\text{trend}}(y)\)</td><td>12 B-splines over the years</td><td>second differences</td></tr>
+    <tr><td>\(f_{\text{season}}(d)\)</td><td>20 B-splines over the window's days</td><td>second differences</td></tr>
+    <tr><td>\(f_{\text{shift}}(y,d)\)</td><td>tensor product, 6 (years) × 8 (days)</td><td>second differences along each axis (two \(\lambda\))</td></tr>
+    <tr><td>\(\alpha_y\)</td><td>one coefficient per year</td><td>ridge \(\lambda_\alpha \sum_y \alpha_y^2\) (a random effect)</td></tr>
+    <tr><td>\(\beta_j\)</td><td>six daily weather terms</td><td>fixed \(\beta_j \sim N(0,1)\), no smoothing parameter</td></tr>
+    <tr><td>\(\eta_{yd}\)</td><td>one value per window day and year</td><td>AR(1) precision (section 5)</td></tr>
+  </tbody>
+</table></div>
+<p>Each smooth sums to zero over its grid, so each level has one owner. The intercept carries the overall level, \(\alpha_y\) a year's level, and the trend and season the main effects of the shift, which is an interaction only. The constraint is a reparametrisation \(\mathbf b = \mathbf Z \mathbf u\), with \(\mathbf Z\) (\(k\times(k-1)\)) spanning the null space of \(\mathbf 1^{\top}\mathbf B\):</p>
+<div class="eq">\[ \sum_{d} f_{\text{season}}(d) = 0, \qquad \sum_y f_{\text{trend}}(y) = 0, \qquad \sum_d \eta_{yd} = 0 \ \text{ for every year } y. \]</div>
+<p>All coefficients also carry a tiny ridge (\(10^{-4}\)).</p>
+
+<h3>Daily weather</h3>
+<p>There are six terms per day. Each is a profile-weighted mean over the whole solar day, so it exists for days with no count and gives most weight to the hours that carry passage:</p>
+<div class="eq">\[ w_{j,yd} = \sum_s \pi(d,s)\; g_j\big(x_{y,d,h(s)}\big), \]</div>
+<div class="eq">\[ g_j \in \Big\{ \log(1+R),\ \max\!\big(\log(1+R) - \log 2,\ 0\big),\ \text{radiation},\ \text{low cloud},\ u,\ v \Big\}, \]</div>
+<p>where \(x_{y,d,h(s)}\) is the weather of the UTC hour holding slot \(s\), and \(R\) its rain in mm. The second rain term is a hinge: a second slope for hours with more than 1 mm of rain. Each term is standardised on the days with a count (mean 0, sd 1), so each \(\beta_j\) is the change in \(\log\Lambda\) per sd of weather.</p>
+<figure>
+  <div class="fig"><div class="grid2"><div class="chart" id="figSeason"></div><div class="chart" id="figTrend"></div></div></div>
+  <figcaption><b>Figure 4. Black Kite's season and years under D.</b> Left: \(\exp f_{\text{season}}(d)\), the season's shape as a multiplier on the day's level. Right: the level of a typical window day, \(\exp(a + f_{\text{trend}})\) as the line and \(\exp(a + f_{\text{trend}} + \alpha_y)\) as the dots: each year sits around a smooth trend.</figcaption>
+</figure>
+<figure>
+  <div class="fig"><div class="chart" id="figBeta"></div></div>
+  <figcaption><b>Figure 5. Daily weather effects, all fits of D.</b> One dot per species and mask draw (ten species, five draws); the bar is the median. Rain lowers passage (\(-0.22\) per sd), and so does a southerly wind (\(v&gt;0\)); a north wind and sunshine raise it. <span id="betaKiteNote"></span></figcaption>
+</figure>
+
+<!-- 5 ------------------------------------------------------------------------------------- -->
+<h2 id="process"><span class="n">5</span>The daily process</h2>
+<p>\(\eta\) replaces production's <code>episode</code> block, which had 25 B-splines a year with first-difference and ridge penalties, about one knot every five days. D has one value per window day and year (about 124 a year), with a stationary AR(1) prior:</p>
+<div class="eqbox">
+<div class="eq">\[ \eta_{y,d} = \rho\,\eta_{y,d-1} + \varepsilon_{y,d}, \qquad \varepsilon_{y,d} \sim N\!\big(0,\ \sigma^2(1-\rho^2)\big), \qquad \rho = e^{-1/\tau}, \]</div>
+<div class="eq">\[ \operatorname{corr}(\eta_{y,d},\ \eta_{y,d+\ell}) = \rho^{\ell} = e^{-\ell/\tau}, \qquad \operatorname{sd}(\eta) = \sigma . \]</div>
+</div>
+<p>In matrix form, a year's \(k\) values have the unit-variance AR(1) precision \(\mathbf R(\rho)\), which is tridiagonal, scaled by \(\lambda_\eta = 1/\sigma^2\), and centred within the year:</p>
+<div class="eq">\[ \boldsymbol\eta_y = \mathbf Z\mathbf u_y, \qquad \mathbf u_y \sim N\!\Big(\mathbf 0,\ \big(\lambda_\eta\,\mathbf Z^{\top}\mathbf R(\rho)\,\mathbf Z\big)^{-1}\Big), \qquad
+\mathbf R(\rho) = \frac{1}{1-\rho^2}\begin{pmatrix} 1 & -\rho & & & \\ -\rho & 1+\rho^2 & -\rho & & \\ & \ddots & \ddots & \ddots & \\ & & -\rho & 1+\rho^2 & -\rho \\ & & & -\rho & 1 \end{pmatrix} \]</div>
+<p>Years are independent: the process restarts each season. It lets a hidden day borrow from its neighbours, so a gap in a run of good days is filled high and a gap in a lull is filled low. The correlation length \(\tau\) sets how far that borrowing reaches.</p>
+<figure>
+  <div class="fig">
+    <div class="ctrl"><label for="tauRange">correlation length τ</label><input type="range" id="tauRange" min="1" max="40" step="0.5" value="7"><output id="tauOut" for="tauRange">7 days</output></div>
+    <div class="grid2"><div class="chart" id="figArPaths"></div><div class="chart" id="figArCorr"></div></div>
+  </div>
+  <figcaption><b>Figure 6. The AR(1) prior.</b> Left: three draws of a season's \(\eta\) (σ = 0.7), centred over the season, using the same random numbers at every τ. Drag the slider: short τ gives day-to-day jitter, long τ slow swings. Right: the correlation between days \(\ell\) apart, \(e^{-\ell/\tau}\), for the six values of τ that are fitted (grey) and the slider's τ (rust).</figcaption>
+</figure>
+
+<!-- 6 ------------------------------------------------------------------------------------- -->
+<h2 id="fitting"><span class="n">6</span>Fitting</h2>
+<p>Given the hyperparameters, all coefficients \(\mathbf b\) are Gaussian a priori. There are about 100 dense coefficients, plus 33 year blocks of about 123 daily values. The hyperparameters are the smoothing parameters \(\boldsymbol\lambda = (\lambda_{\text{season}}, \lambda_{\text{trend}}, \lambda_{\text{shift},y}, \lambda_{\text{shift},d}, \lambda_\alpha, \lambda_\eta)\), the shape \(\theta\) and the correlation length \(\tau\):</p>
+<div class="eq">\[ \mathbf b \sim N\!\big(\mathbf 0,\ \mathbf S_\lambda^{-1}\big), \qquad \mathbf S_\lambda = \sum_k \lambda_k \mathbf S_k + \mathbf I_{\text{weather}} + 10^{-4}\,\mathbf I . \]</div>
+<div class="steps">
+  <div><div><div class="t">Posterior mode</div>Penalised IRLS (Fisher scoring with step halving) for the negative binomial with log link and offset \(\log c\):
+  <div class="eq">\[ \hat{\mathbf b} = \arg\max_{\mathbf b}\ \sum_{yd} \log \operatorname{NB}\!\big(Y_{yd};\ c_{yd} e^{\mathbf x_{yd}^{\top}\mathbf b},\ \theta\big) - \tfrac12\, \mathbf b^{\top}\mathbf S_\lambda \mathbf b . \]</div>
+  The penalised information \(\mathbf H = \mathbf X^{\top}\mathbf W\mathbf X + \mathbf S_\lambda\) is solved by blocks: the dense columns, plus one block per year for the daily process. A fit then costs \(O(\text{years}\cdot k^3)\) rather than \(O((\text{years}\cdot k)^3)\).</div></div>
+  <div><div><div class="t">Smoothing parameters</div>Extended Fellner–Schall updates (Wood and Fasiolo 2017) find a fixed point of the Laplace marginal likelihood. Each \(\lambda_k\) is scaled by the degrees of freedom its prior allows minus those the data use, divided by the wiggliness it is asked to explain:
+  <div class="eq">\[ \lambda_k \leftarrow \lambda_k\; \frac{\operatorname{tr}\!\big(\mathbf S_\lambda^{-1}\mathbf S_k\big) - \operatorname{tr}\!\big(\mathbf H^{-1}\mathbf S_k\big)}{\hat{\mathbf b}^{\top}\mathbf S_k\hat{\mathbf b}} . \]</div>
+  The daily process's \(\lambda_\eta = 1/\sigma^2\) is one of them.</div></div>
+  <div><div><div class="t">Shape θ</div>θ starts at its maximum likelihood given the fitted means. It is then alternated with the smoothing parameters as the maximiser of the Laplace marginal likelihood, for up to five rounds:
+  <div class="eq">\[ \log p(\mathbf Y\mid\boldsymbol\lambda,\theta,\tau) \approx \ell(\hat{\mathbf b}) - \tfrac12 \hat{\mathbf b}^{\top}\mathbf S_\lambda\hat{\mathbf b} + \tfrac12\log\lvert\mathbf S_\lambda\rvert_+ - \tfrac12\log\lvert\mathbf H\rvert . \]</div></div></div>
+  <div><div><div class="t">Correlation length τ</div>The whole fit is run for τ = 2, 4, 7, 14, 21 and 30 days, and the one with the highest Laplace marginal likelihood is kept. No hyperparameter is chosen on held-out counts.
+  <div class="eq">\[ \hat\tau = \arg\max_{\tau \in \{2,4,7,14,21,30\}} \log p\big(\mathbf Y\mid\hat{\boldsymbol\lambda}_\tau,\hat\theta_\tau,\tau\big) \]</div></div></div>
+  <div><div><div class="t">Posterior</div>\(\mathbf b \sim N(\hat{\mathbf b}, \mathbf H^{-1})\). Where a species is counted but never seen, the information is evaluated at no less than 0.1 birds a day (production's <code>MIN_RATE</code>), so the posterior does not become flat there.</div></div>
+</div>
+<figure>
+  <div class="fig"><div class="grid2"><div class="chart" id="figTauCurve"></div><div class="chart" id="figTauSpecies"></div></div></div>
+  <figcaption><b>Figure 7. Choosing τ.</b> Left: the Laplace marginal likelihood of Black Kite's fit at each τ, relative to the best. 7 and 14 days are tied, and 2 days is 30 log units worse. Right: the τ chosen for each species, one dot per mask draw. Soaring raptors choose a week; Black Kite and Great Cormorant two weeks; Grey Heron and White Stork, which pass in a few large movements, choose longer.</figcaption>
+</figure>
+<h3>Within-day dispersion κ</h3>
+<p>This is production's <code>hour_dispersion</code>. On days timed to the hour, given the day's birds, the birds of its counted four-hour blocks \(b\) are Dirichlet-multinomial, with weights \(\kappa\) times the share of the profile counted in each block:</p>
+<div class="eq">\[ (Y_{b})_b \mid \textstyle\sum_b Y_b \sim \operatorname{DirMult}\big(\textstyle\sum_b Y_b;\ \kappa\, c_b\big), \qquad \hat\kappa \text{ by maximum likelihood.} \]</div>
+<p>A small κ means birds bunch into a few hours. For Black Kite, \(\hat\kappa\) = <span id="kappaV"></span> per full day of coverage. A D fit takes about 1–2 minutes (six τ, a few cores); a production fit takes 1.5 s.</p>
+
+<!-- 7 ------------------------------------------------------------------------------------- -->
+<h2 id="year"><span class="n">7</span>One season, decomposed</h2>
+<p>Here is a whole season, Black Kite 2020, fitted with mask draw <span id="drawN"></span> hiding some of its days and hours (section 9). It shows what each part of \(\log\Lambda\) does, and how D and production fill the hidden days.</p>
+<figure>
+  <div class="fig">
+    <div class="legend"><span><i class="sw dot i"></i>counted day, birds ÷ c</span><span><i class="sw dot" style="background:none;border:1.5px solid var(--kite)"></i>hidden day, its truth ÷ c</span><span><i class="sw p"></i>production Λ, 80%</span><span><i class="sw k"></i>D Λ, 80%</span><span><i class="sw r"></i>daily rain</span></div>
+    <div class="chart" id="figYearRate"></div>
+  </div>
+  <figcaption><b>Figure 8. Expected birds per full day, 2020.</b> The bands are the 10–90% posterior intervals of \(\Lambda\) (log scale). Production's band is smooth over about five days. D's band follows the rain (blue ticks at the bottom) and the run of neighbouring days. It drops on the wet days of 28 July, 2–3 August and 28–30 August, where production stays at the season's level.</figcaption>
+</figure>
+<figure>
+  <div class="fig">
+    <div class="legend"><span><i class="sw line s"></i>season + trend + year + shift</span><span><i class="sw line r"></i>weather \(\sum\beta_j w_j\)</span><span><i class="sw line k"></i>daily process η (D)</span><span><i class="sw line p"></i>episode curve (production)</span></div>
+    <div class="chart" id="figYearParts"></div>
+  </div>
+  <figcaption><b>Figure 9. The parts of log Λ in 2020.</b> The smooth parts set the season, the weather term marks each wet or still day, and η carries what both miss: runs of good or poor days a week or two long. Production's episode curve has to carry the weather and the runs together, so it cannot drop for a single wet day.</figcaption>
+</figure>
+<figure>
+  <div class="fig">
+    <div class="legend"><span><i class="sw dot i"></i>truth (birds in the hidden part)</span><span><i class="sw p"></i>production 80%</span><span><i class="sw k"></i>D 80%</span></div>
+    <div class="chart" id="figYearFill"></div>
+  </div>
+  <figcaption><b>Figure 10. The hidden days of 2020 and their fills.</b> These are the hidden days where truth or a fill reaches 2 birds; the axis is square-root. Whole days were hidden by the day mask; for early ends, only the hours after the end were hidden. <span id="fillNote"></span> This is one season and one mask draw: here both models fill the hidden peak days low, and D more so. The scores in section 11 average over every species, year and draw.</figcaption>
+</figure>
+
+<!-- 8 ------------------------------------------------------------------------------------- -->
+<h2 id="filling"><span class="n">8</span>Filling the gaps</h2>
+<p>Each posterior draw (1000 in production, 500 in the assessment) produces a complete season:</p>
+<div class="flow">
+  <div><div class="t">coefficients</div><div class="eq">\[ \mathbf b^{*} \sim N(\hat{\mathbf b}, \mathbf H^{-1}) \]</div></div>
+  <div><div class="t">day's expected passage</div><div class="eq">\[ \mu_{yd} = e^{\mathbf x_{yd}^{\top}\mathbf b^{*}} \]</div></div>
+  <div><div class="t">day's rate, given its count</div><div class="eq">\[ \lambda_{yd} \sim \Gamma\!\big(\theta + Y_{yd},\ \tfrac{\theta}{\mu_{yd}} + c_{yd}\big) \]</div></div>
+  <div><div class="t">coverage not counted</div><div class="eq">\[ m_{yd} = c^{\text{tot}}_{yd} - c_{yd} \]</div></div>
+  <div><div class="t">passage, with flocks</div><div class="eq">\[ P_{yd} \sim \Gamma\!\big(\kappa m_{yd},\ \tfrac{\kappa}{\lambda_{yd}}\big) \]</div></div>
+  <div><div class="t">birds missed</div><div class="eq">\[ M_{yd} \sim \operatorname{Poisson}(P_{yd}) \]</div></div>
+</div>
+<div class="eq">\[ \text{day total}_{yd} = Y_{yd} + \text{extra}_{yd} + M_{yd}, \qquad \text{season total}_y = \sum_d \text{day total}_{yd}. \]</div>
+<p>The gamma–Poisson pair is conjugate. The rate given the count is a weighted compromise between the model and the day's own counted birds:</p>
+<div class="eq">\[ \mathbb E[\lambda_{yd}\mid Y_{yd}] = \frac{\theta + Y_{yd}}{\theta/\mu_{yd} + c_{yd}} = w\,\frac{Y_{yd}}{c_{yd}} + (1-w)\,\mu_{yd}, \qquad w = \frac{c_{yd}\,\mu_{yd}}{c_{yd}\,\mu_{yd} + \theta}. \]</div>
+<p>So a partly counted day is filled mostly from its own birds once \(c\mu \gg \theta\), and a day with nothing counted (\(c=0\)) draws its rate from the model alone. The flock step widens the fill without moving its mean, because \(\mathbb E[P] = \lambda m\). In production \(c^{\text{tot}}=1\), the whole day; in the assessment it is the coverage of the hidden observations, whose counts are the truth. The mean and quantiles of a season total come from its draws.</p>
+
+<!-- 9 ------------------------------------------------------------------------------------- -->
+<h2 id="missing"><span class="n">9</span>Why the gaps can be filled this way</h2>
+<p>Filling from a model fitted to the counted hours is unbiased if the gaps depend only on what the model contains: missing at random given the covariates. The missingness audit tested this.</p>
+<figure>
+  <div class="fig"><div class="grid2"><div class="chart" id="figMissRain"></div><div class="chart" id="figMissTau"></div></div></div>
+  <figcaption><b>Figure 11. Gaps are not random.</b> Left: the share of season days with no count, by the day's rain and recording era. In the notebook era, a third of the days with more than 5 mm of rain were not counted, against 2% of dry days. Right: the share of daylight not counted, by tenth of the day (0 = dawn, 1 = dusk). Days start late and end early, and less so in recent eras.</figcaption>
+</figure>
+<ul>
+  <li><b>Missing days</b> depend on rain (odds ×1.9 per sd), radiation (×0.44 per sd), era, month and weekday. Rain and radiation are now in the model. Once they are, the passage of the neighbouring days no longer predicts a missing day.</li>
+  <li><b>Early ends</b> follow quiet hours: the hazard of ending falls by 0.78 per sd of the last three hours' passage. The day's counted birds enter the fill through \(\lambda\mid Y\), and with production's profile the hidden tails of early ends are filled without bias (−0.5% to −1.9% of their birds).</li>
+  <li><b>What the data cannot show</b>: a day that was never counted has no truth. Wet days of 1993–2013 that were counted for six hours or more were mostly days when birds flew, and the uncounted ones probably had fewer. This is why the rain effect is shared across eras (section 12).</li>
+</ul>
+
+<!-- 10 ------------------------------------------------------------------------------------ -->
+<h2 id="assessment"><span class="n">10</span>Assessment</h2>
+<p><b>Realistic masks</b> hide counted days and hours the way real gaps happen, so their truth is known. There are five draws.</p>
+<ul>
+  <li><b>Day masks</b>, 1993–2025: a logistic model of a real missing day (era, month, weekend, daylight rain and radiation, whether the day before is missing), fitted on every season day and applied to days counted for six hours or more. Its intercepts are shifted so that each era hides 10% of them:
+  <div class="eq">\[ \operatorname{logit} P(\text{hide}_{yd}) = \hat\gamma_0 + \delta_{\text{era}} + \mathbf z_{yd}^{\top}\hat{\boldsymbol\gamma}, \qquad \delta_{\text{era}} : \ \text{mean } P = 0.10 \text{ within the era.} \]</div></li>
+  <li><b>Early-end masks</b>, 2014–2025: a discrete-time hazard of a real early end (era, month, time of day, rain in the hour and the three before, the passage of the last three hours), fitted on the afternoon hours of full days. It is shifted so that 30% of those days end early.</li>
+  <li>Days of the lockbox are never hidden.</li>
+</ul>
+<p><b>Scores.</b> The ten species are weighted equally, and scores are averaged over draws. For species \(i\), year \(y\), and the set \(\mathcal H_{iy}\) of hidden day-parts:</p>
+<div class="eqbox">
+<div class="eq">\[ \text{season error} = \frac{1}{10}\sum_i \operatorname{mean}_y \frac{\big|\sum_{d\in\mathcal H_{iy}} (\hat M_{iyd} - M_{iyd})\big|}{\sum_d Y^{\text{all}}_{iyd}}, \qquad
+\text{daily MAE} = \frac{1}{10}\sum_i \operatorname{mean}_{(y,d)\in\mathcal H_i} \big|\hat M_{iyd} - M_{iyd}\big| . \]</div>
+</div>
+<p>We also score wet and dry days, day and early-end masks, eras, and how well the draws' tails are calibrated. Each step is compared with the step before and with production by a paired bootstrap over years, resampling all species and draws together. <b>Keep rule</b>: a step is kept if it improves one of the two primary scores and the other's interval includes zero or is better.</p>
+<p><b>Lockbox</b>: the research's historical calendar phases 1–4 and 8–11, two four-day masks in every 21 days, 1993–2021. They were set aside before any fit and scored once, for the final model and production:</p>
+<div class="eq">\[ \text{phase}(y,d) = (d - 3 + 4(y - 1993)) \bmod 21 \in \{1,2,3,4,8,9,10,11\}. \]</div>
+
+<!-- 11 ------------------------------------------------------------------------------------ -->
+<h2 id="results"><span class="n">11</span>Results</h2>
+<div class="tw"><table id="ladderTable"></table></div>
+<figure>
+  <div class="fig"><div class="grid2"><div class="chart" id="figLadderSeason"></div><div class="chart" id="figLadderMae"></div></div></div>
+  <figcaption><b>Figure 12. Each step against production, realistic masks.</b> Dots show the difference from P; bars show its 95% paired bootstrap interval. Left is better. Daily rain (R) gives the largest single gain. Radiation, cloud, wind and the daily process each add a little, and the hourly weather in the profile (I) adds nothing. H is the research's hourly-weather model, for reference.</figcaption>
+</figure>
+<figure>
+  <div class="fig"><div class="chart" id="figWetBias"></div></div>
+  <figcaption><b>Figure 13. Where the gain comes from.</b> The relative bias of the hidden days' totals, wet and dry. Production fills hidden wet days 65% too high, because it fills them with the passage of a typical day. Every model with daily rain removes that bias.</figcaption>
+</figure>
+<figure>
+  <div class="fig"><div class="chart" id="figCalib"></div></div>
+  <figcaption><b>Figure 14. Are the intervals honest?</b> The share of hidden days whose truth lies above the draws' 90% and 97.5% quantiles, against the nominal 10% and 2.5%. D's upper tail is close to calibrated. The lower tail cannot be read on counts that are mostly zero.</figcaption>
+</figure>
+<h3>Lockbox, scored once</h3>
+<div class="kv" id="lockKv"></div>
+<figure>
+  <div class="fig"><div class="chart" id="figLockbox"></div></div>
+  <figcaption><b>Figure 15. Lockbox season error by species.</b> Grey is production and rust is D. D is better for eight species of ten. Daily totals are confirmed better, with a 95% interval of the MAE difference of −3.9 to −1.2. Season totals are better on average but not established (−0.71 to +0.10 points).</figcaption>
+</figure>
+
+<!-- 12 ------------------------------------------------------------------------------------ -->
+<h2 id="rejected"><span class="n">12</span>What was tried and not kept</h2>
+<div class="tw"><table>
+  <thead><tr><th>option</th><th>what happened</th></tr></thead>
+  <tbody>
+    <tr><td>Early-end correction (E)</td><td>Not needed: with production's profile, early ends are filled without bias. A profile learned from 2022–2025 only (the research benchmark's) under-filled the 2014–2021 early ends by a third.</td></tr>
+    <tr><td>Hourly weather in the profile (I)</td><td>Within a day, birds do pass in the dry hours and with a north wind. With \(\pi \propto \pi_0 \exp(\mathbf x_h^{\top}\boldsymbol\gamma)\), the median γ is −0.17 for rain and −0.25 for wind v, per sd. But the daily terms and the daily process already carry this: no gain.</td></tr>
+    <tr><td>A rain effect of its own for 1993–2013 (De)</td><td>It gains on 2014–2025 days only. It would fill the real, uncounted wet days of 1993–2013 with a rain effect learned from the counted ones, which were selected for passage. Not adopted; this is a judgement, recorded in <code>DECISIONS.md</code>.</td></tr>
+    <tr><td>The research's hourly weather mean (H)</td><td>Season error 4.19%, daily MAE 20.6 on the realistic masks; it over-fills early ends by about a quarter.</td></tr>
+    <tr><td>The research's daily-passage AR(1)</td><td>As accurate as D (3.7%, 17.8), but biased lower, with no intervals, and 6 of its 50 fits fail its own convergence checks.</td></tr>
+    <tr><td>Production plus rain (the hybrid, R)</td><td>Rejected earlier on calendar masks, which hide mostly dry days. On realistic masks it is the largest single gain.</td></tr>
+  </tbody>
+</table></div>
+
+<!-- 13 ------------------------------------------------------------------------------------ -->
+<h2 id="limits"><span class="n">13</span>Limitations and open questions</h2>
+<ul>
+  <li>Real gaps with no counting at all (storm closures, uncounted wet days) have no truth. The masks can only hide counted days, which are less extreme: 27% of masked days had over 5 mm of rain, against 65% of real missing days.</li>
+  <li>The weather effect differs by era on the masks: D fills 1993–2013 wet days 31% low and 2014–2025 wet days 21% high. Whether that is a real change or selection is not settled.</li>
+  <li>Only ten species; passerines and pigeons were not part of this line.</li>
+  <li>Adopting D in production would change the build time (1–2 minutes a taxon) and the meaning of the exported <code>episodes</code>, since the daily process replaces the episode curves. Both repositories would change together.</li>
+</ul>
+
+<!-- 14 ------------------------------------------------------------------------------------ -->
+<h2 id="reproduce"><span class="n">14</span>Reproduce</h2>
+<p>From the repository root (<code>logs/</code> and <code>data/</code> are generated; ERA5 needs <code>pyarrow</code>):</p>
+<pre>uv run --with 'pyarrow&lt;20' python scripts/hierarchical/audit_missingness.py &gt; logs/hierarchical/audit.log
+uv run python scripts/hierarchical/realistic_masks.py &gt; logs/hierarchical/masks.log
+uv run python scripts/hierarchical/pilot_replay.py &gt; logs/hierarchical/pilot.log
+uv run --with 'pyarrow&lt;20' python scripts/hierarchical/run_steps.py --arms P R RS RSW D I De &gt; logs/hierarchical/steps.log
+uv run python scripts/hierarchical/run_reference_hourly.py &gt; logs/hierarchical/reference.log
+uv run python scripts/hierarchical/run_reference_daily.py &gt; logs/hierarchical/reference-daily.log
+uv run python scripts/hierarchical/score_steps.py --references H De &gt; logs/hierarchical/scores.log
+uv run python scripts/hierarchical/rescore_calendar.py &gt; logs/hierarchical/rescore.log
+uv run --with 'pyarrow&lt;20' python scripts/hierarchical/model_figures.py &gt; logs/hierarchical/figures.log</pre>
+<p class="note">The last command refits Black Kite (P, and D at every τ), reads the saved scores, and writes this page with its numbers to <code>logs/hierarchical/model_page.html</code>. The written account is <code>scripts/hierarchical/MODEL.md</code>.</p>
+<footer>Research line <code>scripts/hierarchical</code>, defile-explore. Production (<code>defile_explore.trend</code>) is unchanged: D is production's model plus daily weather, with a daily AR(1) process in place of the episode block. Every part it shares with production is imported, not copied.</footer>
+</main>
+</div>
+
+<script>
+(() => {
+const D = JSON.parse(document.getElementById("data").textContent);
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (v, d = 1) => (v == null || v === "" || isNaN(v) ? "–" : (+v).toFixed(d));
+const pct = (v, d = 1) => fmt(100 * v, d) + "%";
+const iv = (s) => (s ? String(s).replace(/[\[\]+\s]/g, "").split(",").map(Number) : null);
+const charts = [];
+function mount(id, draw) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const run = () => { el.innerHTML = ""; draw(el, Math.max(260, el.clientWidth)); };
+  charts.push(run);
+  let last = 0;
+  new ResizeObserver(() => { const w = el.clientWidth; if (Math.abs(w - last) > 4) { last = w; run(); } }).observe(el);
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => charts.forEach((f) => f()));
+new MutationObserver(() => charts.forEach((f) => f())).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+function svgOf(el, w, h) {
+  return d3.select(el).append("svg").attr("width", w).attr("height", h).attr("viewBox", `0 0 ${w} ${h}`).style("display", "block").style("overflow", "visible");
+}
+function axisB(g, x, h, opts = {}) {
+  const a = d3.axisBottom(x).tickSizeOuter(0);
+  if (opts.ticks) a.ticks(opts.ticks); if (opts.fmt) a.tickFormat(opts.fmt); if (opts.values) a.tickValues(opts.values);
+  return g.append("g").attr("class", "axis").attr("transform", `translate(0,${h})`).call(a);
+}
+function axisL(g, y, opts = {}) {
+  const a = d3.axisLeft(y).tickSizeOuter(0);
+  if (opts.ticks) a.ticks(opts.ticks); if (opts.fmt) a.tickFormat(opts.fmt); if (opts.values) a.tickValues(opts.values);
+  return g.append("g").attr("class", "axis").call(a);
+}
+function gridY(g, y, w, values) {
+  g.append("g").attr("class", "grid").call(d3.axisLeft(y).tickValues(values || y.ticks(5)).tickSize(-w).tickFormat("")).call((s) => s.select(".domain").remove());
+}
+function title(g, text, x = 0, y = -10) { g.append("text").attr("class", "lab-ink").attr("x", x).attr("y", y).text(text); }
+function ylab(g, text) { g.append("text").attr("class", "lab").attr("x", 0).attr("y", -10).attr("text-anchor", "start").text(text); }
+const doyDate = (doy, year = 2021) => new Date(Date.UTC(year, 0, doy));
+const monthFmt = d3.utcFormat("%-d %b");
+const C = D.components, YS = D.year_series, CD = D.coverage_day;
+const sc = (arm, sub = "all") => D.scores.find((r) => r.arm === arm && r.subset === sub);
+
+// ---- numbers in the text ----------------------------------------------------------------------
+document.getElementById("thetaP").textContent = fmt(D.theta.P, 2);
+document.getElementById("thetaD").textContent = fmt(D.theta.D, 2);
+document.getElementById("kappaV").textContent = fmt(D.kappa, 2);
+document.getElementById("drawN").textContent = D.draw;
+document.getElementById("covC").textContent = pct(CD.c_total, 1);
+const covY = d3.sum(CD.count);
+document.getElementById("covY").textContent = covY;
+document.getElementById("covL").textContent = Math.round(covY / CD.c_total);
+const kiteB = D.fits_D.filter((f) => f.english_name === D.species);
+document.getElementById("betaKiteNote").textContent = `${D.species} (ringed dots): rain ${fmt(d3.median(kiteB, (f) => f.beta_log_rain), 2)}, wind v ${fmt(d3.median(kiteB, (f) => f.beta_wind_v), 2)} per sd.`;
+
+const P0 = sc("P"), Df = sc("D"), Pw = sc("P", "wet days"), Dw = sc("D", "wet days");
+const LP = D.lockbox.find((r) => r.subset === "all" && r.arm === "P"), LD = D.lockbox.find((r) => r.subset === "all" && r.arm === "D");
+const LPw = D.lockbox.find((r) => r.subset === "wet days" && r.arm === "P"), LDw = D.lockbox.find((r) => r.subset === "wet days" && r.arm === "D");
+const kv = (id, items) => { document.getElementById(id).innerHTML = items.map(([v, l, good]) => `<div><div class="v${good ? " good" : ""}">${v}</div><div class="l">${l}</div></div>`).join(""); };
+kv("headline", [
+  [`${pct(Df.season_abs_error, 2)} <small>vs ${pct(P0.season_abs_error, 2)}</small>`, "season-total error on realistic masks, D vs production", true],
+  [`${fmt(Df.daily_mae, 1)} <small>vs ${fmt(P0.daily_mae, 1)}</small>`, "birds per hidden day, mean absolute error", true],
+  [`${pct(Dw.daily_rel_bias, 0)} <small>vs +${pct(Pw.daily_rel_bias, 0)}</small>`, "bias on hidden wet days", true],
+  [`${fmt(LD.daily_mae, 1)} <small>vs ${fmt(LP.daily_mae, 1)}</small>`, "lockbox daily MAE, scored once", true],
+]);
+kv("lockKv", [
+  [`${pct(LD.season_abs_error, 2)} <small>vs ${pct(LP.season_abs_error, 2)}</small>`, "season error, D vs production", false],
+  [`${fmt(LD.daily_mae, 1)} <small>vs ${fmt(LP.daily_mae, 1)}</small>`, "daily MAE (interval −3.9 to −1.2)", true],
+  [`${fmt(LDw.daily_mae, 1)} <small>vs ${fmt(LPw.daily_mae, 1)}</small>`, "wet-day MAE", true],
+  [`${LDw.n_days + 0}`, "lockbox wet days, of " + LD.n_days + " hidden", false],
+]);
+
+// ---- results table -----------------------------------------------------------------------------
+const LADDER = [["P", "production", "reference"], ["R", "+ daily rain (two terms)", "yes"], ["RS", "+ radiation and low cloud", "yes"], ["RSW", "+ wind u and v", "yes"], ["D", "daily AR(1) in place of the episode knots", "yes: final"], ["I", "hourly weather in the time-of-day profile", "no: no gain"], ["H", "research hourly-weather mean (reference)", "–"], ["De", "D + own rain effect 1993–2013 (diagnostic)", "not adopted"]];
+document.getElementById("ladderTable").innerHTML = `<thead><tr><th>step</th><th>change</th><th class="num">season error</th><th class="num">daily MAE</th><th class="num">wet-day bias</th><th>kept</th></tr></thead><tbody>` +
+  LADDER.map(([a, t, k]) => { const r = sc(a), w = sc(a, "wet days"); return `<tr class="${a === "D" ? "final" : ""}"><td><code>${a}</code></td><td>${t}</td><td class="num">${pct(r.season_abs_error, 2)}</td><td class="num">${fmt(r.daily_mae, 1)}</td><td class="num">${(w.daily_rel_bias > 0 ? "+" : "") + pct(w.daily_rel_bias, 0)}</td><td>${k}</td></tr>`; }).join("") + "</tbody>";
+
+// ---- Figure 1: hierarchy ---------------------------------------------------------------------
+mount("figHier", (el, W) => {
+  const m = { l: 44, r: 12 }, w = W - m.l - m.r;
+  const rows = [{ y: 22, h: 60 }, { y: 120, h: 90 }, { y: 262, h: 110 }];
+  const H = rows[2].y + rows[2].h + 34;
+  const svg = svgOf(el, W, H), g = svg.append("g").attr("transform", `translate(${m.l},0)`);
+  const x = d3.scaleUtc().domain([doyDate(C.doy[0], 2020), doyDate(C.doy[C.doy.length - 1], 2020)]).range([0, w]);
+  // tier 1
+  const s1 = C.season.map(Math.exp), y1 = d3.scaleLinear().domain([0, d3.max(s1)]).range([rows[0].y + rows[0].h, rows[0].y]);
+  g.append("text").attr("class", "tier").attr("x", 0).attr("y", rows[0].y - 8).text("Season and year: the level");
+  g.append("path").datum(C.doy.map((d, i) => [d, s1[i]])).attr("fill", "var(--faint)").style("fill", "var(--faint)").attr("d", d3.area().x((p) => x(doyDate(p[0], 2020))).y0(y1(0)).y1((p) => y1(p[1])));
+  g.append("path").datum(C.doy.map((d, i) => [d, s1[i]])).style("fill", "none").style("stroke", "var(--sun)").style("stroke-width", 2).attr("d", d3.line().x((p) => x(doyDate(p[0], 2020))).y((p) => y1(p[1])));
+  // tier 2
+  const lam = YS.log_rate_D.mid.map(Math.exp);
+  const y2 = d3.scaleSqrt().domain([0, d3.max(lam)]).range([rows[1].y + rows[1].h, rows[1].y]);
+  g.append("text").attr("class", "tier").attr("x", 0).attr("y", rows[1].y - 8).text("Day: Λ, each day's expected passage (weather, AR(1))");
+  const bw = Math.max(1, w / YS.doy.length - 0.6);
+  const ex = YS.date.indexOf(CD.date);
+  g.selectAll("rect.b").data(YS.doy).join("rect").attr("x", (d) => x(doyDate(d, 2020)) - bw / 2).attr("width", bw)
+    .attr("y", (d, i) => y2(lam[i])).attr("height", (d, i) => y2(0) - y2(lam[i]))
+    .style("fill", (d, i) => (i === ex ? "var(--kite)" : "var(--prod)")).style("opacity", (d, i) => (i === ex ? 1 : 0.55));
+  axisB(g, x, rows[1].y + rows[1].h, { ticks: Math.max(3, Math.floor(w / 110)), fmt: monthFmt });
+  // tier 3
+  const hx = d3.scaleLinear().domain([4, 20]).range([0, w]);
+  const prof = CD.profile.map((v, i) => [(i + 0.5) / 12, v]).filter((p) => p[0] >= 4 && p[0] <= 20);
+  const y3 = d3.scaleLinear().domain([0, Math.max(d3.max(prof, (p) => p[1]), d3.max(CD.count))]).range([rows[2].y + rows[2].h, rows[2].y]);
+  g.append("text").attr("class", "tier").attr("x", 0).attr("y", rows[2].y - 8).text(`Hour (${CD.date}): profile π, counted hours, coverage c = ${fmt(CD.c_total, 2)}`);
+  const lo = d3.min(CD.solar_hour), hi = d3.max(CD.solar_hour) + 1;
+  g.append("path").datum(prof.filter((p) => p[0] >= lo && p[0] <= hi)).style("fill", "var(--kite-soft)").attr("d", d3.area().x((p) => hx(p[0])).y0(y3(0)).y1((p) => y3(p[1])));
+  g.selectAll("rect.h").data(CD.solar_hour).join("rect").attr("x", (h) => hx(h) + 1).attr("width", hx(1) - hx(0) - 2).attr("y", (h, i) => y3(CD.count[i])).attr("height", (h, i) => y3(0) - y3(CD.count[i])).style("fill", "var(--ink)").style("opacity", 0.75);
+  g.append("path").datum(prof).style("fill", "none").style("stroke", "var(--kite)").style("stroke-width", 2).attr("d", d3.line().x((p) => hx(p[0])).y((p) => y3(p[1])));
+  axisB(g, hx, rows[2].y + rows[2].h, { values: [4, 6, 8, 10, 12, 14, 16, 18, 20], fmt: (v) => v + " h" });
+  // zoom connector
+  const bx = x(doyDate(YS.doy[ex], 2020));
+  g.append("path").attr("d", `M${bx - bw / 2},${rows[1].y + rows[1].h + 18} L0,${rows[2].y - 22} M${bx + bw / 2},${rows[1].y + rows[1].h + 18} L${w},${rows[2].y - 22}`).style("fill", "none").style("stroke", "var(--kite)").style("stroke-dasharray", "3 3").style("opacity", 0.6);
+  g.append("text").attr("class", "lab").attr("x", -6).attr("y", rows[2].y + rows[2].h / 2).attr("text-anchor", "end").attr("transform", `rotate(-90,-30,${rows[2].y + rows[2].h / 2})`).text("birds / h");
+});
+
+// ---- Figure 2: profile ---------------------------------------------------------------------
+mount("figProfileHeat", (el, W) => {
+  const m = { t: 26, r: 10, b: 30, l: 44 }, w = W - m.l - m.r, h = 230;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const days = D.profile.doy, H0 = 4, H1 = 20;
+  const x = d3.scaleLinear().domain([H0, H1]).range([0, w]);
+  const y = d3.scaleUtc().domain([doyDate(days[0]), doyDate(days[days.length - 1] + 2)]).range([0, h]);
+  const vmax = d3.max(D.profile.hourly.flat());
+  const col = d3.scaleSequential(d3.interpolateRgb(css("--panel"), css("--kite"))).domain([0, vmax]);
+  const cell = h / days.length + 0.5;
+  days.forEach((d, i) => { for (let hr = H0; hr < H1; hr++) g.append("rect").attr("x", x(hr)).attr("y", y(doyDate(d))).attr("width", x(1) - x(0) + 0.5).attr("height", cell).style("fill", col(D.profile.hourly[i][hr])); });
+  axisB(g, x, h, { values: [4, 8, 12, 16, 20], fmt: (v) => v + " h" });
+  axisL(g, y, { ticks: 5, fmt: d3.utcFormat("%-d %b") });
+  title(g, "share of the day's passage per solar hour");
+});
+mount("figProfileCurves", (el, W) => {
+  const m = { t: 26, r: 14, b: 30, l: 40 }, w = W - m.l - m.r, h = 230;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleLinear().domain([4, 20]).range([0, w]);
+  const curves = Object.entries(D.profile.curves);
+  const y = d3.scaleLinear().domain([0, d3.max(curves.flatMap(([, v]) => v)) * 1.08]).range([h, 0]);
+  gridY(g, y, w);
+  const shades = [1, 0.75, 0.5, 0.3];
+  curves.forEach(([doy, v], k) => {
+    const pts = v.map((p, i) => [(i + 0.5) / 12, p]).filter((p) => p[0] >= 4 && p[0] <= 20);
+    g.append("path").datum(pts).style("fill", "none").style("stroke", "var(--kite)").style("opacity", shades[k]).style("stroke-width", 2).attr("d", d3.line().x((p) => x(p[0])).y((p) => y(p[1])));
+    const top = pts.reduce((a, b) => (b[1] > a[1] ? b : a));
+    g.append("text").attr("class", "lab").attr("x", x(top[0])).attr("y", y(top[1]) - 5).attr("text-anchor", "middle").style("opacity", Math.max(shades[k], 0.6)).text(monthFmt(doyDate(+doy)));
+  });
+  axisB(g, x, h, { values: [4, 8, 12, 16, 20], fmt: (v) => v + " h" });
+  axisL(g, y, { ticks: 5, fmt: d3.format(".0%") });
+  title(g, "share per hour, four dates");
+});
+
+// ---- Figure 3: coverage ---------------------------------------------------------------------
+mount("figCoverage", (el, W) => {
+  const m = { t: 26, r: 16, b: 32, l: 48 }, w = W - m.l - m.r, h = 230;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleLinear().domain([4, 20]).range([0, w]);
+  const prof = CD.profile.map((v, i) => [(i + 0.5) / 12, v]).filter((p) => p[0] >= 4 && p[0] <= 20);
+  const y = d3.scaleLinear().domain([0, Math.max(d3.max(CD.count), d3.max(prof, (p) => p[1])) * 1.1]).range([h, 0]);
+  gridY(g, y, w);
+  const lo = d3.min(CD.solar_hour), hi = d3.max(CD.solar_hour) + 1;
+  g.append("path").datum(prof).style("fill", "var(--faint)").attr("d", d3.area().x((p) => x(p[0])).y0(h).y1((p) => y(p[1])));
+  g.append("path").datum(prof.filter((p) => p[0] >= lo && p[0] <= hi)).style("fill", "var(--kite-soft)").attr("d", d3.area().x((p) => x(p[0])).y0(h).y1((p) => y(p[1])));
+  g.selectAll("rect").data(CD.solar_hour).join("rect").attr("x", (s) => x(s) + 2).attr("width", x(1) - x(0) - 4).attr("y", (s, i) => y(CD.count[i])).attr("height", (s, i) => h - y(CD.count[i])).style("fill", "var(--ink)").style("opacity", 0.8);
+  g.selectAll("text.cv").data(CD.solar_hour).join("text").attr("class", "lab").attr("x", (s) => x(s + 0.5)).attr("y", (s, i) => y(CD.count[i]) - 4).attr("text-anchor", "middle").style("font-size", "11px").text((s, i) => (w > 420 ? fmt(CD.c[i], 2) : ""));
+  g.append("path").datum(prof).style("fill", "none").style("stroke", "var(--kite)").style("stroke-width", 2).attr("d", d3.line().x((p) => x(p[0])).y((p) => y(p[1])));
+  axisB(g, x, h, { values: [4, 6, 8, 10, 12, 14, 16, 18, 20], fmt: (v) => v + " h" });
+  axisL(g, y, { ticks: 5 });
+  ylab(g, "birds per hour");
+  g.append("text").attr("class", "lab-ink").attr("x", w).attr("y", 4).attr("text-anchor", "end").text(`c = Σ counted profile = ${fmt(CD.c_total, 3)}`);
+  if (w > 420) g.append("text").attr("class", "lab").attr("x", w).attr("y", 22).attr("text-anchor", "end").text("numbers over bars: each hour's own c");
+});
+
+// ---- Figure 4: season and trend ---------------------------------------------------------------
+mount("figSeason", (el, W) => {
+  const m = { t: 26, r: 12, b: 30, l: 40 }, w = W - m.l - m.r, h = 200;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleUtc().domain([doyDate(C.doy[0]), doyDate(C.doy[C.doy.length - 1])]).range([0, w]);
+  const v = C.season.map(Math.exp);
+  const y = d3.scaleLog().domain([d3.min(v) * 0.8, d3.max(v) * 1.2]).range([h, 0]);
+  const pw = [0.001, 0.01, 0.1, 1, 10, 100, 1000].filter((t) => t >= y.domain()[0] && t <= y.domain()[1]);
+  gridY(g, y, w, pw);
+  g.append("path").datum(C.doy.map((d, i) => [d, v[i]])).style("fill", "none").style("stroke", "var(--sun)").style("stroke-width", 2.2).attr("d", d3.line().x((p) => x(doyDate(p[0]))).y((p) => y(p[1])));
+  axisB(g, x, h, { ticks: Math.max(3, Math.floor(w / 90)), fmt: monthFmt });
+  axisL(g, y, { values: pw, fmt: (t) => "×" + d3.format("~g")(t) });
+  title(g, "season: exp f_season(d)");
+});
+mount("figTrend", (el, W) => {
+  const m = { t: 26, r: 12, b: 30, l: 44 }, w = W - m.l - m.r, h = 200;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleLinear().domain([C.years[0] - 0.5, C.years[C.years.length - 1] + 0.5]).range([0, w]);
+  const tr = C.trend.map((t) => Math.exp(C.intercept + t)), yr = C.trend.map((t, i) => Math.exp(C.intercept + t + C.year[i]));
+  const y = d3.scaleLog().domain([d3.min(yr.concat(tr)) * 0.8, d3.max(yr.concat(tr)) * 1.25]).range([h, 0]);
+  const yt = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].filter((t) => t >= y.domain()[0] && t <= y.domain()[1]);
+  gridY(g, y, w, yt);
+  g.append("path").datum(C.years.map((a, i) => [a, tr[i]])).style("fill", "none").style("stroke", "var(--sun)").style("stroke-width", 2.2).attr("d", d3.line().x((p) => x(p[0])).y((p) => y(p[1])));
+  g.selectAll("circle").data(C.years).join("circle").attr("cx", (a) => x(a)).attr("cy", (a, i) => y(yr[i])).attr("r", 3).style("fill", "var(--ink)");
+  axisB(g, x, h, { ticks: 6, fmt: d3.format("d") });
+  axisL(g, y, { values: yt, fmt: d3.format("~g") });
+  title(g, "typical window day: birds (trend and year)");
+});
+
+// ---- Figure 5: weather betas -------------------------------------------------------------------
+mount("figBeta", (el, W) => {
+  const terms = [["log_rain", "rain log(1+R)"], ["rain_hinge", "rain above 1 mm"], ["radiation", "radiation"], ["low_cloud", "low cloud"], ["wind_u", "wind u (from west +)"], ["wind_v", "wind v (from south +)"]];
+  const m = { t: 18, r: 50, b: 32, l: W < 480 ? 118 : 150 }, w = W - m.l - m.r, rowH = 34, h = rowH * terms.length;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const all = D.fits_D.flatMap((f) => terms.map(([t]) => f["beta_" + t]));
+  const x = d3.scaleLinear().domain([Math.min(-0.6, d3.min(all)), Math.max(0.4, d3.max(all))]).nice().range([0, w]);
+  const y = d3.scaleBand().domain(terms.map((t) => t[0])).range([0, h]).padding(0.2);
+  g.append("line").attr("x1", x(0)).attr("x2", x(0)).attr("y1", 0).attr("y2", h).style("stroke", "var(--muted)").style("stroke-dasharray", "2 3");
+  const rnd = d3.randomLcg(7);
+  terms.forEach(([t, lab]) => {
+    const yc = y(t) + y.bandwidth() / 2;
+    g.append("text").attr("class", "lab").attr("x", -10).attr("y", yc + 4).attr("text-anchor", "end").style("fill", "var(--ink)").text(lab);
+    D.fits_D.forEach((f) => {
+      const kite = f.english_name === D.species;
+      g.append("circle").attr("cx", x(f["beta_" + t])).attr("cy", yc + (rnd() - 0.5) * y.bandwidth() * 0.8).attr("r", kite ? 4 : 2.6)
+        .style("fill", kite ? "none" : "var(--prod)").style("opacity", kite ? 1 : 0.55).style("stroke", kite ? "var(--kite)" : "none").style("stroke-width", 1.6);
+    });
+    const med = d3.median(D.fits_D, (f) => f["beta_" + t]);
+    g.append("rect").attr("x", x(med) - 1.5).attr("width", 3).attr("y", y(t)).attr("height", y.bandwidth()).style("fill", "var(--ink)");
+    g.append("text").attr("class", "lab").attr("x", w + 8).attr("y", yc + 4).style("fill", "var(--ink)").style("font-family", "var(--mono)").style("font-size", "11.5px").text((med > 0 ? "+" : "") + fmt(med, 2));
+  });
+  axisB(g, x, h, { ticks: 6 });
+  g.append("text").attr("class", "lab").attr("x", w).attr("y", h + 30).attr("text-anchor", "end").text("β: change in log Λ per sd");
+  g.append("text").attr("class", "lab").attr("x", w + 8).attr("y", -4).text("median");
+});
+
+// ---- Figure 6: AR(1) ---------------------------------------------------------------------------
+const K = 124, NS = 3;
+const eps = (() => { const r = d3.randomNormal.source(d3.randomLcg(42))(0, 1); return d3.range(NS).map(() => d3.range(K).map(() => r())); })();
+let tauNow = 7;
+function arPaths(tau, sigma = 0.7) {
+  const rho = Math.exp(-1 / tau), s = Math.sqrt(1 - rho * rho);
+  return eps.map((e) => { const p = [sigma * e[0]]; for (let i = 1; i < K; i++) p.push(rho * p[i - 1] + sigma * s * e[i]); const mu = d3.mean(p); return p.map((v) => v - mu); });
+}
+mount("figArPaths", (el, W) => {
+  const m = { t: 26, r: 10, b: 30, l: 34 }, w = W - m.l - m.r, h = 200;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleLinear().domain([0, K - 1]).range([0, w]), y = d3.scaleLinear().domain([-2.2, 2.2]).range([h, 0]);
+  gridY(g, y, w, [-2, -1, 0, 1, 2]);
+  const paths = g.append("g");
+  const draw = () => {
+    const ps = arPaths(tauNow);
+    paths.selectAll("path").data(ps).join("path").style("fill", "none").style("stroke", (d, i) => (i === 0 ? "var(--kite)" : "var(--prod)")).style("stroke-width", (d, i) => (i === 0 ? 2 : 1.3)).style("opacity", (d, i) => (i === 0 ? 1 : 0.7))
+      .attr("d", d3.line().x((v, i) => x(i)).y((v) => y(Math.max(-2.2, Math.min(2.2, v)))));
+  };
+  el._draw = draw; draw();
+  axisB(g, x, h, { values: [0, 30, 60, 90, 120], fmt: (v) => "day " + v });
+  axisL(g, y, { values: [-2, -1, 0, 1, 2] });
+  title(g, "η: three prior draws of one season");
+});
+mount("figArCorr", (el, W) => {
+  const m = { t: 26, r: 14, b: 30, l: 34 }, w = W - m.l - m.r, h = 200;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleLinear().domain([0, 30]).range([0, w]), y = d3.scaleLinear().domain([0, 1]).range([h, 0]);
+  gridY(g, y, w, [0, 0.25, 0.5, 0.75, 1]);
+  const line = d3.line().x((l) => x(l[0])).y((l) => y(l[1]));
+  [2, 4, 7, 14, 21, 30].forEach((t) => {
+    const pts = d3.range(0, 30.1, 0.5).map((l) => [l, Math.exp(-l / t)]);
+    g.append("path").datum(pts).style("fill", "none").style("stroke", "var(--muted)").style("opacity", 0.45).attr("d", line);
+    g.append("text").attr("class", "lab").attr("x", x(30) + 2).attr("y", y(Math.exp(-30 / t)) + 4).style("font-size", "10.5px").text(t);
+  });
+  const cur = g.append("path").style("fill", "none").style("stroke", "var(--kite)").style("stroke-width", 2.4);
+  const draw = () => cur.datum(d3.range(0, 30.1, 0.5).map((l) => [l, Math.exp(-l / tauNow)])).attr("d", line);
+  el._draw = draw; draw();
+  axisB(g, x, h, { values: [0, 7, 14, 21, 28], fmt: (v) => v + " d" });
+  axisL(g, y, { values: [0, 0.5, 1] });
+  title(g, "correlation of days ℓ apart");
+});
+const tr = document.getElementById("tauRange"), to = document.getElementById("tauOut");
+tr.addEventListener("input", () => { tauNow = +tr.value; to.textContent = tauNow + " days"; ["figArPaths", "figArCorr"].forEach((id) => document.getElementById(id)._draw && document.getElementById(id)._draw()); });
+
+// ---- Figure 7: tau -------------------------------------------------------------------------------
+mount("figTauCurve", (el, W) => {
+  const m = { t: 26, r: 14, b: 30, l: 40 }, w = W - m.l - m.r, h = 200, T = D.tau_curve;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scalePoint().domain(T.tau).range([0, w]).padding(0.4), y = d3.scaleLinear().domain([d3.min(T.log_marginal) * 1.1, 3]).range([h, 0]);
+  gridY(g, y, w);
+  g.append("path").datum(T.tau.map((t, i) => [t, T.log_marginal[i]])).style("fill", "none").style("stroke", "var(--prod)").style("stroke-width", 1.5).attr("d", d3.line().x((p) => x(p[0])).y((p) => y(p[1])));
+  g.selectAll("circle").data(T.tau).join("circle").attr("cx", (t) => x(t)).attr("cy", (t, i) => y(T.log_marginal[i])).attr("r", (t) => (t === T.best ? 6 : 4)).style("fill", (t) => (t === T.best ? "var(--kite)" : "var(--prod)"));
+  g.selectAll("text.v").data(T.tau).join("text").attr("class", "lab").attr("x", (t) => x(t)).attr("y", (t, i) => y(T.log_marginal[i]) - 10).attr("text-anchor", "middle").text((t, i) => fmt(T.log_marginal[i], 1));
+  axisB(g, x, h, { fmt: (t) => "τ " + t });
+  axisL(g, y, { ticks: 4 });
+  title(g, `${D.species}: log marginal likelihood − best`);
+});
+mount("figTauSpecies", (el, W) => {
+  const sp = D.core, taus = [2, 4, 7, 14, 21, 30];
+  const m = { t: 26, r: 14, b: 30, l: W < 480 ? 120 : 150 }, rowH = 20, h = rowH * sp.length, w = W - m.l - m.r;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scalePoint().domain(taus).range([0, w]).padding(0.4), y = d3.scaleBand().domain(sp).range([0, h]);
+  taus.forEach((t) => g.append("line").attr("x1", x(t)).attr("x2", x(t)).attr("y1", 0).attr("y2", h).style("stroke", "var(--faint)"));
+  sp.forEach((s) => {
+    g.append("text").attr("class", "lab").attr("x", -8).attr("y", y(s) + rowH / 2 + 4).attr("text-anchor", "end").style("fill", "var(--ink)").text(s);
+    const fits = D.fits_D.filter((f) => f.english_name === s);
+    const by = d3.rollup(fits, (v) => v.length, (f) => f.tau);
+    by.forEach((n, t) => { d3.range(n).forEach((k) => g.append("circle").attr("cx", x(t) + (k - (n - 1) / 2) * 6).attr("cy", y(s) + rowH / 2).attr("r", 2.6).style("fill", s === D.species ? "var(--kite)" : "var(--ink)")); });
+  });
+  axisB(g, x, h, { fmt: (t) => t + " d" });
+  title(g, "τ chosen, per species and mask draw");
+});
+
+// ---- Figure 8-10: one season ----------------------------------------------------------------
+const yDates = YS.date.map((s) => new Date(s + "T00:00:00Z"));
+const xYear = (w) => d3.scaleUtc().domain([yDates[0], yDates[yDates.length - 1]]).range([0, w]);
+mount("figYearRate", (el, W) => {
+  const m = { t: 12, r: 12, b: 30, l: 46 }, w = W - m.l - m.r, h = 270;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = xYear(w);
+  const y = d3.scaleSymlog().constant(1).domain([0, 4000]).range([h - 16, 0]);
+  const ticks = [0, 1, 10, 100, 1000];
+  gridY(g, y, w, ticks);
+  for (const [arm, col] of [["P", "var(--prod-soft)"], ["D", "var(--kite-soft)"]]) {
+    const L = YS["log_rate_" + arm];
+    g.append("path").datum(yDates.map((d, i) => [d, Math.exp(L.lo[i]), Math.exp(L.hi[i])])).style("fill", col).attr("d", d3.area().x((p) => x(p[0])).y0((p) => y(p[1])).y1((p) => y(p[2])));
+    g.append("path").datum(yDates.map((d, i) => [d, Math.exp(L.mid[i])])).style("fill", "none").style("stroke", arm === "P" ? "var(--prod)" : "var(--kite)").style("stroke-width", 1.6).attr("d", d3.line().x((p) => x(p[0])).y((p) => y(p[1])));
+  }
+  yDates.forEach((d, i) => {
+    if (YS.c[i] > 0) g.append("circle").attr("cx", x(d)).attr("cy", y(YS.y[i] / YS.c[i])).attr("r", 2.6).style("fill", "var(--ink)");
+    if (YS.hidden_count[i] >= 0 && YS.hidden_kind[i] === "day" && YS.hidden_c[i] > 0.1) g.append("circle").attr("cx", x(d)).attr("cy", y(YS.hidden_count[i] / YS.hidden_c[i])).attr("r", 3.6).style("fill", "none").style("stroke", "var(--kite)").style("stroke-width", 1.6);
+  });
+  const rmax = d3.max(YS.rain);
+  yDates.forEach((d, i) => { if (YS.rain[i] > 0.05) g.append("rect").attr("x", x(d) - 1.2).attr("width", 2.4).attr("y", h - 14 * YS.rain[i] / rmax).attr("height", 14 * YS.rain[i] / rmax).style("fill", "var(--rain)"); });
+  axisB(g, x, h, { ticks: Math.max(3, Math.floor(w / 100)), fmt: monthFmt });
+  axisL(g, y, { values: ticks, fmt: d3.format("~s") });
+  g.append("text").attr("class", "lab").attr("x", 4).attr("y", 10).text("birds per full day");
+});
+mount("figYearParts", (el, W) => {
+  const m = { t: 12, r: 12, b: 30, l: 40 }, w = W - m.l - m.r, h = 220;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = xYear(w);
+  const L = YS.log_rate_D.mid;
+  const smooth = L.map((v, i) => v - YS.weather[i] - YS.daily[i] - C.intercept);
+  const smoothMean = d3.mean(smooth);
+  const series = [["var(--sun)", smooth.map((v) => v - smoothMean), 2], ["var(--rain)", YS.weather, 1.6], ["var(--prod)", YS.episode, 1.6], ["var(--kite)", YS.daily, 2]];
+  const all = series.flatMap((s) => s[1]);
+  const y = d3.scaleLinear().domain([Math.max(-5, d3.min(all)), d3.max(all)]).nice().range([h, 0]);
+  gridY(g, y, w);
+  g.append("line").attr("x1", 0).attr("x2", w).attr("y1", y(0)).attr("y2", y(0)).style("stroke", "var(--muted)").style("stroke-dasharray", "2 3");
+  series.forEach(([col, v, sw]) => g.append("path").datum(v).style("fill", "none").style("stroke", col).style("stroke-width", sw).attr("d", d3.line().x((p, i) => x(yDates[i])).y((p) => y(Math.max(y.domain()[0], p)))));
+  axisB(g, x, h, { ticks: Math.max(3, Math.floor(w / 100)), fmt: monthFmt });
+  axisL(g, y, { ticks: 5 });
+  g.append("text").attr("class", "lab").attr("x", 4).attr("y", 10).text("contribution to log Λ (smooth parts centred)");
+});
+mount("figYearFill", (el, W) => {
+  const idx = YS.hidden_count.map((v, i) => i).filter((i) => YS.hidden_count[i] >= 0 && Math.max(YS.hidden_count[i], YS.fill_P.q90[i], YS.fill_D.q90[i]) >= 2);
+  const m = { t: 14, r: 12, b: 54, l: 44 }, w = W - m.l - m.r, h = 230;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleBand().domain(idx).range([0, w]).padding(0.25);
+  const y = d3.scaleSqrt().domain([0, d3.max(idx.flatMap((i) => [YS.hidden_count[i], YS.fill_P.q90[i], YS.fill_D.q90[i]])) * 1.05]).range([h, 0]);
+  gridY(g, y, w, y.ticks(5));
+  const bw = x.bandwidth();
+  idx.forEach((i) => {
+    [["P", "var(--prod)", -0.22], ["D", "var(--kite)", 0.22]].forEach(([a, col, off]) => {
+      const F = YS["fill_" + a], cx = x(i) + bw / 2 + off * bw;
+      g.append("rect").attr("x", cx - Math.min(5, bw * 0.18)).attr("width", Math.min(10, bw * 0.36)).attr("y", y(F.q90[i])).attr("height", Math.max(1, y(F.q10[i]) - y(F.q90[i]))).style("fill", col).style("opacity", 0.75);
+      g.append("line").attr("x1", cx - Math.min(7, bw * 0.24)).attr("x2", cx + Math.min(7, bw * 0.24)).attr("y1", y(F.mean[i])).attr("y2", y(F.mean[i])).style("stroke", "var(--ink)").style("stroke-width", 1.2);
+    });
+    g.append("circle").attr("cx", x(i) + bw / 2).attr("cy", y(YS.hidden_count[i])).attr("r", 4).style("fill", "var(--ink)");
+    g.append("text").attr("class", "lab").attr("transform", `translate(${x(i) + bw / 2},${h + 12}) rotate(-45)`).attr("text-anchor", "end").style("font-size", "11px").text(monthFmt(yDates[i]) + (YS.hidden_kind[i] === "end" ? " ·end" : ""));
+  });
+  axisL(g, y, { ticks: 5 });
+  g.append("text").attr("class", "lab").attr("x", 4).attr("y", 0).text("birds in the hidden part (bar 80%, tick mean)");
+  const sum = (a) => d3.sum(idx, (i) => (a === "T" ? YS.hidden_count[i] : YS["fill_" + a].mean[i]));
+  document.getElementById("fillNote").textContent = `Over these days the truth is ${Math.round(sum("T"))} birds; production fills ${Math.round(sum("P"))} and D ${Math.round(sum("D"))}.`;
+});
+
+// ---- Figure 11: missingness --------------------------------------------------------------------
+const ERAS = ["notebook", "spreadsheet", "naturalist", "trektellen"], ERA_LAB = { notebook: "notebook 93–13", spreadsheet: "spreadsheet 14–16", naturalist: "naturalist 17–21", trektellen: "Trektellen 22–25" };
+const eraCol = () => [css("--ink"), css("--prod"), css("--sun"), css("--kite")];
+mount("figMissRain", (el, W) => {
+  const m = { t: 40, r: 10, b: 30, l: 40 }, w = W - m.l - m.r, h = 200, cls = ["dry <0.5mm", "0.5-5mm", "wet >5mm"];
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x0 = d3.scaleBand().domain(cls).range([0, w]).padding(0.2), x1 = d3.scaleBand().domain(ERAS).range([0, x0.bandwidth()]).padding(0.08);
+  const y = d3.scaleLinear().domain([0, 0.35]).range([h, 0]);
+  gridY(g, y, w, [0, 0.1, 0.2, 0.3]);
+  const cols = eraCol();
+  D.audit.missing_by_rain.forEach((r) => cls.forEach((c) => g.append("rect").attr("x", x0(c) + x1(r.era)).attr("width", x1.bandwidth()).attr("y", y(r[c])).attr("height", h - y(r[c])).style("fill", cols[ERAS.indexOf(r.era)])));
+  axisB(g, x0, h, { fmt: (c) => ({ "dry <0.5mm": "dry < 0.5 mm", "0.5-5mm": "0.5–5 mm", "wet >5mm": "> 5 mm" })[c] });
+  axisL(g, y, { values: [0, 0.1, 0.2, 0.3], fmt: d3.format(".0%") });
+  title(g, "season days not counted, by the day's rain", 0, -26);
+  const lg = g.append("g").attr("transform", "translate(0,-12)");
+  let lx = 0; ERAS.forEach((e, i) => { const t = ERA_LAB[e]; lg.append("rect").attr("x", lx).attr("y", -8).attr("width", 10).attr("height", 8).style("fill", cols[i]); const tx = lg.append("text").attr("class", "lab").attr("x", lx + 14).attr("y", 0).style("font-size", "11px").text(t); lx += tx.node().getComputedTextLength() + 26; });
+});
+mount("figMissTau", (el, W) => {
+  const m = { t: 40, r: 12, b: 30, l: 40 }, w = W - m.l - m.r, h = 200;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleLinear().domain([0, 1]).range([0, w]), y = d3.scaleLinear().domain([0, 1]).range([h, 0]);
+  gridY(g, y, w, [0, 0.25, 0.5, 0.75, 1]);
+  const cols = eraCol();
+  D.audit.uncounted_by_tau.forEach((r) => {
+    const pts = d3.range(10).map((k) => [(k + 0.5) / 10, r[k.toFixed(1)]]);
+    const i = ERAS.indexOf(r.era);
+    g.append("path").datum(pts).style("fill", "none").style("stroke", cols[i]).style("stroke-width", 2).attr("d", d3.line().x((p) => x(p[0])).y((p) => y(p[1])));
+    g.selectAll(null).data(pts).join("circle").attr("cx", (p) => x(p[0])).attr("cy", (p) => y(p[1])).attr("r", 2.4).style("fill", cols[i]);
+  });
+  axisB(g, x, h, { values: [0, 0.25, 0.5, 0.75, 1], fmt: (v) => ({ 0: "dawn", 0.5: "mid-day", 1: "dusk" })[v] ?? "" });
+  axisL(g, y, { values: [0, 0.5, 1], fmt: d3.format(".0%") });
+  title(g, "daylight not counted, by time of day", 0, -26);
+});
+
+// ---- Figure 12-14: results ------------------------------------------------------------------
+const ARMS = ["R", "RS", "RSW", "D", "I", "H", "De"];
+function diffChart(el, W, key, label, scale = 1, unit = "") {
+  const m = { t: 26, r: 46, b: 30, l: 44 }, rowH = 26, h = rowH * ARMS.length, w = W - m.l - m.r;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const rows = ARMS.map((a) => { const r = sc(a); const i = iv(r[key + "_vs_P"]); return { a, v: (r[key] - P0[key]) * scale, lo: i[0] * scale, hi: i[1] * scale, abs: r[key] * (key === "daily_mae" ? 1 : 100) }; });
+  const x = d3.scaleLinear().domain([Math.min(0, d3.min(rows, (r) => r.lo)), Math.max(0, d3.max(rows, (r) => r.hi))]).nice().range([0, w]);
+  const y = d3.scaleBand().domain(ARMS).range([0, h]);
+  g.append("line").attr("x1", x(0)).attr("x2", x(0)).attr("y1", 0).attr("y2", h).style("stroke", "var(--muted)").style("stroke-dasharray", "2 3");
+  rows.forEach((r) => {
+    const yc = y(r.a) + rowH / 2, col = r.a === "D" ? "var(--kite)" : ["H", "De"].includes(r.a) ? "var(--muted)" : "var(--prod)";
+    if (r.a === "H") g.append("line").attr("x1", -40).attr("x2", w + 40).attr("y1", y(r.a)).attr("y2", y(r.a)).style("stroke", "var(--rule)");
+    g.append("line").attr("x1", x(r.lo)).attr("x2", x(r.hi)).attr("y1", yc).attr("y2", yc).style("stroke", col).style("stroke-width", 3).style("stroke-linecap", "round");
+    g.append("circle").attr("cx", x(r.v)).attr("cy", yc).attr("r", 5).style("fill", col);
+    g.append("text").attr("class", "lab").attr("x", -10).attr("y", yc + 4).attr("text-anchor", "end").style("fill", "var(--ink)").style("font-family", "var(--mono)").text(r.a);
+    g.append("text").attr("class", "lab").attr("x", w + 6).attr("y", yc + 4).style("font-family", "var(--mono)").style("font-size", "11.5px").text(fmt(r.abs, key === "daily_mae" ? 1 : 2) + unit);
+  });
+  axisB(g, x, h, { ticks: 5 });
+  title(g, label);
+}
+mount("figLadderSeason", (el, W) => diffChart(el, W, "season_abs_error", "Δ season error vs P (points)", 100, "%"));
+mount("figLadderMae", (el, W) => diffChart(el, W, "daily_mae", "Δ daily MAE vs P (birds)", 1, ""));
+mount("figWetBias", (el, W) => {
+  const arms = ["P", "R", "RS", "RSW", "D", "I", "H"];
+  const m = { t: 30, r: 12, b: 30, l: 44 }, w = W - m.l - m.r, h = 200;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x0 = d3.scaleBand().domain(arms).range([0, w]).padding(0.25), x1 = d3.scaleBand().domain(["wet days", "dry days"]).range([0, x0.bandwidth()]).padding(0.1);
+  const y = d3.scaleLinear().domain([-0.2, 0.7]).range([h, 0]);
+  gridY(g, y, w, [-0.2, 0, 0.2, 0.4, 0.6]);
+  g.append("line").attr("x1", 0).attr("x2", w).attr("y1", y(0)).attr("y2", y(0)).style("stroke", "var(--ink)");
+  arms.forEach((a) => ["wet days", "dry days"].forEach((s) => { const v = sc(a, s).daily_rel_bias; g.append("rect").attr("x", x0(a) + x1(s)).attr("width", x1.bandwidth()).attr("y", y(Math.max(0, v))).attr("height", Math.abs(y(v) - y(0))).style("fill", s === "wet days" ? "var(--rain)" : "var(--sun)").style("opacity", a === "D" ? 1 : 0.7);
+    if (s === "wet days") g.append("text").attr("class", "lab").attr("x", x0(a) + x1(s) + x1.bandwidth() / 2).attr("y", v > 0 ? y(v) - 4 : y(v) + 12).attr("text-anchor", "middle").style("font-size", "11px").text((v > 0 ? "+" : "") + Math.round(100 * v) + "%"); }));
+  axisB(g, x0, h + 0, {}).selectAll("text").style("font-family", "var(--mono)");
+  axisL(g, y, { values: [-0.2, 0, 0.2, 0.4, 0.6], fmt: d3.format("+.0%") });
+  const lg = g.append("g").attr("transform", "translate(0,-14)");
+  lg.append("rect").attr("width", 10).attr("height", 8).attr("y", -8).style("fill", "var(--rain)"); lg.append("text").attr("class", "lab").attr("x", 14).text("wet hidden days");
+  lg.append("rect").attr("x", 130).attr("width", 10).attr("height", 8).attr("y", -8).style("fill", "var(--sun)"); lg.append("text").attr("class", "lab").attr("x", 144).text("dry hidden days");
+});
+mount("figCalib", (el, W) => {
+  const arms = ["P", "R", "RSW", "D", "I"], qs = [["daily_above_q90", 0.1, "truth above q90"], ["daily_above_q975", 0.025, "truth above q97.5"]];
+  const m = { t: 26, r: 12, b: 30, l: 44 }, w = W - m.l - m.r, h = 170;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x0 = d3.scaleBand().domain(qs.map((q) => q[0])).range([0, w]).padding(0.18), x1 = d3.scaleBand().domain(arms).range([0, x0.bandwidth()]).padding(0.15);
+  const y = d3.scaleLinear().domain([0, 0.13]).range([h, 0]);
+  gridY(g, y, w, [0, 0.025, 0.05, 0.1]);
+  qs.forEach(([k, nom]) => {
+    arms.forEach((a) => { const v = sc(a)[k]; g.append("rect").attr("x", x0(k) + x1(a)).attr("width", x1.bandwidth()).attr("y", y(v)).attr("height", h - y(v)).style("fill", a === "D" ? "var(--kite)" : "var(--prod)").style("opacity", a === "D" ? 1 : 0.6);
+      g.append("text").attr("class", "lab").attr("x", x0(k) + x1(a) + x1.bandwidth() / 2).attr("y", h + 13).attr("text-anchor", "middle").style("font-family", "var(--mono)").style("font-size", "10.5px").text(a); });
+    g.append("line").attr("x1", x0(k) - 4).attr("x2", x0(k) + x0.bandwidth() + 4).attr("y1", y(nom)).attr("y2", y(nom)).style("stroke", "var(--ink)").style("stroke-dasharray", "4 3").style("stroke-width", 1.5);
+    g.append("text").attr("class", "lab").attr("x", x0(k) + x0.bandwidth()).attr("y", y(nom) - 5).attr("text-anchor", "end").style("fill", "var(--ink)").text("nominal " + d3.format(".1~%")(nom));
+  });
+  qs.forEach(([k, , lab]) => g.append("text").attr("class", "lab-ink").attr("x", x0(k)).attr("y", -10).text(lab));
+  axisL(g, y, { values: [0, 0.025, 0.05, 0.1], fmt: d3.format(".1~%") });
+});
+mount("figLockbox", (el, W) => {
+  const rows = D.lockbox_by_species.slice().sort((a, b) => b.P - a.P);
+  const m = { t: 22, r: 50, b: 30, l: W < 480 ? 130 : 160 }, rowH = 24, h = rowH * rows.length, w = W - m.l - m.r;
+  const svg = svgOf(el, W, h + m.t + m.b), g = svg.append("g").attr("transform", `translate(${m.l},${m.t})`);
+  const x = d3.scaleLinear().domain([0, d3.max(rows, (r) => Math.max(r.P, r.D)) * 1.05]).nice().range([0, w]);
+  const y = d3.scaleBand().domain(rows.map((r) => r.english_name)).range([0, h]);
+  g.append("g").attr("class", "grid").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(5).tickSize(-h).tickFormat("")).call((s) => s.select(".domain").remove());
+  rows.forEach((r) => {
+    const yc = y(r.english_name) + rowH / 2, better = r.D < r.P;
+    g.append("line").attr("x1", x(r.P)).attr("x2", x(r.D)).attr("y1", yc).attr("y2", yc).style("stroke", better ? "var(--kite)" : "var(--muted)").style("stroke-width", 2);
+    g.append("circle").attr("cx", x(r.P)).attr("cy", yc).attr("r", 4.5).style("fill", "var(--prod)");
+    g.append("circle").attr("cx", x(r.D)).attr("cy", yc).attr("r", 4.5).style("fill", "var(--kite)");
+    g.append("text").attr("class", "lab").attr("x", -10).attr("y", yc + 4).attr("text-anchor", "end").style("fill", "var(--ink)").text(r.english_name);
+    g.append("text").attr("class", "lab").attr("x", w + 6).attr("y", yc + 4).style("font-family", "var(--mono)").style("font-size", "11px").text((r.D - r.P > 0 ? "+" : "") + fmt(100 * (r.D - r.P), 1));
+  });
+  axisB(g, x, h, { ticks: 5, fmt: d3.format(".0%") });
+  g.append("text").attr("class", "lab").attr("x", w + 6).attr("y", -8).text("Δ pts");
+  g.append("text").attr("class", "lab-ink").attr("x", 0).attr("y", -8).text("season error, production → D");
+});
+})();
+</script>
