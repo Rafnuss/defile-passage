@@ -36,9 +36,10 @@ defileViz (`src/services/explore.js`, `src/components/explore/`) reads `taxa.jso
 `tier`, and the picker's `taxon_order`, `group`, `season_birds`, `story`, `highlight` from
 `catalogue.py`),
 `effort.json` (`annual`) and `species/<taxon_id>.json`: `trend` (`annual`, `passage_q`, `season`,
-`episodes`, `window`, `theta`, `kappa`, `first_year`, `last_year`, `days`: every window day
+`episodes` (`base`, `weather`, `episode`), `window`, `theta`, `kappa`, `first_year`, `last_year`, `days`: every window day
 gap-filled, drawn by the year panel), `season` (`source`, `share`, `count`, `c`, `passage` with
-`q50_lo`/`q50_hi`, `chances`), `daytime` (`hours` over the main passage beside `expected`, the
+`q50_lo`/`q50_hi`, `chances`), `weather` (`effects` with `class`, `confirmed`, `counted`; `wind`
+with its `rose`), `daytime` (`hours` over the main passage beside `expected`, the
 profile's prediction for the same days and minutes),
 `key_numbers`, `reliability`, `benchmark` (`gap`, `gap_trials`), `records`, `accounts`, `age`,
 `sex`, `window`, `settings.start_year`, `links`, `profile` (`day`: the curve the coverage figure of the method page draws), `annual` and `days`. Only

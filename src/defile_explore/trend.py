@@ -5,14 +5,18 @@ A GAM, benchmarked by `scripts/benchmark_trend.py` (`DECISIONS.md` -> Explore ha
 
     count_day ~ NegBin(mean = c_day * exp(eta), theta)
     eta = a + trend(year) + year_effect(year) + season(doy) + shift(year, doy)
-          + episode_year(doy)
+          + sum_j beta_j weather_j(day) + episode_year(doy)
 
 `c_day` is the day's coverage (`defile_explore.profile.coverage`: the share of the day's expected
 passage in the hours counted), `year_effect` an independent level per year (good and bad years),
 `shift` a smooth change of the season's timing or width over the years, and `episode` a short-range
-curve of its own each year: runs of good or bad migration days, the weather's share, which a
-weather model would one day explain. Without it the shift absorbed them (lengthscales of 3 years by
-6 days), and filled days were treated as independent of their neighbours. The negative binomial is a
+curve of its own each year: runs of good or bad migration days that the day's weather does not
+explain. The weather terms (`defile_explore.weather`: rain, rain the day before, sunshine, thermal
+mixing, wind and its speed, the pressure change and the temperature anomaly, each the profile's
+weighted mean over the day, standardised) are linear with a unit prior (a ridge); without them a
+rained-out day was filled as an average day (`DECISIONS.md`, 2026-10-13). Without the episodes, the
+shift absorbed the runs of days (lengthscales of 3 years by 6 days), and filled days were treated as
+independent of their neighbours. The negative binomial is a
 day's gamma-distributed rate seen through a Poisson count; within the day, passage comes in flocks,
 so the hours not counted are drawn with an hourly over-dispersion `kappa` (`hour_dispersion`,
 `fill_draws`).
@@ -57,11 +61,13 @@ from scipy.interpolate import BSpline
 from scipy.linalg import cho_factor, cho_solve, solve_triangular
 from scipy.special import gammaln
 
+from defile_explore import weather as W
 from defile_explore.export import HOURS, by_hour, in_window
 from defile_explore.profile import PROFILE_DOY, PROFILE_MIN_TIMED, coverage
 from defile_explore.season import chance_from_draws, passage_from_draws
 
 VARIANTS = ("season", "gam")
+WEATHER_COLUMNS = [f"w_{t}" for t in W.TERMS]  # a model frame's standardised weather terms
 # Ranks whose trend is exported: a species, or a group read as everything below it (`members`).
 # A group with nothing below it ("Acrocephalus sp.") trends with how hard observers try to
 # identify it, not with the birds.
@@ -92,7 +98,9 @@ KAPPA_BOUNDS = (0.01, 1e4)  # hourly over-dispersion, per full day of coverage; 
 # slow morning), so neighbouring hours are not independent and `kappa` falls from single hours to
 # blocks of 3-4 hours, then levels off (Honey Buzzard 4.7 -> 2.6). Gaps are blocks of hours too.
 KAPPA_BLOCK = 4
-SMOOTH = ("year", "episode")  # left out of the smooth trend, season curves and passage dates
+# left out of the smooth trend, season curves and passage dates (weather at its mean: zero)
+SMOOTH = ("year", "episode", "weather")
+WEATHER_PRECISION = 1.0  # prior precision of a weather coefficient (terms standardised): a ridge
 
 # Below this coverage a day says nothing about its rate (75 Black Kites in 11 minutes on
 # 2025-07-27, c = 0.0004, would be a 190 000-bird day): it is neither fitted nor conditioned on,
@@ -230,6 +238,8 @@ class Design:
 
     def block_precision(self, b: Block, h: dict) -> np.ndarray:
         """Prior precision of one group of the block's columns."""
+        if b.name == "weather":
+            return WEATHER_PRECISION * np.eye(b.size)
         return sum((np.exp(h[n]) * S for n, S in b.penalties), RIDGE * np.eye(b.size))
 
     def prior(self, h: dict) -> Prior:
@@ -251,9 +261,18 @@ class Design:
         )
 
 
-def design(variant: str, years: np.ndarray, doy_range: tuple[int, int]) -> Design:
+def design(
+    variant: str,
+    years: np.ndarray,
+    doy_range: tuple[int, int],
+    weather: pd.DataFrame | None = None,
+) -> Design:
     """The bases and penalties of a variant over `years` (all of them, including years without
     data, whose coefficients then stay at their prior) and the window's days of year.
+
+    `weather` (the `gam` only): standardised daily terms indexed by (year, doy), a linear `weather`
+    block with a unit prior, before the episodes; a day not in it is at its mean weather (zero), as
+    the smooth curves are.
 
     Every smooth sums to zero over its grid (`sum_to_zero`), so each level has one owner: the
     intercept, then `year` for a year's level (`episode` has zero mean over each season), and the
@@ -300,6 +319,15 @@ def design(variant: str, years: np.ndarray, doy_range: tuple[int, int]) -> Desig
             lambda y, d: np.eye(n_years)[np.clip(y - y0, 0, n_years - 1)],
             [("year", np.eye(n_years))],
         )
+        if weather is not None:
+            table = weather.sort_index()
+            add(
+                "weather",
+                lambda y, d: table.reindex(pd.MultiIndex.from_arrays([y, d]))
+                .fillna(0.0)
+                .to_numpy(),
+                [],
+            )
         episode, Se = centred(d0, d1, GAM_EPISODE_K, doy_grid, order=1)
         add(
             "episode",
@@ -598,6 +626,25 @@ def _efs(d: Design, X, offset, y, hyper: dict, beta, theta_ml: bool):
     return hyper, beta
 
 
+def weather_table(frame: pd.DataFrame) -> pd.DataFrame | None:
+    """The frame's standardised weather terms (`with_weather`) by (year, doy); None without."""
+    if WEATHER_COLUMNS[0] not in frame:
+        return None
+    t = frame.set_index(["year", "doy"])[WEATHER_COLUMNS]
+    return t.set_axis(W.TERMS, axis=1)
+
+
+def with_weather(frame: pd.DataFrame, weather: pd.DataFrame, profile: np.ndarray):
+    """`frame` with each day's weather terms standardised on its counted days (`WEATHER_COLUMNS`),
+    the terms in their own units, and their scale (`weather.daily_terms`,
+    `weather.standardise`)."""
+    raw = W.daily_terms(frame["date"], frame["doy"].to_numpy(), profile, weather)
+    assert np.isfinite(raw.to_numpy()).all(), "weather missing for a modelled day"
+    terms, sd = W.standardise(raw, frame["c"].to_numpy() > 0)
+    frame = frame.assign(**{c: terms[t].to_numpy() for c, t in zip(WEATHER_COLUMNS, W.TERMS)})
+    return frame, raw, sd
+
+
 def fit(variant: str, frame: pd.DataFrame, years: np.ndarray, doy_range, hyper=None) -> Fit:
     """Fit a variant to the observed rows of `frame` (`c > 0`), over the year range `years`.
 
@@ -610,7 +657,7 @@ def fit(variant: str, frame: pd.DataFrame, years: np.ndarray, doy_range, hyper=N
     maximum of the Laplace marginal likelihood. With `hyper` given, only the posterior mode is
     found: how the benchmark refits a year with part of it hidden.
     """
-    d = design(variant, years, doy_range)
+    d = design(variant, years, doy_range, weather_table(frame) if variant == "gam" else None)
     obs = frame[frame["c"] > 0]
     g = d.grouped
     X = Matrix(
@@ -792,20 +839,23 @@ def season_curve(f: Fit, year: int, n: int = 400, seed: int = 0) -> pd.DataFrame
 
 
 def episode_curves(f: Fit, years: np.ndarray) -> dict:
-    """Each year's season with and without its weather episodes, at the posterior mode: `base`,
+    """Each year's season with and without its day-to-day terms, at the posterior mode: `base`,
 
-    expected birds per full day without the episodes (trend, year level, season and shift), and
-    `episode`, the episodes' log multiplier, so that `base * exp(episode)` is the full fit.
+    expected birds per full day without them (trend, year level, season and shift), `weather`, the
+    day's weather as a log multiplier, and `episode`, the episodes' log multiplier, so that `base *
+    exp(weather + episode)` is the full fit.
     """
     doy = np.arange(f.design.doy_range[0], f.design.doy_range[1] + 1)
-    base, episode = {}, {}
+    base, weather, episode = {}, {}, {}
     for yr in years:
         yd = (np.full(len(doy), yr), doy)
         full = eta_draws(f, *yd, f.beta[None])[0]
-        without = eta_draws(f, *yd, f.beta[None], without=("episode",))[0]
+        no_episode = eta_draws(f, *yd, f.beta[None], without=("episode",))[0]
+        without = eta_draws(f, *yd, f.beta[None], without=("episode", "weather"))[0]
         base[str(yr)] = np.round(np.exp(without), 1)
-        episode[str(yr)] = np.round(full - without, 3)
-    return {"doy": doy, "base": base, "episode": episode}
+        weather[str(yr)] = np.round(no_episode - without, 3)
+        episode[str(yr)] = np.round(full - no_episode, 3)
+    return {"doy": doy, "base": base, "weather": weather, "episode": episode}
 
 
 def peak_doy(f: Fit, years: np.ndarray, n: int = 400, seed: int = 0) -> pd.DataFrame:
@@ -887,6 +937,7 @@ def taxon_trend(
     variant: str = "gam",
     seed: int = 0,
     window: tuple[int, int] | None = None,
+    weather: pd.DataFrame | None = None,
 ) -> dict:
     """One taxon's trend for `species/<taxon_id>.json`, `first_year`..`last_year` (complete seasons
     from its start year), over `window` (season days; the default window if None).
@@ -901,14 +952,32 @@ def taxon_trend(
     gap-filled full-day total (`filled_days`), from the same draws as `annual`. `season_fill`: the
     same series for the season block (`season.season_block`): each day's mean, every year's passage
     dates over the draws (`season.passage_from_draws`) and the chances
-    (`season.chance_from_draws`); not exported as such.
+    (`season.chance_from_draws`); not exported as such. `weather`: with the hourly weather
+    (`weather.hourly`), the `gam` has daily weather terms (`with_weather`), refitted on odd and on
+    even years alone for the `weather` block (`weather.weather_block`); None without.
     """
     c = coverage(effort, profile)
     frame = model_frame(days, effort, c, first_year, last_year, window)
     years = np.arange(first_year, last_year + 1)
     doy_range = (int(frame["doy"].min()), int(frame["doy"].max()))
     kappa = hour_dispersion(days, hourly, effort, profile)
+    block = None
+    if weather is not None and variant == "gam":
+        frame, raw, sd = with_weather(frame, weather, profile)
     f = fit(variant, frame, years, doy_range)
+    if weather is not None and variant == "gam":
+        halves = {
+            half: fit(
+                variant,
+                frame.assign(
+                    **{k: frame[k].where(frame["year"] % 2 == r, 0.0) for k in ("c", "y", "extra")}
+                ),
+                years,
+                doy_range,
+            )
+            for half, r in (("odd", 1), ("even", 0))
+        }
+        block = W.weather_block({"all": f, **halves}, frame, raw, sd, seed=seed)
     totals = fill_draws(f, frame, 1.0, seed=seed, kappa=kappa)
     a = annual_totals(f, frame, seed=seed, kappa=kappa, totals=totals)
     a = a.drop(columns=["total"]).rename(columns={"q50": "total"})
@@ -930,6 +999,7 @@ def taxon_trend(
         "season": {"doy": np.arange(doy_range[0], doy_range[1] + 1), **curves},
         "episodes": episode_curves(f, years) if variant == "gam" else None,
         "days": filled_days(frame, totals, c.set_axis(effort["date"])),
+        "weather": block,
         "season_fill": {
             "days": frame[["year", "doy"]].assign(total=totals.mean(axis=0)),
             "passage": passage_from_draws(frame, totals),

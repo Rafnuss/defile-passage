@@ -34,6 +34,7 @@ from defile_explore import pipeline as L
 from defile_explore import release as R
 from defile_explore import settings as X
 from defile_explore import trend as T
+from defile_explore import weather as H
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # What the export is made from: a change here marks it built from uncommitted code (the viewer and
@@ -99,6 +100,9 @@ def main(argv=None) -> int:
         urllib.request.urlretrieve(E.EBIRD_TAXONOMY_URL, names_path)
         print(f"Downloaded the eBird taxonomy (French names) to {names_path}")
     ebird = pd.read_csv(names_path)
+    fetched = H.fetch(args.data_dir, pd.Timestamp.now().year)
+    if fetched:
+        print(f"Downloaded the ERA5 weather of {', '.join(map(str, fetched))}")
 
     shared = L.load_shared(args.data_dir, ebird, use_cache=not args.no_cache)
     print(f"Shared stage ready in {time.time() - t0:.0f} s (cache key {shared.key})")

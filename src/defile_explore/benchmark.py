@@ -262,8 +262,10 @@ def taxon_benchmark(
     first_year: int,
     last_year: int,
     window: tuple[int, int] | None = None,
+    weather: pd.DataFrame | None = None,
 ) -> dict:
-    """Both tests on the GAM as exported (same years, window, profile): the `benchmark` block.
+    """Both tests on the GAM as exported (same years, window, profile, weather terms): the
+    `benchmark` block.
 
     `gap`: test 1's scores of the GAM and, as `gap_ratio`, of the ratio estimator, with the median
     share of the target years' coverage hidden; `gap_trials`: one row per trial (target, donor,
@@ -278,6 +280,8 @@ def taxon_benchmark(
         "profile": profile,
     }
     frame = T.model_frame(days, effort, P.coverage(effort, profile), first_year, last_year, window)
+    if weather is not None:
+        frame = T.with_weather(frame, weather, profile)[0]
     years = np.arange(first_year, last_year + 1)
     doy_range = (int(frame["doy"].min()), int(frame["doy"].max()))
     kappa = T.hour_dispersion(days, hourly, effort, profile)

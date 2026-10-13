@@ -27,7 +27,8 @@ Files, written by `scripts/build_explore.py` (one `build_*` function each):
   effort-adjusted index; the time-of-day profile used; and for
   full-tier taxa with a trend, `trend` (`defile_explore.trend.taxon_trend`): gap-filled
   annual totals with intervals, the smooth trend, the median passage date per year, the smooth
-  season in the first and last year, and each year's season with and without its weather episodes.
+  season in the first and last year, and each year's season without its day-to-day terms, with its weather
+  and its episodes (`episode_curves`).
   `defile_explore.pipeline.build_taxon` adds the blocks derived from the same data and fit
   (`settings`, `window`, `links`, `key_numbers`, `season`, `daytime`, `age`, `sex`, `records`,
   `accounts`, `benchmark`, `reliability`, `diagnostics`); each of those modules documents its block.
@@ -487,10 +488,10 @@ def add_rollups(
 
     `members` (taxon ids, the group first) in `taxonomy` for a group, None otherwise (a species
     with subspecies below it is always one), `own_days` and `own_birds` (the taxon's own records,
-    before the sums), and `rollup_excluded` for a group that is alone or
-    dominated by one taxon (`ROLLUP_MIN_BELOW`, `ROLLUP_MAX_BELOW`, `ROLLUP_MAX_SHARE`: share of
-    all birds counted under it), whose own series is left as it was. Sums of all taxa no longer
-    reconcile with `count.csv`, so the reconciliation uses the release taxa.
+    before the sums), and `rollup_excluded` for a group that is alone or dominated by one taxon
+    (`ROLLUP_MIN_BELOW`, `ROLLUP_MAX_BELOW`, `ROLLUP_MAX_SHARE`: share of all birds counted under
+    it), whose own series is left as it was. Sums of all taxa no longer reconcile with `count.csv`,
+    so the reconciliation uses the release taxa.
     """
     if "parent_taxon_id" not in taxonomy:
         raise SystemExit(

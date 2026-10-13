@@ -8,7 +8,8 @@ file:
 the raw tables as before (`days`,
 `hourly`, `annual`, `profile`), `trend` (the GAM, cached per taxon), and the blocks
 derived from the same data and fit: `season`, `daytime`, `age`, `sex`, `records`,
-`key_numbers`, the written `accounts`, the trend's `benchmark` (cached like the trend) and
+`key_numbers`, the written `accounts`, `weather` (the trend's weather terms, `defile_explore.weather`),
+the trend's `benchmark` (cached like the trend) and
 `reliability`, with the taxon's `settings`, `window`, `links` and
 `diagnostics`. The trend is fitted
 on the taxon's model window, the season panels show its view window (`defile_explore.window`).
@@ -39,6 +40,7 @@ from defile_explore import season as S
 from defile_explore import settings as X
 from defile_explore import timeofday
 from defile_explore import trend as T
+from defile_explore import weather as H
 from defile_explore import window as W
 
 CACHE_DIR = os.path.join("cache")  # under the data dir
@@ -56,13 +58,15 @@ def _source_hash(*modules) -> str:
 
 
 def release_key(data_dir: str) -> str:
-    """The release (file names, sizes, modification times) and the code of the shared stage."""
+    """The release (file names, sizes, modification times), the weather files and the code of the
+    shared stage."""
     folder = os.path.join(data_dir, R.DATASET_DIR)
     h = hashlib.sha1()
     for f in sorted(os.listdir(folder)):
         st = os.stat(os.path.join(folder, f))
         h.update(f"{f}:{st.st_size}:{st.st_mtime_ns}".encode())
-    h.update(_source_hash(R, E, P, M, timeofday).encode())
+    h.update(H.files_key(data_dir).encode())
+    h.update(_source_hash(R, E, P, M, timeofday, H).encode())
     return h.hexdigest()[:12]
 
 
@@ -80,6 +84,7 @@ class Shared:
     demography: pd.DataFrame
     remarks: pd.DataFrame
     last_year: int
+    weather: pd.DataFrame  # hourly terms (`weather.hourly`) over the profile's season
 
 
 def load_shared(data_dir: str, ebird: pd.DataFrame, use_cache: bool = True) -> Shared:
@@ -115,6 +120,7 @@ def load_shared(data_dir: str, ebird: pd.DataFrame, use_cache: bool = True) -> S
         demography=demo.astype({"age": "string", "sex": "string"}),
         remarks=M.day_remarks(surveys, counts),
         last_year=int(days["date"].max().year) - len(E.partial_years(days)),
+        weather=H.hourly(data_dir),
     )
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as f:
@@ -162,6 +168,7 @@ def taxon_jobs(
             ],
             "overrides": overrides,
             "last_year": shared.last_year,
+            "weather": shared.weather,
             "cache": os.path.join(data_dir, CACHE_DIR) if use_cache else None,
             "benchmark": benchmark,
             "shared_key": shared.key,
@@ -210,9 +217,10 @@ def trend_block(job: dict, start: int, window: tuple[int, int]) -> dict:
             first_year=start,
             last_year=job["last_year"],
             window=window,
+            weather=job["weather"],
         )
         return {
-            "method": "trend-gam@1",
+            "method": "trend-gam@2",
             "model": t["model"],
             "first_year": t["first_year"],
             "last_year": t["last_year"],
@@ -226,10 +234,11 @@ def trend_block(job: dict, start: int, window: tuple[int, int]) -> dict:
             "episodes": t["episodes"],
             "days": E.columns(t["days"]),
             "season_fill": t["season_fill"],  # for the season block, popped before export
+            "weather": t["weather"],  # the `weather` block, popped before export
         }
 
     # `taxon_trend` summarises its draws for the season block with `season`'s code
-    return cached(job, "trend", trend_key(job, start, window, S), compute)
+    return cached(job, "trend", trend_key(job, start, window, S, H), compute)
 
 
 def benchmark_block(job: dict, start: int, window: tuple[int, int]) -> dict:
@@ -244,9 +253,10 @@ def benchmark_block(job: dict, start: int, window: tuple[int, int]) -> dict:
             first_year=start,
             last_year=job["last_year"],
             window=window,
+            weather=job["weather"],
         )
 
-    return cached(job, "benchmark", trend_key(job, start, window, B), compute)
+    return cached(job, "benchmark", trend_key(job, start, window, B, H), compute)
 
 
 # --- derived blocks ---------------------------------------------------------------------------
@@ -411,6 +421,7 @@ def build_taxon(job: dict) -> tuple[str, dict]:
     trend = trend_block(job, start, model_w) if settings["trend"].value else None
     bench = benchmark_block(job, start, model_w) if trend and job["benchmark"] else None
     fill = trend.pop("season_fill") if trend else None
+    weather = trend.pop("weather") if trend else None
     reliability = Q.reliability_block(trend, bench, window, job["profile_source"])
     frame = season_frame[season_frame["doy"].between(*view_w)]
     season = S.season_block(frame, last, model_w, fill if Q.fills_season(reliability) else None)
@@ -441,6 +452,7 @@ def build_taxon(job: dict) -> tuple[str, dict]:
         "reliability": reliability,
         "season": season,
         "daytime": daytime,
+        "weather": weather,
         "age": age,
         "sex": sex,
         "records": records,

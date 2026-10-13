@@ -22,6 +22,13 @@ A field in `NO_CAVEAT` is hidden rather than caveated: lines drawn over the coun
 has no room and a doubtful line reads as a finding. A field in `COUNTS_FALLBACK` (the season block,
 from the trend's gap-filled days) is built from the counts instead where its claim is hidden
 (`fills_season`), and then shown.
+The `weather` block's effects (`weather.weather_block`) are classed here too (`weather_class`,
+`wind_class`): `show` when clear on all years (the 95% interval excludes no effect and the effect
+is at least `WEATHER_MIN_EFFECT` for its contrast) and the same way on odd and on even years alone;
+`caveat` when clear but a half points the other way; `hide` otherwise, and for a side of the wind
+rose with fewer than `WEATHER_MIN_DAYS` counted days; `confirmed` when each half is clear on its own.
+The wind is shown when a side of its rose is, with a caveat when the halves' preferred directions
+are more than `WEATHER_MAX_ANGLE` apart.
 Fields not listed (the birds counted, the daytime, age and sex, the records) are counts, shown
 whatever the trend's classes.
 `estimated_years` lists the years mostly filled (`ESTIMATED_SHARE`): a page can mark them. The
@@ -45,6 +52,9 @@ SMOOTH_BAND = (4.0, 20.0)  # median q97.5 / q2.5 of the smooth total: caveat, hi
 PASSAGE_BAND = (10.0, 30.0)  # median width of the passage date's 80% band, days: caveat, hide
 SEASON_BIRDS = 50  # median birds counted per season, below which the dates are a caveat
 ESTIMATED_SHARE = 0.5  # a year with less than this share counted is mostly an estimate
+WEATHER_MIN_EFFECT = 0.10  # x1.10 or x0.91 at least, for its contrast
+WEATHER_MIN_DAYS = 20  # counted days with wind from a side of the rose
+WEATHER_MAX_ANGLE = 60.0  # degrees between the halves' preferred wind directions
 ELEMENTS = {  # field of the species file: the claim it rests on
     "trend.annual.total": "totals",  # the gap-filled season totals, with q10/q90
     "trend.days.total": "totals",  # each counted day's gap-filled total, with q10/q90
@@ -170,3 +180,29 @@ def reliability_block(trend: dict | None, bench, window: dict, profile: str) -> 
         "estimated_years": [int(y) for y in a.loc[a["observed_share"] < ESTIMATED_SHARE, "year"]],
         "inputs": x,
     }
+
+
+def weather_class(log_all, log_odd, log_even, days: int | None = None) -> dict:
+    """A weather effect's class from posterior draws of its log effect on all years and on odd and
+    even years alone, and whether each half confirms it (module docstring)."""
+    lo, mid, hi = np.quantile(log_all, [0.025, 0.5, 0.975])
+    clear = (lo > 0 or hi < 0) and abs(mid) >= np.log1p(WEATHER_MIN_EFFECT)
+    if days is not None and days < WEATHER_MIN_DAYS:
+        clear = False
+    halves = [np.quantile(h, [0.025, 0.5, 0.975]) for h in (log_odd, log_even)]
+    same = all(np.sign(q[1]) == np.sign(mid) for q in halves)
+    confirmed = clear and all((q[0] > 0) if mid > 0 else (q[2] < 0) for q in halves)
+    cls = "hide" if not clear else "show" if same else "caveat"
+    return {"class": cls, "confirmed": bool(confirmed)}
+
+
+def wind_class(origin: float, odd: float, even: float, rose: list[dict]) -> dict:
+    """The wind's class: its rose's best side's, with a caveat when the halves' preferred
+    directions disagree; confirmed when a side shown is."""
+    classes = [side["class"] for side in rose]
+    cls = next((c for c in CLASSES if c in classes), "hide")
+    apart = abs((odd - even + 180) % 360 - 180)
+    if cls == "show" and apart > WEATHER_MAX_ANGLE:
+        cls = "caveat"
+    confirmed = any(side["confirmed"] and side["class"] == "show" for side in rose)
+    return {"class": cls, "confirmed": bool(cls != "hide" and confirmed)}

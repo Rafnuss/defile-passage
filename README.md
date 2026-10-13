@@ -111,21 +111,22 @@ flowchart TD
   A --> N["Age and sex<br/>a branch of its own"]
 ```
 
-| #   | Step                                                                                           | Module                 | For                          |
-| --- | ---------------------------------------------------------------------------------------------- | ---------------------- | ---------------------------- |
-| 1   | Read the counts and the surveys (who counted when), per day and per hour                       | `release`, `export`    | all                          |
-| 2   | Start year (counted in full from) and season window (widened if still passing at its edges)    | `settings`, `window`   | all                          |
-| 3   | Time-of-day profile p(t): a GAM over date and civil dawn-to-dusk time, on the hourly counts    | `profile`              | all (group's if few timed)   |
-| 4   | Coverage c: each counted day's share of p(t) in the minutes counted                            | `profile`              | all                          |
-| 5   | Birds per full day, count / c (only when c >= 0.5); also used to choose the window (2)         | `profile`, `season`    | all; on the page only via 10 |
-| 6   | Trend GAM: trend, year levels, season, timing shift, episodes; count ~ c x exp(...)            | `trend`                | with a trend (74 of 275)     |
-| 7   | Gap filling: 1000 draws of the birds missed, every window day gets a full-day value            | `trend`                | with a trend                 |
-| 8   | Benchmark: recent seasons given older seasons' gaps, refilled, compared with what was counted  | `benchmark`            | with a trend                 |
-| 9   | Reliability: totals, trend and season each `show`, `caveat` or `hide`                          | `reliability`          | with a trend                 |
-| 10  | Season panels, passage dates, chances: from 7, or from 5 without a trend or with totals hidden | `season`               | all (one source per species) |
-| 11  | Through the day: hours counted against the profile's prediction, over the main passage         | `daytime`              | all                          |
-| 12  | Key numbers, records, accounts                                                                 | `pipeline`, `accounts` | all                          |
-| -   | Age and sex: shares among the birds classed                                                    | `demography`           | where enough birds classed   |
+| #   | Step                                                                                               | Module                 | For                          |
+| --- | -------------------------------------------------------------------------------------------------- | ---------------------- | ---------------------------- |
+| 1   | Read the counts and the surveys (who counted when), per day and per hour                           | `release`, `export`    | all                          |
+| 2   | Start year (counted in full from) and season window (widened if still passing at its edges)        | `settings`, `window`   | all                          |
+| 3   | Time-of-day profile p(t): a GAM over date and civil dawn-to-dusk time, on the hourly counts        | `profile`              | all (group's if few timed)   |
+| 4   | Coverage c: each counted day's share of p(t) in the minutes counted                                | `profile`              | all                          |
+| 5   | Birds per full day, count / c (only when c >= 0.5); also used to choose the window (2)             | `profile`, `season`    | all; on the page only via 10 |
+| 6   | Trend GAM: trend, year levels, season, timing shift, daily weather, episodes; count ~ c x exp(...) | `trend`, `weather`     | with a trend (96 of 273)     |
+| 7   | Gap filling: 1000 draws of the birds missed, every window day gets a full-day value                | `trend`                | with a trend                 |
+| 8   | Benchmark: recent seasons given older seasons' gaps, refilled, compared with what was counted      | `benchmark`            | with a trend                 |
+| 9   | Reliability: totals, trend and season each `show`, `caveat` or `hide`                              | `reliability`          | with a trend                 |
+| 10  | Season panels, passage dates, chances: from 7, or from 5 without a trend or with totals hidden     | `season`               | all (one source per species) |
+| 11  | Through the day: hours counted against the profile's prediction, over the main passage             | `daytime`              | all                          |
+| 11b | Weather: each term's effect (shown when clear and the same in odd and even years), wind rose       | `weather`              | with a trend                 |
+| 12  | Key numbers, records, accounts                                                                     | `pipeline`, `accounts` | all                          |
+| -   | Age and sex: shares among the birds classed                                                        | `demography`           | where enough birds classed   |
 
 defileViz's "How it's made" pages follow the same order: the counts (1-2), time of day and
 coverage (3-5), the trend model (6-7), how reliable (8-9), what the page shows (10-12), age and
@@ -159,7 +160,9 @@ src/defile_explore/
   export.py      raw aggregation: daily totals, effort, taxa -> JSON
   timeofday.py   the time-of-day GAM
   profile.py     effort adjustment: time-of-day profile, coverage, annual index
-  trend.py       the trend GAM: smooth trend, season, timing shift, gap-filled totals
+  trend.py       the trend GAM: smooth trend, season, timing shift, weather, gap-filled totals
+  weather.py     hourly ERA5 at the site (Open-Meteo archive, data/weather/), daily weather terms,
+                 the weather block
   pipeline.py    the build: a cached shared stage, then build_taxon (all blocks of one taxon)
   settings.py    per-taxon settings by rule; overrides.yaml holds the exceptions, with reasons
   season.py      the season day by day (gap-filled by the trend, else from the counts)

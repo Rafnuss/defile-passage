@@ -554,6 +554,59 @@ def daytime_panel(sp: dict) -> str:
                  strip=strip(sp, counts="by date" if ch["show"] else "one histogram"))  # fmt: skip
 
 
+WEATHER_LABELS = {  # term: how the contrast reads (`weather.CONTRASTS`)
+    "rain": "rain, 1 mm/h all day",
+    "rain_yesterday": "rain the day before",
+    "sunshine": "sunny vs overcast",
+    "boundary_layer": "mixing 500 m deeper",
+    "pressure_change": "pressure +5 hPa in 24 h",
+    "temperature_anomaly": "3 °C colder than usual",
+}
+WEATHER_COLOURS = {"show": "#1e6b34", "caveat": "#8a5300", "hide": "#bbbbbb"}
+
+
+def weather_panel(sp: dict) -> str:
+    w = sp.get("weather")
+    if not w:
+        return "<p class='note'>No weather block.</p>"
+    fig = make_subplots(rows=1, cols=2, column_widths=[0.6, 0.4], horizontal_spacing=0.12,
+                        specs=[[{"type": "xy"}, {"type": "polar"}]],
+                        subplot_titles=("effect for its contrast (95%)",
+                                        f"{w['wind']['speed']:g} m/s from each side, against calm"))  # fmt: skip
+    effects = w["effects"][::-1]
+    labels = [WEATHER_LABELS[e["term"]] + (" ✓" if e["confirmed"] else "") for e in effects]
+    fig.add_trace(go.Scatter(
+        x=[e["effect"] for e in effects], y=labels, mode="markers",
+        marker=dict(size=9, color=[WEATHER_COLOURS[e["class"]] for e in effects]),
+        error_x=dict(type="data", symmetric=False, array=[e["hi"] - e["effect"] for e in effects],
+                     arrayminus=[e["effect"] - e["lo"] for e in effects], color="#999"),
+        customdata=[[e["class"], " · ".join(f"{b['bin']} {b['relative']:.2f} ({b['days']} d)"
+                                            for b in e["bins"])] for e in effects],
+        hovertemplate="x%{x:.2f}, %{customdata[0]}<br>counted days: %{customdata[1]}<extra></extra>",
+        showlegend=False), 1, 1)  # fmt: skip
+    fig.add_vline(x=1, line_color="#888", line_dash="dot", row=1, col=1)
+    fig.update_xaxes(type="log", range=[np.log10(0.2), np.log10(5)], row=1, col=1)
+    rose = w["wind"]["rose"]
+    fig.add_trace(go.Barpolar(
+        theta=[r["from"] for r in rose], r=[np.log(r["effect"]) / np.log(4) + 1 for r in rose],
+        marker_color=[WEATHER_COLOURS[r["class"]] for r in rose],
+        customdata=[[r["effect"], r["days"], r["class"]] for r in rose],
+        hovertemplate="from %{theta}: x%{customdata[0]:.2f}, %{customdata[1]} days, "
+                      "%{customdata[2]}<extra></extra>", showlegend=False), 1, 2)  # fmt: skip
+    fig.update_layout(height=FIG_H, polar=dict(radialaxis=dict(range=[0, 2], tickvals=[0, 1, 2],
+                      ticktext=["x1/4", "x1", "x4"]), angularaxis=dict(direction="clockwise",
+                      rotation=90)))  # fmt: skip
+    fig.update_annotations(yshift=6, font_size=12)
+    wind = w["wind"]
+    return panel(fig, "Weather: the day's passage against its weather" + method(w),
+                 "Each term's effect on the day's expected passage, all else equal at the same date "
+                 "(green: shown, brown: caveat, grey: hidden; ✓ confirmed in odd and even years "
+                 "alone). Hover: the counted days in classes of the term, birds over the usual for "
+                 f"the date as a share of the average counted day. Wind: {badge(wind['class'])} "
+                 f"preferred from {wind['origin']:.0f}°" + (" (confirmed)" if wind["confirmed"] else "")
+                 + "; a side with fewer than 20 counted days is hidden.", top=75)  # fmt: skip
+
+
 DEMOGRAPHY = {  # field: (what is plotted, its class labels, verb)
     "age": ("non-adult share", ("non-adult", "adult"), "aged"),
     "sex": ("male share", ("male", "female-type"), "sexed"),
@@ -688,13 +741,14 @@ def profile_panel(sp: dict) -> str:
 
 
 def components_panel(sp: dict) -> str:
-    """The fitted season in the first and last year, and each year's expectation with and without
-    its episodes over the counted birds per full day (one year at a time)."""
+    """The fitted season in the first and last year, and each year's expectation without its day-
+    to-day terms, with the weather, and with the episodes too, over the counted birds per full day
+    (one year at a time)."""
     t = sp["trend"]
     s, e = t["season"], t["episodes"]
     fig = make_subplots(rows=1, cols=2, column_widths=[0.35, 0.65], horizontal_spacing=0.08,
                         subplot_titles=("season: first and last year (share per day)",
-                                        "one year: expected, with and without episodes"))  # fmt: skip
+                                        "one year: expected, with and without weather and episodes"))  # fmt: skip
     for i, y in enumerate(k for k in s if k != "doy"):
         v = arr(s[y])
         fig.add_trace(go.Scatter(x=s["doy"], y=v / np.nansum(v), name=y, mode="lines",
@@ -736,13 +790,18 @@ def components_panel(sp: dict) -> str:
         fig.add_trace(go.Scatter(x=e["doy"], y=e["base"][y], mode="lines", visible=vis,
                                  name="without episodes",
                                  line=dict(color="#555", dash="dash")), 1, 2)  # fmt: skip
-        with_ep = arr(e["base"][y]) * np.exp(arr(e["episode"][y]))  # `episode` is on the log scale
+        # `weather` and `episode` are log multipliers
+        with_wx = arr(e["base"][y]) * np.exp(arr(e["weather"][y]))
+        fig.add_trace(go.Scatter(x=e["doy"], y=with_wx, mode="lines", visible=vis,
+                                 name="with the weather", line=dict(color="#17becf")), 1, 2)  # fmt: skip
+        with_ep = with_wx * np.exp(arr(e["episode"][y]))
         fig.add_trace(go.Scatter(x=e["doy"], y=with_ep, mode="lines", visible=vis,
-                                 name="with episodes", line=dict(color="#e66c00")), 1, 2)  # fmt: skip
+                                 name="with weather and episodes", line=dict(color="#e66c00")),
+                      1, 2)  # fmt: skip
     n = len(fig.data)
     buttons = []
     for k, y in enumerate(years):
-        vis = [True] * first + [first + 4 * k <= j < first + 4 * k + 4 for j in range(first, n)]
+        vis = [True] * first + [first + 5 * k <= j < first + 5 * k + 5 for j in range(first, n)]
         buttons.append(dict(label=y, method="update", args=[{"visible": vis}]))
     fig.update_layout(height=FIG_H + 20, legend=dict(orientation="h", y=-0.15),
                       updatemenus=[dict(buttons=buttons, active=len(years) - 1, x=1, y=1.18,
@@ -754,8 +813,8 @@ def components_panel(sp: dict) -> str:
     return panel(fig, f"Model components (θ = {t['theta']:.2f}, κ = {t['kappa']:.1f})",
                  "Left: the smooth season (with its change of timing) of the first and last "
                  "year, each summing to 1. Right: a year's expected birds per full day without "
-                 "(trend, year level, season, shift) and with its weather episodes, over the "
-                 "counted birds / c (days with c ≥ 0.5) and each counted day's gap-filled total "
+                 "(trend, year level, season, shift), with the day's weather and with the episodes too, "
+                 "over the counted birds / c (days with c ≥ 0.5) and each counted day's gap-filled total "
                  "(blue, any c: the count plus the hours not counted, drawn from the model). θ: "
                  "day-to-day over-dispersion; κ: hour-to-hour (flocks).", top=75,
                  strip=strip(sp, ["trend.days.total"], counts="counted / c"))  # fmt: skip
@@ -834,7 +893,7 @@ tier {tx['tier']} · from {tx['start_year']}</small></h2>
 <h3 id="counts">2. Counts and effort</h3>{effort_panel(sp, effort_annual)}
 <h3 id="daytime">3. Time of day and coverage</h3>{profile_panel(sp)}{daytime_panel(sp)}
 <h3 id="season">4. Season day by day</h3>{season_panel(sp)}{chances_panel(sp)}
-<h3 id="trend">5. Trend model</h3>{trend_panel(sp, effort_annual) + components_panel(sp) if sp['trend'] else no_trend}
+<h3 id="trend">5. Trend model</h3>{trend_panel(sp, effort_annual) + components_panel(sp) + weather_panel(sp) if sp['trend'] else no_trend}
 <h3 id="validation">6. Validation</h3>{reliability_panel(sp) + benchmark_panel(sp) if sp['trend'] else no_trend}
 <h3 id="derived">7. Derived blocks</h3>{key_numbers(sp)}
 {demography_panel(sp, "age") + demography_panel(sp, "sex") or "<p class='note'>Age and sex: not enough birds aged or sexed.</p>"}

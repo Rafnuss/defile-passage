@@ -71,17 +71,13 @@ review. Open:
 
 ## Phase 4: weather
 
-The prototype binned days of the main passage by one weather variable (12 variables: tailwind
-and crosswind, wind speed, rain on the day and the day before, cloud, low cloud, temperature
-anomaly and change, pressure change, sunshine, upstream tailwind) and showed birds relative to
-the GAM's expectation without weather episodes, with a keep flag (best and worst bins' 95%
-intervals apart). Hard to read, and the keep rule passes too much for rare taxa.
+Active: a hierarchical model, production's daily structure with daily weather and a daily process, then an intra-day level with hourly weather ([scripts/hierarchical/](scripts/hierarchical/README.md)). The paragraphs below describe the hourly-rate research it follows.
 
-- Design first: the binned ratio vs. weather terms in the GAM; which 6-10 variables; a keep rule
-  with a minimum effect and a minimum number of birds; a simple "good day / bad day" summary.
-- The baseline is already exported: `trend.episodes.base` (expected birds without episodes).
-- Weather data: Explore needs daily ERA5 at Défilé (and one upstream site). Getting it is a
-  decision of its own, since nothing is shared with the forecast's weather cache.
+Weather gap-fill experimentation is paused. The [consolidated decision](scripts/research/MODEL_SPECIFICATION.md) retains one small hourly radiation/cloud research candidate; the original model remains production because historical dry and season-total errors are lower. No further fitting, station comparison or variable search is scheduled.
+
+Open scientific requirements before any future production reconsideration are historical reconstruction accuracy, severe-rain validation, historical partial-day conditioning, a calibrated joint predictive distribution and independent confirmation. Their evidence and limits are tracked against the original five goals in [GAP_FILL_PLAN.md](scripts/research/GAP_FILL_PLAN.md). These requirements are not an active experimental queue.
+
+The separate product question of how to present weather effects on Explore remains open. The existing `trend.episodes.base` export is available for descriptive comparisons; no weather presentation or export-contract change is implemented by the research consolidation.
 
 ## Publishing
 
