@@ -3,7 +3,9 @@ the real release when it is present in `data/count/dataset/`: the export must re
 `count.csv`, and with the dataset's own daily totals when its interim build sits next to this
 repo."""
 
+import json
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -282,7 +284,14 @@ def test_real_release_reconciles():
     assert d["local"].sum() == expected.get("local", 0)
     normal = counts["count_category"] == C.MAIN_CATEGORY
     assert E.hourly_counts(counts)["count"].sum() == counts.loc[normal, "timed_count"].sum()
-    if os.path.exists(DATASET_DAILY):
+    sibling_metadata = Path(DATASET_DAILY).parents[2] / "output" / "metadata.json"
+    copied_metadata = Path(DATA_DIR) / C.DATASET_DIR / "metadata.json"
+    same_release = (
+        sibling_metadata.exists()
+        and json.loads(sibling_metadata.read_text())["built_at"]
+        == json.loads(copied_metadata.read_text())["built_at"]
+    )
+    if os.path.exists(DATASET_DAILY) and same_release:
         ds = pd.read_csv(DATASET_DAILY, parse_dates=["date"])
         m = ds.merge(d, on=["date", "taxon_id"], how="outer", indicator=True)
         assert (m["_merge"] == "both").all()
@@ -514,17 +523,29 @@ def _synthetic_frame(trend: float, seed: int = 0, width: float = 20) -> pd.DataF
 
 
 def test_model_frame_fills_every_window_day():
-    effort = _effort([("2020-08-01", {h: 1 for h in range(24)}), ("2020-08-02", {})])
+    effort = _effort(
+        [
+            ("2020-08-01", {h: 1 for h in range(24)}),
+            ("2020-08-02", {}),
+            ("2020-08-03", {8: 1}),
+            ("2020-08-04", {8: 1, 9: 1}),
+        ]
+    )
     effort.loc[1, "state"] = "not_counted"
     days = pd.DataFrame(
-        {"date": pd.to_datetime(["2020-08-01", "2020-07-01"]), "count": [5.0, 99.0]}
+        {
+            "date": pd.to_datetime(["2020-08-01", "2020-07-01", "2020-08-03", "2020-08-04"]),
+            "count": [5.0, 99.0, 7.0, 9.0],
+        }
     )
-    c = pd.Series([0.8, 0.0], index=effort.index)
+    c = pd.Series([0.8, 0.0, 0.15, 0.2], index=effort.index)
     f = T.model_frame(days, effort, c, 2020, 2020).set_index("date")
     assert len(f) == E.in_window(pd.Series(pd.date_range("2020-01-01", "2020-12-31"))).sum()
     assert f.loc["2020-08-01", "c"] == 0.8 and f.loc["2020-08-01", "y"] == 5
     assert f.loc["2020-08-02", "c"] == 0 and f.loc["2020-08-02", "y"] == 0
-    assert f["y"].sum() == 5  # outside the window: not in the frame
+    assert f.loc["2020-08-03", ["c", "y", "extra"]].tolist() == [0, 0, 7]
+    assert f.loc["2020-08-04", ["c", "y", "extra"]].tolist() == [0.2, 9, 0]
+    assert (f["y"] + f["extra"]).sum() == 21  # keep every bird inside the window
 
 
 def test_fill_keeps_the_counted_and_draws_the_rest():

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Publishes a local build: the export (`data/explore/`) and the QA viewer (`logs/viewer/`) as
-assets of a GitHub release of this repo, then starts the Pages workflow that deploys the viewer.
+"""Publishes a local build: the export (`data/explore/`) and the documentation site (`logs/site/`)
+as assets of a GitHub release of this repo, then starts the Pages workflow that deploys the site.
 
 The build takes 30-40 min on a GitHub runner and ~5.5 min here, so it runs here and only its result
 goes online. defileViz downloads `explore.zip` from the same release when it deploys (its
@@ -22,11 +22,11 @@ import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXPORT_DIR = os.path.join(ROOT, "data", "explore")
-VIEWER_DIR = os.path.join(ROOT, "logs", "viewer")
+VIEWER_DIR = os.path.join(ROOT, "logs", "site")
 ZIP_DIR = os.path.join(ROOT, "logs", "publish")
 DEV_TAG = "dev"  # rolling pre-release, until the first versioned release
 EXPORT_ASSET = "explore.zip"  # the name defileViz downloads
-VIEWER_ASSET = "viewer.zip"  # the name .github/workflows/pages.yml downloads
+VIEWER_ASSET = "viewer.zip"  # documentation + QA; the name the Pages workflow downloads
 PAGES_WORKFLOW = "pages.yml"
 UNCOMMITTED = "uncommitted"
 
@@ -60,7 +60,27 @@ def check(export_dir: str, viewer_dir: str) -> dict:
         problems.append("species files rewritten since the last full build (--taxa): rebuild all")
     viewer = os.path.join(viewer_dir, "index.html")
     if not os.path.exists(viewer) or os.path.getmtime(viewer) < catalogue:
-        problems.append("the viewer is older than the export: run scripts/explore_viewer.py")
+        problems.append("the site is older than the export: run scripts/build_site.py")
+    for required in (
+        "qa/index.html",
+        "qa/compare.html",
+        "data/explore/manifest.json",
+        "site-manifest.json",
+    ):
+        if not os.path.exists(os.path.join(viewer_dir, required)):
+            problems.append(f"missing {required}: run scripts/build_site.py")
+    site_manifest = os.path.join(viewer_dir, "site-manifest.json")
+    if os.path.exists(site_manifest):
+        with open(site_manifest, encoding="utf-8") as f:
+            site = json.load(f)
+        if UNCOMMITTED in site.get("site_git_sha", ""):
+            problems.append(
+                "site built from uncommitted code: commit, then run scripts/build_site.py"
+            )
+        elif site.get("site_git_sha") != run("git", "rev-parse", "--short", "HEAD"):
+            problems.append("site built from another commit: run scripts/build_site.py")
+        if site.get("built_at") != manifest.get("built_at"):
+            problems.append("site built from another export: run scripts/build_site.py")
     if problems:
         raise SystemExit("Not published:\n  " + "\n  ".join(problems))
     return manifest

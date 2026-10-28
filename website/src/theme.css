@@ -1,0 +1,229 @@
+/* The site's palette and base styles. Colours are taken from the Défilé logo and mirror
+   src/theme.js (used by the charts): keep both in sync. */
+
+:root {
+  /* Neutrals: charcoal ink on cream paper */
+  --dv-ink: #24211d;
+  --dv-muted: #625c53;
+  --dv-faint: #948d82;
+  --dv-line: #e0dacd;
+  --dv-grid: #ece7dc;
+  --dv-paper: #faf8f2;
+  --dv-surface: #ffffff;
+  --dv-surface-2: #f3f0e8;
+
+  /* Interface accent: the olive of the trees */
+  --dv-accent: #5a6b23;
+  --dv-accent-rgb: 90, 107, 35;
+  --dv-accent-dark: #46541a;
+  --dv-accent-soft: #eef0e2;
+
+  /* Data: one meaning each, everywhere */
+  --dv-predicted: #3d6a8f;
+  --dv-predicted-soft: #e6edf3;
+  --dv-counted: #c0562a;
+  --dv-counted-soft: #f7e7df;
+  --dv-history-outer: #e3ded2;
+  --dv-history-inner: #bdb6a7;
+  --dv-median: #24211d;
+  --dv-gold: #d9a92e;
+  --dv-gold-soft: #fbf3dc;
+  --dv-ochre: #c4801c;
+  --dv-plum: #7a4f7f;
+  --dv-sage: #6f8a3a;
+  --dv-red: #a83a24;
+  --dv-year: #92734e;
+  --dv-teal: #3f8a8c;
+
+  --dv-radius: 0.6rem;
+  --dv-header-h: 56px;
+
+  /* Bootstrap, re-pointed at the palette */
+  --bs-font-sans-serif:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bs-body-font-size: 0.95rem;
+  --bs-body-bg: var(--dv-paper);
+  --bs-body-color: var(--dv-ink);
+  --bs-emphasis-color: var(--dv-ink);
+  --bs-secondary-color: var(--dv-muted);
+  --bs-tertiary-bg: var(--dv-surface-2);
+  --bs-border-color: var(--dv-line);
+  --bs-border-color-translucent: rgba(36, 33, 29, 0.12);
+  --bs-primary: var(--dv-accent);
+  --bs-primary-rgb: var(--dv-accent-rgb);
+  --bs-primary-bg-subtle: var(--dv-accent-soft);
+  --bs-primary-border-subtle: #cfd5b3;
+  --bs-link-color: var(--dv-accent);
+  --bs-link-color-rgb: var(--dv-accent-rgb);
+  --bs-link-hover-color: var(--dv-accent-dark);
+  --bs-link-hover-color-rgb: 70, 84, 26;
+  --bs-success: var(--dv-sage);
+  --bs-danger: var(--dv-red);
+  --bs-warning: var(--dv-gold);
+  --bs-warning-bg-subtle: var(--dv-gold-soft);
+  --bs-info: var(--dv-predicted);
+  --bs-info-bg-subtle: var(--dv-predicted-soft);
+  --bs-light: var(--dv-surface-2);
+  --bs-border-radius: 0.45rem;
+  --bs-border-radius-lg: var(--dv-radius);
+  --bs-heading-color: var(--dv-ink);
+  --bs-focus-ring-color: rgba(var(--dv-accent-rgb), 0.25);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/* Bootstrap components that compile their colours in */
+.btn-primary {
+  --bs-btn-bg: var(--dv-accent);
+  --bs-btn-border-color: var(--dv-accent);
+  --bs-btn-hover-bg: var(--dv-accent-dark);
+  --bs-btn-hover-border-color: var(--dv-accent-dark);
+  --bs-btn-active-bg: var(--dv-accent-dark);
+  --bs-btn-active-border-color: var(--dv-accent-dark);
+}
+.btn-outline-secondary {
+  --bs-btn-color: var(--dv-muted);
+  --bs-btn-border-color: var(--dv-line);
+  --bs-btn-hover-color: var(--dv-ink);
+  --bs-btn-hover-bg: var(--dv-surface-2);
+  --bs-btn-hover-border-color: var(--dv-history-inner);
+  --bs-btn-active-color: var(--dv-ink);
+  --bs-btn-active-bg: var(--dv-surface-2);
+  --bs-btn-active-border-color: var(--dv-history-inner);
+}
+.btn-secondary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--dv-ink);
+  --bs-btn-border-color: var(--dv-ink);
+  --bs-btn-hover-bg: #3a3630;
+  --bs-btn-hover-border-color: #3a3630;
+  --bs-btn-active-bg: var(--dv-ink);
+  --bs-btn-active-border-color: var(--dv-ink);
+}
+.text-success {
+  color: var(--dv-sage) !important;
+}
+.text-danger {
+  color: var(--dv-red) !important;
+}
+.card {
+  --bs-card-bg: var(--dv-surface);
+  --bs-card-border-color: var(--dv-line);
+  --bs-card-border-radius: var(--dv-radius);
+  --bs-card-cap-bg: var(--dv-surface);
+}
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: var(--dv-accent);
+}
+.form-check-input:checked {
+  background-color: var(--dv-accent);
+  border-color: var(--dv-accent);
+}
+.form-switch .form-check-input:focus:not(:checked) {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%235a6b23'/%3e%3c/svg%3e");
+}
+.form-range::-webkit-slider-thumb {
+  background-color: var(--dv-accent);
+}
+.form-range::-webkit-slider-thumb:active {
+  background-color: var(--dv-accent-dark);
+}
+.form-range::-moz-range-thumb {
+  background-color: var(--dv-accent);
+}
+.form-range::-moz-range-thumb:active {
+  background-color: var(--dv-accent-dark);
+}
+.form-range::-webkit-slider-runnable-track {
+  background-color: var(--dv-line);
+}
+.form-range::-moz-range-track {
+  background-color: var(--dv-line);
+}
+.alert-warning {
+  --bs-alert-bg: var(--dv-gold-soft);
+  --bs-alert-border-color: #efdca6;
+  --bs-alert-color: #6b5210;
+}
+.alert-info {
+  --bs-alert-bg: var(--dv-predicted-soft);
+  --bs-alert-border-color: #c9d7e3;
+  --bs-alert-color: #2b4a63;
+}
+.table {
+  --bs-table-bg: transparent;
+}
+
+/* Numbers line up in tables, cards and tooltips */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A section of a page: a short heading, an optional one-line explanation, then the content */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 2rem 0 0.75rem;
+}
+.section-head h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+.section-head .section-note {
+  flex-basis: 100%;
+  color: var(--dv-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* The legend swatches shared by the pages */
+.swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+  vertical-align: -0.05rem;
+}
+.swatch.predicted {
+  background: var(--dv-predicted);
+}
+.swatch.counted {
+  background: var(--dv-counted);
+}
+.swatch.band {
+  width: 1.4rem;
+  border-radius: 0.2rem;
+  background: linear-gradient(
+    90deg,
+    var(--dv-history-outer) 0 25%,
+    var(--dv-history-inner) 25% 75%,
+    var(--dv-history-outer) 75%
+  );
+}
+
+/* The small label above each chart of a species card */
+.plot-label {
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dv-muted);
+  margin: 0 0 0.4rem;
+}

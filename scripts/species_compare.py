@@ -15,12 +15,10 @@ What each figure draws, and from which field:
   year with a trend, else the last `KEY_YEARS` counted seasons pooled), with the 80% band of the
   median date (`trend.passage`); or the share of the season passing on each day, the last
   `KEY_YEARS` seasons of `season.share` pooled (heat map).
-- Passage shift: the smooth season's 10/50/90% dates (`trend.passage_q`) in the last year minus
-  the first, class `trend.passage`; the 80% band combines the two years' bands (`trend.passage`)
-  as if independent.
+- Passage shift: linear changes in annual reconstructed dates (`season.phenology`), with 95% intervals carrying reconstruction uncertainty and between-year residual variation.
 
 Usage:
-    python scripts/species_compare.py          # -> logs/viewer/compare.html
+    python scripts/species_compare.py          # -> logs/site/qa/compare.html
 """
 
 import argparse
@@ -35,10 +33,10 @@ from defile_explore.pipeline import KEY_YEARS
 
 Z95, Z80 = 1.959964, 1.281552  # normal quantiles of the 95% and 80% two-sided bands
 GROUPS = {  # catalogue group: colour (validated all-pairs, light)
-    "raptors": "#eb6834",
-    "passerines": "#2a78d6",
-    "waterbirds": "#1baf7a",
-    "other": "#4a3aa7",
+    "raptors": "#c0562a",
+    "passerines": "#3d6a8f",
+    "waterbirds": "#3f8a8c",
+    "other": "#7a4f7f",
 }
 CLASS_OF = {  # figure: the element of `reliability.ELEMENTS` its rows rest on
     "trend": "key_numbers.trend",
@@ -114,19 +112,21 @@ def passage_row(sp: dict) -> dict | None:
 
 
 def shift_row(sp: dict) -> dict | None:
-    t = sp.get("trend")
-    if not t:
+    q = sp["season"].get("phenology", {}).get("quantiles", {})
+    if not q:
         return None
-    q0, q1 = t["passage_q"][0], t["passage_q"][-1]
-    b0, b1 = t["passage"][0], t["passage"][-1]
-    bands = {"q10": ("q10_lo", "q10_hi"), "q50": ("lo", "hi"), "q90": ("q90_lo", "q90_hi")}
-    out = {"first": t["first_year"], "last": t["last_year"]}
-    for q, (lo, hi) in bands.items():
-        d = q1[q] - q0[q]
-        se = math.hypot(*((b[hi] - b[lo]) / (2 * Z80) for b in (b0, b1)))
-        out[q] = {"d": round(d, 1), "lo": round(d - Z80 * se, 1), "hi": round(d + Z80 * se, 1),
-                  "from": q0[q], "to": q1[q]}  # fmt: skip
-    cls, why = element_class(sp, CLASS_OF["shift"])
+    years = q["q50"]["year"]
+    span = years[-1] - years[0]
+    out = {"first": years[0], "last": years[-1]}
+    for name, fit in q.items():
+        out[name] = {
+            "d": fit["slope"] * span,
+            "lo": fit["slope_lo"] * span,
+            "hi": fit["slope_hi"] * span,
+            "from": fit["date"][0],
+            "to": fit["date"][-1],
+        }
+    cls, why = element_class(sp, "season.phenology")
     return out | {"cls": cls, "why": why}
 
 
@@ -157,7 +157,9 @@ def rows(taxa: list, export: str, pages: set) -> list:
 
 
 CSS = """
-.bar{position:sticky;top:37px;z-index:8;background:#fff;border-bottom:1px solid #ddd;
+@media(max-width:1000px){.bar{top:0!important}}
+@media(max-width:700px){.bar{position:static!important}}
+.bar{position:sticky;top:var(--explore-header-height);z-index:8;background:var(--dv-paper);border-bottom:1px solid var(--dv-line);
  padding:8px 16px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font-size:13px}
 .bar fieldset{border:0;margin:0;padding:0;display:flex;gap:8px;align-items:center}
 .bar legend{float:left;font-weight:600;color:#555;margin-right:4px;font-size:12px}
@@ -170,7 +172,7 @@ CSS = """
 .ctl .seg button:first-child{border-radius:4px 0 0 4px}
 .ctl .seg button:last-child{border-radius:0 4px 4px 0}
 .ctl .seg button+button{border-left:0}
-.ctl .seg button.on{background:#4C78A8;color:#fff;border-color:#4C78A8}
+.ctl .seg button.on{background:var(--dv-accent);color:#fff;border-color:var(--dv-accent)}
 .count{color:#777;font-size:12px}
 .key{font-size:12px;color:#555;margin:2px 8px}
 .key span{margin-right:14px;white-space:nowrap}
@@ -191,7 +193,7 @@ BODY = """
  <fieldset><legend>Name</legend><input id="f-name" type="search" placeholder="English, French, Latin"></fieldset>
 </div>
 <section>
-<h2>Species compared</h2>
+<h1>Species comparison</h1>
 <p class="note">One row per taxon. The filters above apply to all three figures; the class
 filter applies to the class of the figure's own claim (trend, season). Click a row's mark to open
 its page (full tier). Hidden rows are greyed, caveated ones drawn hollow.</p>
@@ -247,9 +249,7 @@ its page (full tier). Hidden rows are greyed, caveated ones drawn hollow.</p>
  </div>
  <div class="key" id="s-key"></div>
  <div id="fig-shift"></div>
- <p class="note">Days by which the smooth season's 10%, median or 90% passage date moved from the
- taxon's first trend year to 2025 (positive: later). Interval: 80%, conservative (the two years'
- bands combined as if independent).</p>
+ <p class="note">Change in annual reconstructed 10%, 50% and 90% passage dates from the linear fits used in the methods guide. Intervals are 95%, combining joint reconstruction uncertainty and residual resampling across years.</p>
 </div>
 </section>
 <script>
@@ -294,7 +294,7 @@ function sorted(rows, how, value) {
 function layout(rows, extra) {
   const n = rows.length;
   return Object.assign({
-    template: "plotly_white", height: TOP + BOTTOM + Math.max(n, 3) * ROW, showlegend: false,
+    template: "plotly_white", font: {family: "system-ui, sans-serif", color: "#24211d"}, height: TOP + BOTTOM + Math.max(n, 3) * ROW, showlegend: false,
     margin: {l: LEFT, r: 30, t: TOP, b: BOTTOM}, hovermode: "closest", hoverlabel: {align: "left"},
     yaxis: {type: "category", categoryorder: "array", categoryarray: rows.map((r) => r.label),
             automargin: true, tickfont: {size: 11}, fixedrange: true},
@@ -323,7 +323,7 @@ function draw(id, traces, lay, rows, countId, total) {
   Plotly.react(el, traces, lay, {responsive: true, displaylogo: false});
   document.getElementById(countId).textContent = `${rows.length} of ${total} taxa`;
   el.removeAllListeners && el.removeAllListeners("plotly_click");
-  el.on("plotly_click", (e) => { const r = e.points[0].customdata; if (r && r.page) window.open(r.id + ".html", "_blank"); });
+  el.on("plotly_click", (e) => { const r = e.points[0].customdata; if (r && r.page) window.open("../index.html?species=" + r.id + "#phenology", "_blank"); });
 }
 function key(id, items) {
   document.getElementById(id).innerHTML = items.map(([c, t, hollow]) =>
@@ -333,7 +333,7 @@ const CLASS_KEY = [["#555", "shown"], ["#555", "caveated", true], ["#bbb", "hidd
 const GROUP_KEY = Object.entries(GROUPS).map(([g, c]) => [c, g]);
 
 // --- 1. abundance trend -------------------------------------------------------
-const UP = "#2a78d6", DOWN = "#e34948";
+const UP = "#3d6a8f", DOWN = "#c0562a";
 function trendValue(r, v = r.trend.log) {
   return state.t.unit === "year" ? v / (r.trend.last - r.trend.first) : v;
 }
@@ -415,7 +415,7 @@ function passageFig() {
 }
 
 // --- 3. passage shift ---------------------------------------------------------
-const QCOL = {q10: "#86b6ef", q50: "#2a78d6", q90: "#104281"};
+const QCOL = {q10: "#6f8a3a", q50: "#7a4f7f", q90: "#c4801c"};
 const QNAME = {q10: "10%", q50: "median", q90: "90%"};
 function shiftFig() {
   const total = DATA.filter((r) => r.shift).length;
@@ -436,7 +436,7 @@ function shiftFig() {
     traces.push({type: "scatter", mode: "markers", x: rows.map((r) => unit(r, r.shift[q].d)), y,
       marker: Object.assign(markers(rows, color), {size: state.s.q === "all" ? 7 : 8}), customdata: rows,
       text: rows.map((r) => { const s = r.shift[q]; return `${hoverhead(r)}<br>${QNAME[q]} date ${date(s.from)} (${r.shift.first}) → ${date(s.to)} (${r.shift.last})<br>` +
-        `<b>${signed(s.d, 1)} days</b> (80%, conservative: ${signed(s.lo, 1)} to ${signed(s.hi, 1)}) · ${signed(10 * s.d / (r.shift.last - r.shift.first), 1)} days per decade<br>season: ${why(r.shift)}`; }),
+        `<b>${signed(s.d, 1)} days</b> (95%: ${signed(s.lo, 1)} to ${signed(s.hi, 1)}) · ${signed(10 * s.d / (r.shift.last - r.shift.first), 1)} days per decade<br>season: ${why(r.shift)}`; }),
       hovertemplate: "%{text}<extra></extra>"});
   }
   const lay = layout(rows, {
@@ -466,7 +466,7 @@ all();
 """
 
 
-def compare_page(data: list) -> str:
+def compare_page(data: list, manifest: dict | None = None) -> str:
     groups = "".join(
         f'<label><input type="checkbox" value="{g}" checked><span class="sw" '
         f'style="background:{c}"></span>{g}</label>'
@@ -479,12 +479,14 @@ def compare_page(data: list) -> str:
         .replace("__GROUP_COLORS__", json.dumps(GROUPS))
         .replace("__JS__", JS)
     )
-    return wrap("Species compared", f"<style>{CSS}</style>{body}")
+    return wrap("Species comparison", f"<style>{CSS}</style>{body}", manifest, current="compare")
 
 
 def write(export: str, out: str, pages: set) -> str:
     taxa = json.load(open(os.path.join(export, "taxa.json")))
-    path, page = os.path.join(out, "compare.html"), compare_page(rows(taxa, export, pages))
+    path, page = os.path.join(out, "compare.html"), compare_page(
+        rows(taxa, export, pages), json.load(open(os.path.join(export, "manifest.json")))
+    )
     with open(path, "w", encoding="utf-8") as f:
         f.write(page)
     return path
@@ -493,7 +495,7 @@ def write(export: str, out: str, pages: set) -> str:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--export", default=os.path.join(ROOT, "data", "explore"))
-    ap.add_argument("--out", default=os.path.join(ROOT, "logs", "viewer"))
+    ap.add_argument("--out", default=os.path.join(ROOT, "logs", "site", "qa"))
     args = ap.parse_args(argv)
     os.makedirs(args.out, exist_ok=True)
     pages = {f[:-5] for f in os.listdir(args.out) if f.endswith(".html")}

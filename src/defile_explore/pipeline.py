@@ -42,6 +42,7 @@ from defile_explore import timeofday
 from defile_explore import trend as T
 from defile_explore import weather as H
 from defile_explore import window as W
+from defile_explore.phenology import phenology_block
 
 CACHE_DIR = os.path.join("cache")  # under the data dir
 RECORD_DAYS = 15  # top days listed
@@ -220,7 +221,7 @@ def trend_block(job: dict, start: int, window: tuple[int, int]) -> dict:
             weather=job["weather"],
         )
         return {
-            "method": "trend-gam@2",
+            "method": "trend-gam@3",
             "model": t["model"],
             "first_year": t["first_year"],
             "last_year": t["last_year"],
@@ -419,12 +420,17 @@ def build_taxon(job: dict) -> tuple[str, dict]:
     model_w, view_w = settings["model_window"].value, settings["view_window"].value
     window = window_block(rule, settings)
     trend = trend_block(job, start, model_w) if settings["trend"].value else None
+    if trend:
+        trend["min_coverage"] = T.MIN_COVERAGE
     bench = benchmark_block(job, start, model_w) if trend and job["benchmark"] else None
     fill = trend.pop("season_fill") if trend else None
     weather = trend.pop("weather") if trend else None
     reliability = Q.reliability_block(trend, bench, window, job["profile_source"])
     frame = season_frame[season_frame["doy"].between(*view_w)]
     season = S.season_block(frame, last, model_w, fill if Q.fills_season(reliability) else None)
+    season["phenology"] = phenology_block(
+        season, fill["passage_draws"] if season["source"] == "gam" else None
+    )
     daytime = Y.daytime_block(
         days, job["hourly"], effort, profile, daytime_parts(trend, season, last)
     )

@@ -1,7 +1,7 @@
-name: Explore viewer
+name: Explore documentation
 
 # The build takes 30-40 min on a runner, so it runs locally: scripts/publish_explore.py uploads
-# viewer.zip to a release and starts this workflow, which only deploys it.
+# the complete site as viewer.zip to a release and starts this workflow, which only deploys it.
 on:
   workflow_dispatch:
     inputs:
@@ -16,7 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Download the viewer of a local build
+      - name: Download the documentation site of a local build
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -42,6 +42,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/configure-pages@v5
-      - name: Deploy the viewer
+      - name: Deploy the documentation site
         id: deployment
         uses: actions/deploy-pages@v4

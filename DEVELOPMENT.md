@@ -5,7 +5,7 @@ pipeline per taxon, settings, caches, QA viewer) is done: `DECISIONS.md` -> Pipe
 
 ## Phase 2: review and refine
 
-Go through `logs/viewer/index.html` (`scripts/explore_viewer.py`) in batches: raptors; pigeons,
+Go through `logs/site/qa/index.html` (`scripts/explore_viewer.py`) in batches: raptors; pigeons,
 storks, cranes and other large birds; passerines. A fix is a better rule (preferred) or an
 override with its reason. The viewer stays a model-inspection tool (everything that helps judge a
 fit, in detail); the visitors' page is designed in defileViz. What the first full build shows:
@@ -83,3 +83,9 @@ The separate product question of how to present weather effects on Explore remai
 
 The species files grew from 8 to 18 MB in all (benchmark trials, episodes): check what the page
 needs before publishing. The license of the exported data is open (defile-dataset's is too).
+
+### Report review follow-ups (2026-10-28)
+
+The species comparison, public Explore timing panel and methods guide now consume the same `season.phenology` annual-date regressions.
+
+The local release reconciliation check currently finds 77 species-day rows in the neighbouring dataset’s intermediate tables for 13–15 October 2026 that are absent from Explore’s copied release (observations through 12 October). Refresh the copied release and full statistics build together when adopting that newer dataset.

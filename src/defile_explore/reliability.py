@@ -65,10 +65,14 @@ ELEMENTS = {  # field of the species file: the claim it rests on
     "trend.passage_q": "season",  # the smooth passage dates (lines on the phenology)
     "key_numbers.passage": "season",  # when its `source` is `smooth`
     "season.share": "totals",  # every day's share of the year, gap-filled (`season.source: gam`)
+    "season.phenology": "season",  # linear changes in annual passage dates
     "season.passage": "totals",  # every year's passage dates, over the gap-filled days
     "season.chances": "totals",  # the chances of a full day, over the gap-filled days
 }
-NO_CAVEAT = ("trend.passage_q",)  # elements shown only when their claim is `show`
+NO_CAVEAT = (
+    "trend.passage_q",
+    "season.phenology",
+)  # elements shown only when their claim is `show`
 COUNTS_FALLBACK = ("season.share", "season.passage", "season.chances")  # from the counts if hidden
 
 

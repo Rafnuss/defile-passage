@@ -63,6 +63,7 @@ from scipy.special import gammaln
 
 from defile_explore import weather as W
 from defile_explore.export import HOURS, by_hour, in_window
+from defile_explore.phenology import passage_draws
 from defile_explore.profile import PROFILE_DOY, PROFILE_MIN_TIMED, coverage
 from defile_explore.season import chance_from_draws, passage_from_draws
 
@@ -105,7 +106,7 @@ WEATHER_PRECISION = 1.0  # prior precision of a weather coefficient (terms stand
 # Below this coverage a day says nothing about its rate (75 Black Kites in 11 minutes on
 # 2025-07-27, c = 0.0004, would be a 190 000-bird day): it is neither fitted nor conditioned on,
 # and its birds are added to the filled total as they are (`extra`).
-MIN_COVERAGE = 0.1
+MIN_COVERAGE = 0.2  # calibrated on realistic gaps and short mornings (2026-10-28)
 # birds per full day at which a day's information is evaluated, at least (`information_weights`)
 MIN_RATE = 0.1
 
@@ -1003,6 +1004,7 @@ def taxon_trend(
         "season_fill": {
             "days": frame[["year", "doy"]].assign(total=totals.mean(axis=0)),
             "passage": passage_from_draws(frame, totals),
+            "passage_draws": passage_draws(frame, totals),
             "chance": chance_from_draws(frame, totals, last_year),
         },
     }

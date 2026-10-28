@@ -1,0 +1,99 @@
+/* Shared by the Vue guide and Python reports; keep all header rules here. */
+:root {
+  --explore-header-height: 80px;
+}
+.site-shell {
+  display: contents;
+}
+.site-header {
+  box-sizing: border-box;
+  min-height: var(--explore-header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 3vw;
+  background: var(--dv-paper);
+  border-bottom: 1px solid var(--dv-line);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  line-height: 1.4;
+}
+.site-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--dv-ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.site-header .brand img {
+  object-fit: contain;
+}
+.site-header .brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.site-header .brand-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.site-header .brand-sub {
+  color: var(--dv-muted);
+  font-size: 0.75rem;
+  font-weight: 450;
+}
+.site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+.site-header nav a {
+  text-decoration: none;
+  color: var(--dv-muted);
+}
+.site-header nav a:hover {
+  color: var(--dv-accent-dark);
+}
+.site-header nav a[aria-current] {
+  color: var(--dv-accent);
+  font-weight: 650;
+}
+.skip-link {
+  position: fixed;
+  top: -80px;
+  left: 1rem;
+  z-index: 30;
+  background: var(--dv-surface);
+  padding: 0.75rem;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+:focus-visible {
+  outline: 3px solid var(--dv-accent);
+  outline-offset: 4px;
+}
+@media (max-width: 1000px) {
+  .site-header {
+    position: static;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 720px) {
+  .site-header nav {
+    gap: 0.6rem 1rem;
+    font-size: 0.78rem;
+  }
+}
+@media print {
+  .site-header,
+  .skip-link {
+    display: none;
+  }
+}

@@ -1,0 +1,278 @@
+/* Shared styles of the illustrated methods (components/explore/methods/), nested under .method
+   so they leave the rest of the app alone. */
+.method {
+  line-height: 1.6;
+  section {
+    margin-bottom: 2.5rem;
+  }
+  h5 {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .sec-n {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    color: #fff;
+    font-size: 0.9rem;
+  }
+  .eq {
+    background: var(--bs-light);
+    border-left: 3px solid var(--bs-primary);
+    border-radius: 0.25rem;
+    padding: 0 1rem;
+    margin: 1.25rem 0;
+    font-size: 1.05rem;
+  }
+  .eq .katex-display {
+    margin: 0;
+    padding: 0.9rem 0;
+  }
+  /* Inline maths at the size of the text around it (KaTeX's default is 1.21em) */
+  .katex {
+    font-size: 1.1em;
+  }
+  .katex-display > .katex {
+    font-size: 1.15em;
+  }
+  /* Model terms, one colour each (same as C in the script) */
+  .t-trend {
+    color: var(--dv-predicted);
+  }
+  .t-year {
+    color: var(--dv-year);
+  }
+  .t-season {
+    color: var(--dv-sage);
+  }
+  .t-shift {
+    color: var(--dv-plum);
+  }
+  .t-episode {
+    color: var(--dv-ochre);
+  }
+  .t-weather {
+    color: var(--dv-teal);
+  }
+  .terms {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  .terms td,
+  .terms th {
+    padding: 0.3rem 0.5rem;
+    vertical-align: baseline;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+  }
+  .terms th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .terms th.terms-group {
+    padding-top: 0.7rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--bs-secondary-color);
+  }
+  .terms-sym {
+    width: 4.5rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+  @media (max-width: 576px) {
+    .terms th {
+      white-space: normal;
+    }
+    .eq {
+      font-size: 0.9rem;
+      padding: 0.1rem 0.5rem;
+    }
+  }
+  .chip {
+    display: inline-block;
+    min-width: 1.5rem;
+    margin: 0 1px;
+    padding: 0 0.3rem;
+    border: 1px solid currentColor;
+    border-radius: 0.6rem;
+    font-size: 0.85rem;
+  }
+  .panel-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .plot-sm {
+    min-height: 220px;
+  }
+  .plot-md {
+    min-height: 300px;
+  }
+  .stat {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.4rem;
+    height: 100%;
+  }
+  .stat-v {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--bs-primary);
+  }
+  .stat-l {
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+  }
+  /* Overview flow */
+  .flow rect {
+    stroke-width: 1.5;
+  }
+  .box-data {
+    fill: var(--dv-surface-2);
+    stroke: var(--dv-faint);
+  }
+  .box-cov {
+    fill: var(--dv-predicted-soft);
+    stroke: var(--dv-predicted);
+  }
+  .box-model {
+    fill: color-mix(in srgb, var(--dv-sage) 10%, white);
+    stroke: var(--dv-sage);
+  }
+  .box-out {
+    fill: var(--dv-gold-soft);
+    stroke: var(--dv-ochre);
+  }
+  .flow-title {
+    text-anchor: middle;
+    font-weight: 700;
+    font-size: 18px;
+    fill: var(--dv-ink);
+  }
+  .flow-line {
+    text-anchor: middle;
+    font-size: 15px;
+    fill: var(--dv-muted);
+  }
+  .flow-arrow {
+    stroke: var(--dv-muted);
+    stroke-width: 2;
+    fill: none;
+  }
+  .arrowhead {
+    fill: var(--dv-muted);
+  }
+  /* Light callouts: Litera's alerts are solid blocks of colour */
+  .callout {
+    border-left: 4px solid var(--c);
+    background: var(--bg);
+    border-radius: 0.375rem;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .callout-primary {
+    --c: var(--bs-primary);
+    --bg: var(--bs-primary-bg-subtle);
+  }
+  .callout-info {
+    --c: var(--bs-info);
+    --bg: var(--bs-info-bg-subtle);
+  }
+  .callout-success {
+    --c: var(--bs-success);
+    --bg: color-mix(in srgb, var(--dv-sage) 10%, white);
+  }
+  .callout-warning {
+    --c: var(--bs-warning);
+    --bg: var(--bs-warning-bg-subtle);
+  }
+  .callout-light {
+    --c: var(--bs-border-color);
+    --bg: var(--bs-light);
+  }
+  .callout-heading {
+    color: var(--c);
+    font-weight: 700;
+  }
+  .callout-light .callout-heading,
+  .callout-warning .callout-heading {
+    color: var(--bs-emphasis-color);
+  }
+  /* Figure 1's hour slider: two range inputs on one track, only their thumbs take the pointer */
+  .hours {
+    position: relative;
+    height: 1.5rem;
+  }
+  .hours input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    appearance: none;
+    background: none;
+    pointer-events: none;
+  }
+  .hours input::-webkit-slider-runnable-track {
+    background: none;
+    height: 1.5rem;
+  }
+  .hours input::-moz-range-track {
+    background: none;
+  }
+  .hours input::-webkit-slider-thumb {
+    appearance: none;
+    pointer-events: auto;
+    width: 16px;
+    height: 22px;
+    margin-top: 1px;
+    border-radius: 4px;
+    background: var(--bs-primary);
+    border: 2px solid var(--dv-surface);
+    box-shadow: 0 0 0 1px var(--bs-primary);
+    cursor: ew-resize;
+  }
+  .hours input::-moz-range-thumb {
+    pointer-events: auto;
+    width: 12px;
+    height: 18px;
+    border-radius: 4px;
+    background: var(--bs-primary);
+    border: 2px solid var(--dv-surface);
+    box-shadow: 0 0 0 1px var(--bs-primary);
+    cursor: ew-resize;
+  }
+  .hours-track,
+  .hours-sel {
+    position: absolute;
+    top: calc(50% - 3px);
+    height: 6px;
+    border-radius: 3px;
+  }
+  .hours-track {
+    left: 8px;
+    right: 8px;
+    background: var(--dv-line);
+  }
+  .hours-sel {
+    background: var(--dv-predicted);
+  }
+  .hours-hint {
+    font-size: 0.75rem;
+  }
+  .readout {
+    background: var(--bs-light);
+    border-radius: 0.375rem;
+    padding: 0.4rem 0.6rem;
+  }
+  .figure-caption {
+    margin-top: 0.3rem;
+  }
+}

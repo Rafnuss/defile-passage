@@ -6,7 +6,7 @@ counted at Défilé de l'Écluse (France) since 1966.
 
 It reads the release of the **defile-dataset** (survey and count tables) and writes one JSON file
 per taxon, which defileViz renders. The data are counts, and the page shows them as counts first:
-model output (a GAM trend, gap-filled totals, smooth phenology) is drawn on top, never instead.
+model output (a GAM trend, gap-filled totals, annual passage-date trends) is drawn on top, never instead.
 
 Sister repos:
 
@@ -39,28 +39,38 @@ uv run python scripts/build_explore.py --dataset ../defile-dataset/output > logs
 uv run python scripts/build_explore.py > logs/build.log 2>&1
 uv run python scripts/build_explore.py --taxa "Red Kite" "Hen Harrier"   # only these taxa
 
-# QA viewer: logs/viewer/index.html, every full-tier taxon with all its model output
+# Documentation homepage, QA viewer and species comparison in logs/site/
+npm ci --prefix website
+uv run python scripts/build_site.py
+
+# Refresh only QA pages, without rebuilding the documentation frontend
 uv run python scripts/explore_viewer.py
 # species compared (trend, passage dates, their shift), also written by the viewer
 uv run python scripts/species_compare.py
 ```
 
+## Documentation website
+
+The [methods website](https://raphaelnussbaumer.com/defile-explore/) is the technical companion to defileViz: one continuous illustrated guide at the root, an expandable QA decision table under `qa/`, and the species comparison at `qa/compare.html`. defileViz links directly to a chapter or section with the selected species in `?species=<taxon_id>`. Old taxon URLs redirect to validation in the methods guide; comparison URLs remain valid.
+
+The Vue sources and interactive method figures live in `website/`; the Python scripts still generate the QA output. Both read the same `data/explore/` export. Building documentation never fits statistical models. See [website/README.md](website/README.md) for editing and preview commands.
+
 ## Publish
 
 The build runs here, not in CI (30-40 minutes on a GitHub runner); CI only runs the tests. After a
-full build and the viewer, from committed code in both repos (pushed here):
+full export and `scripts/build_site.py`, from committed code in both repos (pushed here):
 
 ```bash
 uv run python scripts/publish_explore.py --dry-run   # the checks and the zips only
 uv run python scripts/publish_explore.py
 ```
 
-It uploads `explore.zip` (the export) and `viewer.zip` (the viewer and the species comparison) to
+It uploads `explore.zip` (the export) and `viewer.zip` (the documentation homepage, QA viewer, comparison and their data) to
 the rolling `dev` pre-release of this repo, replacing the previous ones, and starts
-`.github/workflows/pages.yml`, which deploys the viewer to GitHub Pages. defileViz downloads
+`.github/workflows/pages.yml`, which deploys the complete documentation site to GitHub Pages. defileViz downloads
 `explore.zip` from that release when it deploys. It refuses an export built from uncommitted code
 here or in defile-dataset (the manifest says so), from another commit than HEAD, from a `--taxa`
-build, or with an older viewer. A versioned release later is `--tag`.
+build, or with an older site. The site must also be built from committed code at HEAD and from the same export. A versioned release later is `--tag`.
 
 Time, on a 12-core Mac (all cores, `--workers` to change): a build after a new release or a
 code change in the model takes about 5.5 minutes (the shared stage of time-of-day profiles,
@@ -128,9 +138,7 @@ flowchart TD
 | 12  | Key numbers, records, accounts                                                                     | `pipeline`, `accounts` | all                          |
 | -   | Age and sex: shares among the birds classed                                                        | `demography`           | where enough birds classed   |
 
-defileViz's "How it's made" pages follow the same order: the counts (1-2), time of day and
-coverage (3-5), the trend model (6-7), how reliable (8-9), what the page shows (10-12), age and
-sex.
+The illustrated documentation covers data and effort, the daily count model (including coverage), full-day reconstruction, phenology and validation. The QA table retains show/caveat/hide decisions and their numerical inputs; duplicate per-species reports are retired.
 
 The viewer is for inspecting the model output in full detail: fits, intervals, windows, diagnostics,
 method versions. What visitors see is built in defileViz, from the same species files but trimmed
@@ -176,6 +184,7 @@ src/defile_explore/
 content/accounts/  the authored accounts (two TSVs), reading copies and editorial review
 scripts/
   build_explore.py           the export
+  build_site.py              documentation and QA site, assembled from the existing export
   explore_viewer.py          QA viewer of the export (HTML, Plotly)
   benchmark_trend.py         the benchmark with the season-only model beside the GAM (CSV)
   analyse_explore_effort.py  comparison of effort normalisations (PDF)
@@ -191,3 +200,9 @@ tests/
 ## License
 
 Code: [MIT](LICENSE). The counts belong to the defile-dataset release, which has its own terms.
+
+### Shared phenology export
+
+`season.phenology` (`annual-date-linear@2`) contains linear fits to reconstructed annual 10%, 50% and 90% passage dates, slopes in days per year, annual 80% reconstruction intervals, and 95% trend bands. The original 1,000 joint passage-date draws are retained in `season.phenology.draws`, with the same draw index across years. It is calculated once by `phenology.phenology_block` during the Python build. Documentation, QA and defileViz consume those exported values; browsers do not refit them. The historical `trend.passage_q` field remains for compatibility and is no longer used for the primary timing display or headline.
+
+A line is fitted separately to each joint reconstruction, using one date per year in that draw. Two residual resamples per reconstruction add between-year regression uncertainty, giving 2,000 trend draws. These bands propagate reconstruction uncertainty while preserving dependence across years; the 1,000 draws are not treated as 1,000 independent observations per year. For local work, `uv run python scripts/update_phenology.py` refreshes this derived block in an existing export that retains the joint passage-date draws, without refitting daily models, explicitly marks the export uncommitted, and preserves the base statistics revision. A complete committed build is still required before publishing. Then run `npm run explore:local` in defileViz to copy the export for local preview.

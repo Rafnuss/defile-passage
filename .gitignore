@@ -10,3 +10,10 @@ __pycache__/
 
 # Claude Code: share .claude/launch.json and settings.json, keep personal settings local
 .claude/settings.local.json
+
+# Documentation dependencies and copied export
+website/node_modules/
+website/public/data/
+website/.vite/
+output/playwright/
+.playwright-cli/
