@@ -6,10 +6,9 @@
     <div ref="plotDiv" class="plot"></div>
     <figcaption class="figure-caption">
       <strong>Figure 2.6.</strong> {{ name }}, {{ year }}: coverage-adjusted counts (points),
-      baseline expectation (grey dashed), then with weather (blue-green) and with weather plus
-      episodes (orange). Lower panels show their multipliers. Each legend label gives the cumulative
-      percentage of count-model deviance explained for this season, relative to a constant full-day
-      passage rate.
+      baseline expectation (grey dashed), then weather (teal) and weather plus episodes (ochre).
+      Lower panels show their multipliers. Each legend label gives the cumulative percentage of
+      count-model deviance explained for this season, relative to a constant full-day passage rate.
     </figcaption>
     <p class="metric-note">
       All percentages use the same counted days and constant-rate reference. They describe fit to

@@ -2,23 +2,22 @@
   <section id="coverage">
     <h5><span class="sec-n">1</span>Daily coverage</h5>
     <p id="counts-m-resolution">
-      We want to estimate the number of birds of a species passing over each full day, but only some
-      of them were counted, because counting rarely covers the whole day. The observed daily count
-      <Tex e="N_d" /> is the sum recorded during counting intervals, each with a start and end time.
-      There is usually one interval per day, or several when counting is interrupted.
+      We want to estimate a species’ total passage over each full day, but only some of its birds
+      were counted. The observed daily count <Tex e="N_d" /> is the sum recorded during counting
+      intervals, each with a start and end time. There is usually one interval per day, or several
+      when counting is interrupted.
     </p>
     <p id="coverage-m-profile">
-      Equal numbers of hours counted need not cover equal proportions of the day’s passage. A
-      species has a daily rhythm: raptors often pass later than pigeons or finches. Its
-      <strong>time-of-day profile</strong>&nbsp;<Tex e="p_d(h)" /> describes the expected proportion
-      of the day’s birds passing at hour <Tex e="h" /> on date <Tex e="d" />. It is estimated from
-      hourly counts. In full generality the profile could change with both the date and the year; we
-      let it vary with the date but assume it is the same in every year.
+      Equal hours need not cover equal passage. A species has a daily rhythm: raptors often pass
+      later than pigeons or finches. Its <strong>time-of-day profile</strong>
+      <Tex e="p_d(h)" /> describes the expected share passing at hour <Tex e="h" /> on date
+      <Tex e="d" />. It is estimated from hourly counts for each calendar date, with one seasonal
+      pattern shared across years.
     </p>
     <p id="coverage-m-coverage">
-      By definition, the profile’s area over the full day is one. The
-      <strong>coverage</strong>&nbsp;<Tex e="c_d" /> is the part of that area falling during
-      counting, so <Tex e="c_d" /> lies between 0 and 1:
+      By definition, the profile’s area over the full day is one. The <strong>coverage</strong>
+      <Tex e="c_d" /> is the part of that area falling during counting, so <Tex e="c_d" /> lies
+      between 0 and 1:
     </p>
     <div class="eq">
       <Tex display e="c_d = \int_{\text{counting intervals}} p_d(h)\,\mathrm{d}h \tag{1}" />
@@ -67,11 +66,9 @@
       </figcaption>
     </figure>
     <p id="coverage-m-rate">
-      Our modelling target is the <strong>expected full-day passage</strong>&nbsp;<Tex e="R_d" />,
-      the expected number of birds passing over the whole day. Counting covers a fraction
-      <Tex e="c_d" /> of it, giving the <strong>expected observed count</strong>&nbsp;<Tex
-        e="\mu_d"
-      />:
+      Our modelling target is the <strong>expected full-day passage</strong> <Tex e="R_d" />.
+      Counting covers a fraction <Tex e="c_d" /> of it, giving the
+      <strong>expected observed count</strong> <Tex e="\mu_d" />:
     </p>
     <div class="eq"><Tex display e="\mu_d = c_d R_d \tag{2}" /></div>
     <p>

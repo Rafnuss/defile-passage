@@ -11,10 +11,9 @@
         <p>
           If birds passed independently, the observed daily count <Tex e="N_d" /> would follow a
           <strong>Poisson</strong> distribution, whose variance equals its mean. Real counts vary
-          more because birds may travel in flocks and days differ in ways the model cannot fully
-          explain. We therefore use a <strong>negative binomial</strong> distribution to model the
-          observed counts <Tex e="N_d" />, with mean <Tex e="\mu_d" /> (the expected observed count)
-          and a dispersion parameter <Tex e="\theta" /> that controls the extra variation:
+          more because birds travel in flocks and days differ in ways the model cannot fully
+          explain. We therefore use a <strong>negative binomial</strong>, with expected observed
+          count <Tex e="\mu_d" /> and extra variation controlled by <Tex e="\theta" />:
         </p>
         <div class="eq">
           <Tex
@@ -23,11 +22,10 @@
           />
         </div>
         <p>
-          The variance in excess of that of a Poisson is <Tex e="\mu_d^2/\theta" />. A small value
-          of <Tex e="\theta" /> allows much greater variation between days; as the value of
-          <Tex e="\theta" /> grows, the distribution approaches a Poisson with the same mean
-          <Tex e="\mu_d" />. Each species has one fitted <Tex e="\theta" />, estimated jointly with
-          the model’s smoothing parameters below.
+          The extra variance is <Tex e="\mu_d^2/\theta" />. A small <Tex e="\theta" /> allows much
+          greater variation between days; as it grows, the distribution approaches Poisson. Each
+          species has one fitted <Tex e="\theta" />, estimated jointly with the model’s smoothing
+          parameters below.
         </p>
         <NegBinWidget :name="name" :species-theta="trend.theta" />
       </section>
@@ -67,28 +65,22 @@
         <figure class="figure w-100">
           <div class="row g-2">
             <div class="col-md-6">
-              <div class="panel-title t-trend">
-                a. Smooth season total · <Tex e="\alpha+\Tr+\Se+\Sh" />
-              </div>
+              <div class="panel-title t-trend">a. Smooth total · <Tex e="\Tr,\Se,\Sh" /></div>
               <div ref="trendDiv" class="plot-sm"></div>
             </div>
             <div class="col-md-6">
               <div class="panel-title t-year">
-                b. Season total / smooth season total · <Tex e="\Yr,\Wx,\Ep" />
+                b. Season / smooth total · <Tex e="\Yr,\Wx,\Ep" />
               </div>
               <div ref="yearDiv" class="plot-sm"></div>
             </div>
           </div>
           <figcaption class="figure-caption">
             <strong>Figure 2.3.</strong> Summaries of the fitted model for {{ name }}.
-            <strong>a.</strong> The smooth season total: the expected full-day passage summed over
-            the season, from the base level <Tex e="\alpha" /> together with the effects of the
-            trend <Tex e="\Tr" />, the season <Tex e="\Se" /> and the change of timing
-            <Tex e="\Sh" />, in a typical year (the effects of year level, weather and episodes at
-            their average). It is shown relative to {{ trend.first_year }}, with its 95% interval.
-            <strong>b.</strong> Each year’s reconstructed total divided by its smooth season total:
-            the departure due to the effects of that year’s level, weather and episodes. Values
-            above 1 indicate more passage than the smooth expectation.
+            <strong>a.</strong> The smooth integrated season total relative to
+            {{ trend.first_year }}, with its 95% interval. <strong>b.</strong> Each year’s
+            reconstructed total divided by its smooth total; values above 1 indicate more passage
+            than the smooth expectation.
           </figcaption>
         </figure>
         <h6 class="model-timescale">Over the season</h6>
@@ -120,8 +112,7 @@
           <figcaption class="figure-caption">
             <strong>Figure 2.4.</strong> {{ name }}: the fitted seasonal shape in
             {{ shapeYear }} (solid), with {{ shapeYears[0] }} and {{ shapeYears.at(-1) }} as dotted
-            references. Each curve integrates to one; the effects of weather and episodes are
-            omitted.
+            references. Each curve integrates to one; weather and episodes are omitted.
           </figcaption>
         </figure>
         <h6 id="model-m-days" class="model-timescale">From day to day</h6>
@@ -186,8 +177,8 @@
                 >, in m/s.
               </li>
               <li>
-                <strong>Wind speed, <Tex e="s" />:</strong>&nbsp;<a
-                  href="https://open-meteo.com/en/docs/historical-weather-api"
+                <strong>Wind speed, <Tex e="s" />:</strong>
+                <a href="https://open-meteo.com/en/docs/historical-weather-api"
                   ><code>wind_speed_100m</code></a
                 >, in m/s.
               </li>
@@ -277,8 +268,8 @@
       <section id="model-m-fit">
         <h5><span class="sec-n">5</span>Fitting the model</h5>
         <p>
-          Before using the model to predict passage, we need to fit it to the observed daily counts,
-          that is, to estimate the parameters of its components. The fitting estimates two groups of
+          Before using the model to predict passage, we need to learn the parameters of its
+          components by fitting them to observed daily counts. The fitting estimates two groups of
           parameters:
         </p>
         <ul>
@@ -290,8 +281,8 @@
           <li>
             <strong>Smoothing parameters and count dispersion.</strong> Smoothing parameters control
             how strongly curves are kept smooth and effects are kept small. The dispersion parameter
-            <Tex e="\theta" /> of the negative binomial distribution (eq. 3) controls the remaining
-            variability of daily counts around their predicted values.
+            <Tex e="\theta" /> controls the remaining variability of daily counts around their
+            predicted values.
           </li>
         </ul>
         <p>
@@ -302,13 +293,7 @@
           For year levels and weather coefficients, they favour modest effects unless the counts
           support larger ones. Episodes have their own smoothness and size priors.
         </p>
-        <p>
-          This is empirical Bayes inference, as used for generalised additive models (Wood 2011,
-          2017): the coefficients are estimated by penalised iteratively reweighted least squares at
-          fixed smoothing and dispersion, and the smoothing parameters and
-          <Tex e="\theta" /> by maximising an approximate marginal likelihood. The fitting
-          alternates between these two groups:
-        </p>
+        <p>The fitting alternates between updating these two groups:</p>
         <ol>
           <li>
             <strong>Estimate the coefficients.</strong> An iterative solver adjusts all coefficients
@@ -327,8 +312,8 @@
         <p>
           After fitting, a joint Gaussian approximation describes uncertainty around the coefficient
           estimates. Draws from that approximation produce plausible combinations of curves and
-          effects. The reconstruction of full days (Section 3) then uses them to draw the birds
-          missed during uncounted periods.
+          effects. The reconstruction model then uses them to draw the birds missed during uncounted
+          periods.
         </p>
         <p>
           For fitting, we use daily counts with coverage of at least
@@ -373,10 +358,10 @@
               shared and per-year episode blocks without a single large dense inverse.
             </li>
             <li>
-              <strong>Smoothing and dispersion.</strong> Extended Fellner–Schall updates (Wood and
-              Fasiolo 2017) estimate the smoothing penalties. Bounded scalar optimisation updates
-              the same <Tex e="\theta" /> used in the negative binomial, alternating with smoothing
-              updates under a Laplace-approximated marginal likelihood.
+              <strong>Smoothing and dispersion.</strong> Extended Fellner–Schall updates estimate
+              the smoothing penalties. Bounded scalar optimisation updates the same
+              <Tex e="\theta" /> used in the negative binomial, alternating with smoothing updates
+              under a Laplace-approximated marginal likelihood.
             </li>
             <li>
               <strong>Weather coefficients.</strong> Each taxon has its own <Tex e="\beta_j" />.
@@ -401,16 +386,6 @@
             </li>
           </ul>
         </details>
-        <p class="small">
-          <strong>References.</strong><br />
-          Wood, S. N. (2011). Fast stable restricted maximum likelihood and marginal likelihood
-          estimation of semiparametric generalized linear models. <em>JRSS B</em> 73: 3–36.<br />
-          Wood, S. N. (2017). <em>Generalized Additive Models: An Introduction with R</em>, 2nd ed.
-          Chapman &amp; Hall/CRC.<br />
-          Wood, S. N. and Fasiolo, M. (2017). A generalized Fellner–Schall method for smoothing
-          parameter optimization with application to Tweedie location, scale and shape models.
-          <em>Biometrics</em> 73: 1071–1081.
-        </p>
       </section>
     </template>
   </div>
