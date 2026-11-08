@@ -74,7 +74,7 @@
         the counted and uncounted hours share. Writing the daily negative binomial in its
         hierarchical form provides one: a day-specific passage intensity <Tex e="\lambda_d" />, from
         which counted and uncounted birds both arise. This <strong>Gamma–Poisson model</strong> is
-        equivalent to the daily negative-binomial distribution (eq. 3) written in two parts. The
+        equivalent to the daily negative-binomial distribution (eq. 1) written in two parts. The
         daily intensity <Tex e="\lambda_d" /> has a Gamma distribution with mean <Tex e="R_d" /> and
         shape <Tex e="\theta" />, the same dispersion parameter fitted above. We write Gamma
         distributions using shape and rate, so their mean is shape divided by rate. Given that
