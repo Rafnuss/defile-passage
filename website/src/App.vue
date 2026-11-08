@@ -146,7 +146,7 @@ const chapters = [
     title: "Daily count model",
     component: MethodModel,
     intro:
-      "We model each species’ daily counts with a negative binomial distribution whose mean is the counting coverage times an expected full-day passage that depends on the year, the date and the weather. This chapter states the model, describes each of its parts and explains how it is fitted.",
+      "We first link counting intervals to coverage, then describe count variability and fit expected full-day passage using the year, date and weather.",
     technical:
       "The profile determines coverage c. The daily model is fitted to counts with log(c) as an offset. The trend block records the fitted summaries and dispersion parameters.",
     modules: ["profile", "timeofday", "trend", "weather"],

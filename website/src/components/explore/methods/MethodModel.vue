@@ -1,76 +1,5 @@
 <template>
   <div>
-    <section id="model-m-overview">
-      <h5><span class="sec-n">1</span>The model in brief</h5>
-      <p>
-        For each species, we model the <strong>observed count</strong>&nbsp;<Tex e="N_d" />, the
-        number of birds counted on day <Tex e="d" />, with a negative binomial distribution. Its
-        mean, the <strong>expected observed count</strong>&nbsp;<Tex e="\mu_d" />, is the product of
-        two quantities:
-      </p>
-      <div class="eq">
-        <Tex
-          display
-          e="N_d \sim \operatorname{NegBin}(\mu_d,\ \theta), \qquad \mu_d = c_d\,R_d \tag{1}"
-        />
-      </div>
-      <ul>
-        <li>
-          the <strong>coverage</strong>&nbsp;<Tex e="c_d" />, the proportion of the day’s expected
-          passage that falls within the counting intervals. It is calculated before the model is
-          fitted, from the counting times and the species’ time-of-day profile, and is treated as
-          known (Section 2.2);
-        </li>
-        <li>
-          the <strong>expected full-day passage</strong>&nbsp;<Tex e="R_d" />, the expected number
-          of birds of the species passing over the whole day. This is what the model estimates.
-        </li>
-      </ul>
-      <p>
-        The dispersion parameter <Tex e="\theta" /> lets the counts vary more than a Poisson
-        distribution would (Section 2.3). On the logarithmic scale, the expected full-day passage is
-        the sum of a base level and six effects. For day <Tex e="d" />, <Tex e="y_d" /> denotes its
-        year and <Tex e="t_d" /> its day of year:
-      </p>
-      <div class="eq">
-        <Tex
-          display
-          e="\log R_d = \alpha + \Tr(y_d) + \Yr_{y_d} + \Se(t_d) + \Sh(y_d,t_d) + \Wx_d + \Ep_{y_d}(t_d) \tag{2}"
-        />
-      </div>
-      <table class="terms">
-        <tbody v-for="g in GROUPS" :key="g.name">
-          <tr>
-            <th colspan="3" class="terms-group">{{ g.name }}</th>
-          </tr>
-          <tr v-for="term in g.terms" :key="term.name">
-            <td class="terms-sym"><Tex :e="term.tex" /></td>
-            <th scope="row" :class="term.cls">{{ term.name }}</th>
-            <td>
-              <em>{{ term.form }}.</em> {{ term.text }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        Because the effects are added on the logarithmic scale, they <em>multiply</em> the number of
-        birds: an increase of 0.1 in any effect means about 10% more expected birds, holding the
-        other effects fixed. Taking logarithms of eq. (1) gives
-        <Tex e="\log\mu_d = \log c_d + \log R_d" />: the known <Tex e="\log c_d" /> enters the model
-        as an <em>offset</em>, a term whose coefficient is fixed at one rather than estimated.
-      </p>
-      <p>
-        This is a generalised additive model (GAM). We fit it by empirical Bayes inference: each
-        effect has a Gaussian prior, which acts as a penalty that keeps curves smooth and effects
-        small unless the counts support them, and the strength of each penalty is itself estimated
-        from the counts (Sections 2.5 and 2.6).
-      </p>
-      <p>
-        The rest of this chapter takes each part in turn: the coverage (Section 2.2), the negative
-        binomial distribution (Section 2.3), the effects on expected full-day passage (Section 2.4),
-        the penalties (Section 2.5) and the fitting (Section 2.6).
-      </p>
-    </section>
     <MethodCoverage :name="name" :data="data" :effort="effort" />
     <p v-if="!data.trend" class="callout callout-info">
       {{ name }} has no fitted daily count model. Its coverage is still available above; choose a
@@ -78,46 +7,63 @@
     </p>
     <template v-if="data.trend">
       <section id="model-m-scatter">
-        <h5><span class="sec-n">3</span>Variation of the counts around their expectation</h5>
+        <h5><span class="sec-n">2</span>Counts scatter around the expectation</h5>
         <p>
-          The expected observed count <Tex e="\mu_d" /> is an average: the observed counts
-          <Tex e="N_d" /> vary around it from day to day, and the distribution in eq. (1) describes
-          this variation. If birds passed independently of one another, <Tex e="N_d" /> would follow
-          a <strong>Poisson</strong> distribution, whose variance equals its mean. Real counts vary
-          more, because birds may travel in flocks and because days differ in ways that the model
-          cannot fully explain. The <strong>negative binomial</strong> distribution allows for this
-          extra variation through its dispersion parameter <Tex e="\theta" />:
+          If birds passed independently, the observed daily count <Tex e="N_d" /> would follow a
+          <strong>Poisson</strong> distribution, whose variance equals its mean. Real counts vary
+          more because birds may travel in flocks and days differ in ways the model cannot fully
+          explain. We therefore use a <strong>negative binomial</strong> distribution to model the
+          observed counts <Tex e="N_d" />, with mean <Tex e="\mu_d" /> (the expected observed count)
+          and a dispersion parameter <Tex e="\theta" /> that controls the extra variation:
         </p>
         <div class="eq">
-          <Tex display e="\operatorname{Var}(N_d) = \mu_d + \frac{\mu_d^2}{\theta} \tag{4}" />
+          <Tex
+            display
+            e="N_d \sim \operatorname{NegBin}(\mu_d,\ \theta), \qquad \operatorname{Var}(N_d) = \mu_d + \frac{\mu_d^2}{\theta} \tag{3}"
+          />
         </div>
         <p>
-          The second term, <Tex e="\mu_d^2/\theta" />, is the variance in excess of that of a
-          Poisson distribution. A small value of <Tex e="\theta" /> allows much greater variation
-          between days; as the value of <Tex e="\theta" /> grows, the distribution approaches a
-          Poisson with the same mean <Tex e="\mu_d" />. Each species has a single value of
-          <Tex e="\theta" />, estimated together with the smoothing parameters (Section 2.6).
+          The variance in excess of that of a Poisson is <Tex e="\mu_d^2/\theta" />. A small value
+          of <Tex e="\theta" /> allows much greater variation between days; as the value of
+          <Tex e="\theta" /> grows, the distribution approaches a Poisson with the same mean
+          <Tex e="\mu_d" />. Each species has one fitted <Tex e="\theta" />, estimated jointly with
+          the model’s smoothing parameters below.
         </p>
         <NegBinWidget :name="name" :species-theta="trend.theta" />
       </section>
       <section id="model-m-model">
-        <h5><span class="sec-n">4</span>Effects on expected full-day passage</h5>
+        <h5><span class="sec-n">3</span>The model</h5>
         <p>
-          This section describes the effects in eq. (2) by time scale: over the years (trend and
-          year level), over the season (season and change of timing) and from day to day (weather
-          and episodes).
+          It is convenient to model expected full-day passage <Tex e="R_d" /> as a function of the
+          year, date and weather, then use coverage to relate it to the observed count. For day
+          <Tex e="d" />, <Tex e="y_d" /> denotes its year and <Tex e="t_d" /> its day of year:
+        </p>
+        <div class="eq">
+          <Tex
+            display
+            e="\log R_d = \alpha + \Tr(y_d) + \Yr_{y_d} + \Se(t_d) + \Sh(y_d,t_d) + \Wx_d + \Ep_{y_d}(t_d) \tag{4}"
+          />
+        </div>
+        <p>Each term describes a source of variation in full-day passage:</p>
+        <table class="terms">
+          <tbody v-for="g in GROUPS" :key="g.name">
+            <tr>
+              <th colspan="3" class="terms-group">{{ g.name }}</th>
+            </tr>
+            <tr v-for="term in g.terms" :key="term.name">
+              <td class="terms-sym"><Tex :e="term.tex" /></td>
+              <th scope="row" :class="term.cls">{{ term.name }}</th>
+              <td>{{ term.text }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The terms are added on the logarithmic scale, so they <em>multiply</em> the number of
+          birds. An increase of 0.1 in any term means about 10% more expected birds, holding the
+          other terms fixed.
         </p>
 
         <h6 class="model-timescale">Over the years</h6>
-        <p>
-          The <strong class="t-trend">trend</strong>&nbsp;<Tex e="\Tr(y)" /> describes gradual
-          change in passage across years, and the
-          <strong class="t-year">year level</strong>&nbsp;<Tex e="\Yr_y" /> each year’s departure
-          from it. On its own, the trend is not a change in the number of birds: it is defined on
-          the logarithmic scale with every day of the season weighted equally, and it interacts with
-          the change of timing. Figure 2.3 therefore summarises these effects as season totals, in
-          birds.
-        </p>
         <figure class="figure w-100">
           <div class="row g-2">
             <div class="col-md-6">
@@ -147,19 +93,15 @@
         </figure>
         <h6 class="model-timescale">Over the season</h6>
         <p id="model-m-timing">
-          The <strong class="t-season">season</strong>&nbsp;<Tex e="\Se(t)" /> is the average shape
-          of the season, shared by all years: when the species passes, and how spread out its
-          passage is. The <strong class="t-shift">change of timing</strong>&nbsp;<Tex
-            e="\Sh(y,t)"
-          />
-          describes gradual departures from that shape over the decades. Such changes occur when
-          populations alter the timing of their migration, or when populations passing at different
-          times change in relative abundance.
+          <strong class="t-shift">Change of timing</strong>, <Tex e="\Sh(y,t)" />. Migration
+          phenology can change over decades: populations may alter when they migrate, or populations
+          passing at different times may change in relative abundance. We represent this gradual
+          change with a smooth interaction between year and day of year.
         </p>
         <p>
-          <Tex e="\Sh(y,t)" /> is a smooth function of both year and day of year, so it captures
-          only slow changes. The short-lived peaks and gaps of individual seasons are described by
-          the effects of weather and episodes instead.
+          <Tex e="\Se(t)" /> still describes the average seasonal pattern shared across years;
+          <Tex e="\Sh(y,t)" /> describes gradual departures from it. Individual seasons’ short-lived
+          peaks and gaps belong to weather and episodes, not this long-term change.
         </p>
         <figure class="figure w-100">
           <label for="shape-year" class="form-label"
@@ -183,19 +125,14 @@
           </figcaption>
         </figure>
         <h6 id="model-m-days" class="model-timescale">From day to day</h6>
-        <p id="model-m-weather">
-          The <strong class="t-weather">weather</strong> effect <Tex e="\Wx_d" /> is a linear
-          combination of nine daily weather variables <Tex e="w_{j,d}" />, each standardised:
-        </p>
-        <div class="eq"><Tex display e="\Wx_d = \sum_{j=1}^{9}\beta_j w_{j,d}" /></div>
+        <p id="model-m-weather"><strong class="t-weather">Weather</strong></p>
         <p>
-          The coefficient <Tex e="\beta_j" /> gives how much variable <Tex e="j" /> changes the log
-          expected full-day passage, holding the other effects fixed. The variables are calculated
-          from hourly
+          We use hourly
           <a href="https://open-meteo.com/en/docs/historical-weather-api"
-            >ERA5 reanalysis data from the Open-Meteo archive</a
+            >ERA5 data from the Open-Meteo archive</a
           >
-          at the Défilé (0.25° grid), in four steps:
+          at the Défilé (0.25° grid). Each daily weather variable is calculated from hourly values,
+          then averaged across the species’ expected flight hours:
         </p>
         <ol>
           <li>
@@ -280,19 +217,28 @@
             divide by its standard deviation on counted days, giving <Tex e="w_{j,d}" />.
           </li>
         </ol>
+        <div class="eq"><Tex display e="\Wx_d = \sum_{j=1}^{9}\beta_j w_{j,d}" /></div>
+        <p>
+          Here <Tex e="w_{j,d}" /> is weather variable <Tex e="j" /> for day <Tex e="d" />, after
+          standardisation. Its fitted coefficient <Tex e="\beta_j" /> says how that variable changes
+          log expected passage, holding the other terms fixed. Their sum <Tex e="\Wx_d" /> is the
+          day’s combined weather contribution.
+        </p>
         <WeatherPanels v-if="data.weather" :weather="data.weather" :name="name" />
         <p>
-          The <strong class="t-episode">episode</strong> effect <Tex e="\Ep_y(t)" /> is a smooth
-          curve along the day of year, separate for each year. It describes runs of unusually busy
-          or quiet days that the other effects do not explain. These runs may reflect weather
-          elsewhere along the route, the arrival of particular populations, social behaviour or
-          other processes; the model does not identify their cause.
+          <strong class="t-episode">Episodes</strong>, <Tex e="\Ep_y(t)" />. Migration often
+          contains runs of unusually busy or quiet days. These may reflect weather elsewhere or
+          earlier along the route, the arrival of particular populations, social behaviour, or other
+          processes. The episode term represents the remaining pattern shared by neighbouring days
+          after accounting for the model’s seasonal and local-weather effects; it does not identify
+          its ecological cause.
         </p>
         <p>
-          Because the episode curve is smooth, the counts on the days before and after a gap
-          constrain it during the gap, which helps to reconstruct short gaps. This is particularly
-          useful with the near-continuous counting at the Défilé. Across a long gap, the counts give
-          much less information about where a run of busy days occurred.
+          Each year has its own spline along day of year, built from smoothly joined cubic
+          polynomial pieces. In well-covered seasons, observations before and after a missing day
+          constrain the surrounding migration wave, helping reconstruct short gaps. This is
+          particularly useful with our near-continuous counting. Across a long gap, the observations
+          provide much less information about where a wave occurred.
         </p>
         <EpisodeWidget
           v-if="trend.episodes && data.days"
@@ -304,13 +250,12 @@
         />
       </section>
       <section id="model-m-smooth">
-        <h5><span class="sec-n">5</span>Penalties: how smooth is smooth?</h5>
+        <h5><span class="sec-n">4</span>How smooth is smooth?</h5>
         <p>
-          Each smooth effect (<Tex e="\Tr" />, <Tex e="\Se" />, <Tex e="\Sh" />, <Tex e="\Ep" />) is
-          a <em>spline</em>: a weighted sum of fixed, smoothly joined polynomial pieces, flexible
-          enough to follow almost any shape. Too flexible, a curve would follow random fluctuations
-          in the counts. A penalty on its wiggliness prevents this: for given smoothing parameters,
-          the coefficients maximise the penalised log-likelihood
+          Each curve (<Tex e="\Tr" />, <Tex e="\Se" />, <Tex e="\Sh" />, <Tex e="\Ep" />) is a
+          <em>spline</em>: a chain of short polynomial pieces joined smoothly, flexible enough to
+          follow almost any shape. Too flexible, it would follow random fluctuations. Smoothness and
+          size penalties regularise the fit. For the smoothness terms, the coefficient fit maximises
         </p>
         <div class="eq">
           <Tex
@@ -319,63 +264,77 @@
           />
         </div>
         <p>
-          The wiggliness measures how much a curve bends. A large smoothing parameter
-          <Tex e="\rho_k" /> favours a simpler curve; a small one lets it bend more. The smoothing
-          parameters are estimated from the counts, together with <Tex e="\theta" /> (Section 2.6).
-        </p>
-        <p>
-          The other effects are penalised for their size rather than their wiggliness. The year
-          levels <Tex e="\Yr_y" /> have a penalty whose strength is also estimated, which makes them
-          a random effect. The weather coefficients <Tex e="\beta_j" /> have a fixed penalty:
-          without a clear signal in the counts, a weather effect stays near zero.
+          A large smoothing parameter <Tex e="\rho_k" /> favours a simpler curve; a small one lets
+          it bend more. Smoothing parameters and <Tex e="\theta" /> are estimated using an
+          approximation to the <em>marginal likelihood</em>, which accounts for uncertainty in the
+          coefficients. The long-term trend describes gradual change across years. The year levels
+          <Tex e="\Yr" /> are there for year-to-year jumps. The weather effects
+          <Tex e="\beta_j" /> are straight lines, with a fixed penalty of their own: without a clear
+          signal in the counts, an effect stays near zero.
         </p>
         <SmoothWidget :name="name" :annual="trend.annual" />
       </section>
       <section id="model-m-fit">
-        <h5><span class="sec-n">6</span>Fitting the model</h5>
+        <h5><span class="sec-n">5</span>Fitting the model</h5>
         <p>
-          We fit the model by empirical Bayes inference, as is standard for generalised additive
-          models (Wood 2011, 2017). The penalties of Section 2.5 are Gaussian priors on the
-          coefficients. Two groups of parameters are estimated:
+          Before using the model to predict passage, we need to fit it to the observed daily counts,
+          that is, to estimate the parameters of its components. The fitting estimates two groups of
+          parameters:
         </p>
         <ul>
           <li>
-            the <strong>coefficients</strong>, which determine the level, the shape of the curves
-            and the size of the year levels and weather effects, and hence the expected full-day
-            passage on each day;
+            <strong>Coefficients</strong> determine the height and shape of the curves and the size
+            of the year and weather effects. Together, they determine the predicted passage on each
+            day.
           </li>
           <li>
-            the <strong>hyperparameters</strong>: the smoothing parameters <Tex e="\rho_k" />, which
-            set the strength of the penalties, and the dispersion parameter <Tex e="\theta" /> of
-            the negative binomial distribution (eq. 1).
+            <strong>Smoothing parameters and count dispersion.</strong> Smoothing parameters control
+            how strongly curves are kept smooth and effects are kept small. The dispersion parameter
+            <Tex e="\theta" /> of the negative binomial distribution (eq. 3) controls the remaining
+            variability of daily counts around their predicted values.
           </li>
         </ul>
         <p>
-          With the hyperparameters fixed, the coefficients are estimated by penalised iteratively
-          reweighted least squares, which finds the posterior mode: the coefficients that maximise
-          the negative-binomial log-likelihood of the counts minus the penalties (eq. 5). The
-          hyperparameters are estimated by maximising the marginal likelihood of the counts, which
-          integrates over the uncertainty in the coefficients; we use its Laplace approximation. The
-          fitting alternates between the two:
+          We use the negative-binomial likelihood to measure how well the predictions from a trial
+          set of parameter values agree with the observed counts, accounting for their variability.
+          To help find realistic parameter values, we use Gaussian priors: expectations about the
+          shape and size of effects. Priors on seasonal and long-term curves favour smooth changes.
+          For year levels and weather coefficients, they favour modest effects unless the counts
+          support larger ones. Episodes have their own smoothness and size priors.
+        </p>
+        <p>
+          This is empirical Bayes inference, as used for generalised additive models (Wood 2011,
+          2017): the coefficients are estimated by penalised iteratively reweighted least squares at
+          fixed smoothing and dispersion, and the smoothing parameters and
+          <Tex e="\theta" /> by maximising an approximate marginal likelihood. The fitting
+          alternates between these two groups:
         </p>
         <ol>
-          <li><strong>Estimate the coefficients</strong> with the hyperparameters fixed.</li>
-          <li><strong>Update the hyperparameters</strong> with the coefficients from step 1.</li>
           <li>
-            <strong>Repeat</strong> until the changes are small or the iteration limits are reached.
+            <strong>Estimate the coefficients.</strong> An iterative solver adjusts all coefficients
+            together to improve agreement with the counts while respecting the prior penalties,
+            keeping smoothing parameters and dispersion fixed during this step.
+          </li>
+          <li>
+            <strong>Update smoothing and dispersion.</strong> Using the current fit, update the
+            smoothing parameters and the count-dispersion parameter <Tex e="\theta" />.
+          </li>
+          <li>
+            <strong>Repeat.</strong> Re-estimate the coefficients under those updated settings,
+            continuing until the changes are small or the iteration limits are reached.
           </li>
         </ol>
         <p>
-          After fitting, the uncertainty in the coefficients is described by a multivariate Gaussian
-          approximation of their posterior distribution, with the hyperparameters treated as fixed.
-          Draws from it give plausible combinations of the effects, which the reconstruction of full
-          days (Chapter 3) uses to draw the birds missed outside the counting intervals.
+          After fitting, a joint Gaussian approximation describes uncertainty around the coefficient
+          estimates. Draws from that approximation produce plausible combinations of curves and
+          effects. The reconstruction of full days (Section 3) then uses them to draw the birds
+          missed during uncounted periods.
         </p>
         <p>
-          Only days with a coverage of at least {{ Math.round(100 * trend.min_coverage) }}% (<Tex
-            :e="`c_d\\ge${trend.min_coverage}`"
-          />) enter the fit. This avoids estimating the full-day passage from very short counts that
-          may happen to contain a single flock.
+          For fitting, we use daily counts with coverage of at least
+          {{ Math.round(100 * trend.min_coverage) }}% (<Tex :e="`c_d\\ge${trend.min_coverage}`" />)
+          to avoid estimating full-day passage from very short observations that may happen to
+          contain a flock.
         </p>
         <details class="method-detail">
           <summary>Solver details</summary>
@@ -384,6 +343,14 @@
             <a href="https://numpy.org/doc/stable/">NumPy</a> for arrays and
             <a href="https://docs.scipy.org/doc/scipy/">SciPy</a> for splines, linear algebra and
             optimisation.
+          </p>
+          <p>
+            The fitting uses empirical Bayes. Gaussian priors on the coefficients become penalties
+            in the optimisation: at fixed smoothing and dispersion, the solver maximises the
+            negative-binomial log-likelihood minus those penalties, giving the posterior mode.
+            Smoothing and dispersion are selected using a Laplace approximation to the marginal
+            likelihood, which accounts for uncertainty in the coefficients. Subsequent uncertainty
+            calculations treat these estimated settings as fixed.
           </p>
           <ul>
             <li>
@@ -470,31 +437,28 @@ const props = defineProps({
   effort: { type: Array, default: null },
 });
 
-// The terms of eq. (2), in the order of the equation, by time scale
+// The terms of eq. (4), in the order of the equation, by time scale
 const GROUPS = [
   {
     name: "Over the years",
     terms: [
       {
         tex: "\\alpha",
-        name: "base level",
+        name: "level",
         cls: "",
-        form: "Constant",
-        text: "The base level of the log expected full-day passage, around which the other effects raise or lower passage.",
+        text: "The baseline log passage rate: it sets the scale of expected birds per full day, around which the other terms raise or lower passage.",
       },
       {
         tex: "\\Tr(y)",
         name: "trend",
         cls: "t-trend",
-        form: "Smooth function of year (penalised spline)",
-        text: "Gradual change across years, generally associated with long-term population change, but possibly also with shifts in migration routes or in visibility at the site.",
+        text: "A smooth change across years, generally associated with long-term population change but also with shifts in migration routes or visibility at this site.",
       },
       {
         tex: "\\Yr_y",
         name: "year level",
         cls: "t-year",
-        form: "One value per year (random effect)",
-        text: "Each year’s departure from the trend: good and bad years, for example because of breeding success or a shifted route.",
+        text: "One value per year: good and bad years around the trend (breeding success, a shifted route, …).",
       },
     ],
   },
@@ -505,15 +469,13 @@ const GROUPS = [
         tex: "\\Se(t)",
         name: "season",
         cls: "t-season",
-        form: "Smooth function of day of year (penalised spline)",
-        text: "The average shape of the season: when the species passes, and how spread out its passage is.",
+        text: "The average shape of the season: when the species passes, and how spread out.",
       },
       {
         tex: "\\Sh(y,t)",
         name: "change of timing",
         cls: "t-shift",
-        form: "Smooth function of year and day of year (penalised spline)",
-        text: "Gradual change of that shape over the decades, for example a season starting earlier or lasting longer.",
+        text: "A slow change of that shape over the decades, for example a season starting earlier or lasting longer.",
       },
     ],
   },
@@ -524,15 +486,13 @@ const GROUPS = [
         tex: "\\Wx_d",
         name: "weather",
         cls: "t-weather",
-        form: "Linear in nine weather variables (fixed effects with a shrinkage prior)",
-        text: "The effect of the day’s weather: rain, sunshine, thermal mixing, wind, pressure change and temperature (Section 2.4).",
+        text: "The day's weather: rain, sunshine, thermals, wind, fronts and temperature (below).",
       },
       {
         tex: "\\Ep_y(t)",
         name: "episodes",
         cls: "t-episode",
-        form: "Smooth function of day of year, separate for each year (penalised spline)",
-        text: "Runs of a few busy or quiet days that the other effects do not explain (Section 2.4).",
+        text: "Runs of a few good or bad days that the weather does not explain (below).",
       },
     ],
   },
