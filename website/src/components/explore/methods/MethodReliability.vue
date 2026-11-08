@@ -21,8 +21,10 @@
     <figcaption class="figure-caption">
       <strong>Figure 5.1.</strong> {{ name }}: reconstructed totals (blue dots; predictive medians)
       against originally counted totals. Black lines show 80% intervals, with thinner 95%
-      extensions. The diagonal marks perfect agreement. Typical error is the median absolute log
-      error, expressed as a percentage difference.
+      extensions. Each of the {{ targets }} test seasons is masked several times, each time with the
+      gaps of a different historical season, so several dots can share one originally counted total
+      (one vertical line). The diagonal marks perfect agreement. Typical error is the median
+      absolute log error, expressed as a percentage difference.
     </figcaption>
   </figure>
   <p v-else>No gap-transplant validation is available for {{ name }}.</p>
@@ -36,7 +38,7 @@
       independent refit of every model parameter.
     </p>
     <p>
-      Production totals use predictive means; this benchmark scores predictive medians. These
+      Published totals use predictive means; this benchmark scores predictive medians. These
       seasonal-total tests do not directly validate the phenology slopes. Display decisions also
       consider coverage, interval widths and the boundaries of the counting season.
     </p>
@@ -58,6 +60,7 @@ const props = defineProps({
 });
 const trials = computed(() => props.data.benchmark?.gap_trials ?? []);
 const gap = computed(() => props.data.benchmark?.gap);
+const targets = computed(() => new Set(trials.value.map((r) => r.target)).size);
 const error = computed(() => Math.round(100 * Math.expm1(gap.value.abs_log_err)));
 const plotDiv = ref(null),
   visible = usePlot(plotDiv);

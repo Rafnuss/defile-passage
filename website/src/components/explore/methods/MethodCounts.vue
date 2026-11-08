@@ -56,15 +56,18 @@
         ></div>
         <figcaption class="figure-caption">
           <strong>Figure 1.2.</strong> {{ startYear }}–{{ lastYear }}: seasons counted (light),
-          seasons recording {{ name }} (dark), and coverage-adjusted mean birds per full day
-          (seven-day moving average).
+          seasons in which {{ name }} was recorded (dark), and the coverage-adjusted mean number of
+          {{ name }} per full day (seven-day moving average).
         </figcaption>
       </figure>
       <div class="callout callout-info">
         <strong>{{ name }}</strong
-        >: {{ windowText }}. Across {{ startYear }}–{{ lastYear }},
-        {{ outsideCount.toLocaleString() }} birds ({{ outsideShare }}%) were counted outside the
-        standard period.<template v-if="beyond"> Passage also continues {{ beyond }}.</template>
+        >: we use the days from {{ windowText }}. Across {{ startYear }}–{{ lastYear }},
+        {{ outsideCount.toLocaleString() }} {{ name }} ({{ outsideShare }}% of all counted) were
+        counted outside the standard period of 18 July to 18 November: this is the passage that the
+        standard period alone would miss.<template v-if="beyond">
+          Passage also continues {{ beyond }}.</template
+        >
       </div>
     </section>
   </div>
@@ -285,8 +288,8 @@ function plotWindow() {
         type: "bar",
         width: 86400000 * 0.55,
         marker: { color: COLORS.counted },
-        name: "Species recorded",
-        hovertemplate: "%{x|%d %b}: %{y} seasons recording the species<extra></extra>",
+        name: `Seasons with ${props.name} recorded`,
+        hovertemplate: `%{x|%d %b}: %{y} seasons with ${props.name} recorded<extra></extra>`,
       },
       {
         x,
@@ -295,8 +298,7 @@ function plotWindow() {
         mode: "lines",
         line: { color: COLORS.counted, width: 2 },
         showlegend: false,
-        hovertemplate:
-          "%{x|%d %b}: %{y:,.1f} birds per full day (coverage-adjusted)<extra></extra>",
+        hovertemplate: `%{x|%d %b}: %{y:,.1f} ${props.name} per full day (coverage-adjusted)<extra></extra>`,
       },
     ],
     {
@@ -331,7 +333,7 @@ function plotWindow() {
       },
       yaxis3: {
         domain: [0, 0.38],
-        title: { text: "birds / full day" },
+        title: { text: "birds per full day" },
         rangemode: "tozero",
         fixedrange: true,
       },

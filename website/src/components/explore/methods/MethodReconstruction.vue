@@ -3,7 +3,11 @@
     <section id="model-m-fill">
       <h5><span class="sec-n">1</span>Three cases for reconstructing a full day</h5>
       <p>
-        To estimate the total passage <Tex e="F_d" /> on every day of the season, we distinguish
+        We now estimate <Tex e="F_d" />, the number of birds that actually passed on day
+        <Tex e="d" />, for every day of the season. It differs from <Tex e="R_d" />, the
+        <em>expected</em> full-day passage under the daily model: <Tex e="R_d" /> is the average
+        number for that day’s year, date, weather and episode, while <Tex e="F_d" /> is the realised
+        number on that particular day, which the counts constrain where they exist. We distinguish
         three cases using the original daily coverage:
       </p>
       <p v-if="!data.trend" class="callout callout-info">
@@ -66,12 +70,15 @@
       </p>
       <h6>Use the counted hours to update passage intensity</h6>
       <p>
-        Instead of this simple estimate, we use a <strong>Gamma–Poisson model</strong>, which is
-        equivalent to the daily negative-binomial distribution written in two parts. The daily
-        intensity <Tex e="\lambda_d" /> has a Gamma distribution with mean <Tex e="R_d" /> and shape
-        <Tex e="\theta" />, the same dispersion parameter fitted above. We write Gamma distributions
-        using shape and rate, so their mean is shape divided by rate. Given that intensity, the
-        observed count <Tex e="N_d" /> is Poisson with mean <Tex e="c_d\lambda_d" />:
+        To use what the counted hours say about the rest of the same day, we need a quantity that
+        the counted and uncounted hours share. Writing the daily negative binomial in its
+        hierarchical form provides one: a day-specific passage intensity <Tex e="\lambda_d" />, from
+        which counted and uncounted birds both arise. This <strong>Gamma–Poisson model</strong> is
+        equivalent to the daily negative-binomial distribution (eq. 3) written in two parts. The
+        daily intensity <Tex e="\lambda_d" /> has a Gamma distribution with mean <Tex e="R_d" /> and
+        shape <Tex e="\theta" />, the same dispersion parameter fitted above. We write Gamma
+        distributions using shape and rate, so their mean is shape divided by rate. Given that
+        intensity, the observed count <Tex e="N_d" /> is Poisson with mean <Tex e="c_d\lambda_d" />:
       </p>
       <div class="eq">
         <Tex
@@ -161,9 +168,9 @@
         <Tex e="\kappa" /> makes this extra variance larger, while the mean remains <Tex e="m_d" />.
         This is a negative-binomial prediction for missing hours. Uncertainty in
         <Tex e="\lambda_d" /> adds further variability; adding the fixed observed count
-        <Tex e="N_d" /> gives the uncertainty in the reconstructed total. The production estimate
-        averages 1 000 joint reconstruction draws, including coefficient uncertainty; the 10th and
-        90th percentiles give its 80% interval.
+        <Tex e="N_d" /> gives the uncertainty in the reconstructed total. The published estimate
+        (the one shown on the Explore pages) averages 1 000 joint reconstruction draws, including
+        coefficient uncertainty; the 10th and 90th percentiles give its 80% interval.
       </p>
       <ConditionalDay
         v-if="data.trend"

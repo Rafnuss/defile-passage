@@ -9,8 +9,10 @@
       <p class="eyebrow">From birds counted to migration understood</p>
       <h1>Methods guide</h1>
       <p class="lead">
-        Six decades of observations, changing counting effort, and the statistical methods that
-        connect them. Follow each step, try the illustrations, and inspect the evidence.
+        How we turn six decades of migration counts at the Défilé de l’Écluse (Ain, France; 46.12°
+        N, 5.91° E) into daily, seasonal and long-term estimates for each species. Counts run from
+        1966 to today, mostly between mid-July and late November, with counting effort that changed
+        over time. Follow each step, try the illustrations, and inspect the evidence.
       </p>
     </div>
 
@@ -52,8 +54,9 @@
             <header class="chapter-head">
               <h2>{{ chapter.title }}</h2>
               <p v-if="chapter.id === 'counts'">
-                We first select comparable species, years and dates using daily bird counts and
-                counting intervals from
+                We first select the species, years and dates whose counts were collected in a
+                consistent way, so that they can be compared between seasons. We use the daily bird
+                counts and counting intervals from
                 <a href="https://github.com/Rafnuss/defile-dataset">defile-dataset</a>, which
                 documents their preparation and recording conventions.
               </p>
@@ -151,7 +154,7 @@ const chapters = [
   {
     id: "reconstruction",
     label: "Predict",
-    title: "Reconstructing full days",
+    title: "Reconstructing numbers for full days",
     component: MethodReconstruction,
     intro:
       "Using the fitted daily model, we first distinguish uncounted, fully counted and partly counted days, then estimate missing birds and inspect the full-day totals.",

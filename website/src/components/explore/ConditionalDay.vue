@@ -253,7 +253,7 @@ const totalMax = computed(() =>
   Math.max(1, ...totals.value.map((row) => observed.value + row.missing), predictive.value[1]),
 );
 const realisation = ref(0);
-// Keep the supplied count fixed. Draw missing passage from the production Gamma–Poisson
+// Keep the supplied count fixed. Draw missing passage from the published Gamma–Poisson
 // update plus flocking increments; allocate the known birds only to illustrate their times.
 const simulation = computed(() => {
   const seed = (4183 + Math.imul(realisation.value, 2654435761)) >>> 0;
