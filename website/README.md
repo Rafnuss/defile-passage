@@ -22,6 +22,12 @@ npm run dev --prefix website
 
 This copies `data/explore/` to ignored `website/public/data/explore/` before serving. QA pages are available through the assembled preview above. To refresh just the diagnostic pages, run `uv run python scripts/explore_viewer.py`.
 
+To edit the guide's prose in the rendered page, open it on the dev server with `?edit` added to the
+URL (`http://127.0.0.1:5173/?edit`). Text blocks become editable (formulas, links and live readouts
+stay fixed), and each edited block is saved within a second to ignored `logs/guide-edits.json` with
+its original and edited text, maths as TeX between ⟨ ⟩. Edits come back on reload. The `.vue`
+templates are not written: carry the edits into them, then empty the file.
+
 ## Sources
 
 - `src/App.vue`: chapter introductions, contents, species selection and provenance.

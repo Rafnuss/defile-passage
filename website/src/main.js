@@ -12,3 +12,7 @@ import "./site-header.css";
 createApp(App)
   .use(createI18n({ legacy: false, locale: "en", messages }))
   .mount("#app");
+
+// `?edit` on the dev server: edit the guide's prose in place (editMode.js)
+if (import.meta.env.DEV && new URLSearchParams(location.search).has("edit"))
+  import("./editMode.js").then((m) => m.startEditMode());
