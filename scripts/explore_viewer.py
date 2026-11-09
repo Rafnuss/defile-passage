@@ -51,6 +51,18 @@ def taxon_details(tx, sp):
         reasons = f"<table><tr><th>Claim</th><th>Display</th><th>Reason</th></tr>{reasons}</table><details><summary>Rules by output and numerical inputs</summary><table>{elements}</table><pre>{inputs}</pre></details>"
     else:
         reasons = "<p>No fitted count model; descriptive counts only.</p>"
+    edges = sp.get("window", {}).get("edges")
+    if edges and edges.get("early"):
+        cells = "".join(
+            f"<tr><th>{end}</th><td>{edges[end]['index']}</td><td>{edges[end]['q10']}</td>"
+            f"<td>{html.escape((edges[end]['level'] or '').replace('_', ' '))}</td></tr>"
+            for end in ("early", "late")
+        )
+        reasons += (
+            "<p>Passage where regular counting starts and stops: birds per full day in its first "
+            "and last week against the season's average day, and the bootstrap q10 over years.</p>"
+            f"<table><tr><th>Edge</th><th>Index</th><th>q10</th><th>Level</th></tr>{cells}</table>"
+        )
     return (
         f"<details class='taxon-detail'><summary>{name}</summary><div class='decision-detail'>{reasons}"
         f"<p><a href='../index.html?species={taxon}#reliability'>Validation figures and methods →</a><br>"
@@ -128,7 +140,7 @@ INDEX_COLUMNS = (  # header, definition: the index's tooltips and its legend
     (
         "season",
         "Reliability class of the passage dates: width of their 80% bands, birds behind "
-        "them, passage beyond the counting window.",
+        "them, passage beyond regular counting.",
     ),
     (
         "gap error",
@@ -140,7 +152,8 @@ INDEX_COLUMNS = (  # header, definition: the index's tooltips and its legend
     (
         "flags",
         "Diagnostics that may make the page misleading: borrowed_profile, "
-        "passage_beyond_counting (much of the passage falls where counting thins out), "
+        "passage_beyond_counting (birds still pass where regular counting starts or stops, "
+        "in most years; _some_years: in a few), "
         "wide_intervals, no_timed_days. Sorts by number of flags.",
     ),
 )

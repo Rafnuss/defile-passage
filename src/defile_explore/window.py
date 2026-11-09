@@ -1,26 +1,20 @@
-"""Each taxon's windows: the days of the season its model is fitted on, and the days its season
-panels show.
+"""The season's windows: the days the trend model is fitted on, and the days the season panels
+show. One pair for every taxon, from the counting effort alone.
 
-The default window (`export.WINDOW`, 18 Jul - 18 Nov) is where the count is near-complete: most
-days are counted in 80-100% of years, against about a third from 20 Nov to 1 Dec. Late taxa still
-pass beyond it (Red Kite: still around 120 birds a day on 30 Nov in the years counted then), so a
-taxon's windows are extended, by rule:
+A season day belongs to a window when it was counted (`state == "counted"`) in at least a share of
+the years from `export.SYSTEMATIC_FROM` (daily systematic counting) to the last complete year,
+that share smoothed over `ENVELOPE_SMOOTH` days so a one-off gap does not cut the run:
+`MODEL_MIN_YEARS` for the model, which fills the rest, `VIEW_MIN_YEARS` for the panels, which
+only show what was counted. Both are clipped to `profile.PROFILE_DOY`, the days the time-of-day
+profile and the season frame cover. No taxon's passage enters the rule, so every taxon's totals,
+shares and passage dates are over the same days (`DECISIONS.md` -> `window@3`).
 
-- `envelope`: the season days counted (`c >= COVERAGE_MIN`) in at least a share of the taxon's
-  years (from its start year), smoothed over `ENVELOPE_SMOOTH` days so a one-off gap does not cut
-  it: `MODEL_MIN_YEARS` for the model, which must fill the rest, `VIEW_MIN_YEARS` for the panels,
-  which only show what was counted.
-- `passage_tails`: from the taxon's mean birds per full counted day by date over its years
-  (`climatology`), the dates by which `tails` of the passage within an envelope have passed.
-- `windows`: the model window is the default one extended to `MODEL_TAILS` of the passage plus
-  `MARGIN_DAYS`, within the model envelope; the view window is the model window extended the same
-  way to `VIEW_TAILS`, within the view envelope. Only extended, never cut: a taxon whose passage
-  sits inside the default window keeps the fit benchmarked on it.
-- `edge_shares`: the share of the passage within the model envelope that falls in its first and
-  last `EDGE_DAYS`. At `EDGE_SHARE` or more, much of the passage likely falls where counting thins
-  out (`beyond_counting`): its totals and dates are those of the counted season, and the page says
-  so. A test on the tails alone (`MODEL_TAILS` within `MARGIN_DAYS` of the edge) flagged 51 taxa,
-  most for a trickle of late birds.
+On the 2025 release this gives 14 Jul - 1 Dec for the model and 11 Jul - 2 Dec for the panels;
+the default window (`export.WINDOW`, 18 Jul - 18 Nov) stays the standard period of the yearly
+index.
+
+Whether a taxon still passes where counting starts or stops is not a property of the window: it
+is judged from the counts alone (`edges`).
 
 Windows are pairs of season days (`trend.season_day`: the day of year of a non-leap year, so one
 calendar date is one day every year), inclusive. `settings` can override both.
@@ -29,19 +23,14 @@ calendar date is one day every year), inclusive. `settings` can override both.
 import numpy as np
 import pandas as pd
 
-from defile_explore.export import WINDOW
-from defile_explore.profile import COVERAGE_MIN
+from defile_explore.export import SYSTEMATIC_FROM, WINDOW
+from defile_explore.profile import PROFILE_DOY
+from defile_explore.trend import season_day
 
-METHOD = "window@2"
+METHOD = "window@3"
 MODEL_MIN_YEARS = 1 / 3  # share of years a date must be counted in to be modelled
 VIEW_MIN_YEARS = 0.1  # ... to be shown
 ENVELOPE_SMOOTH = 7  # days of the rolling mean of that share (one-off gaps do not cut it)
-CLIMATOLOGY_SMOOTH = 7  # days of the rolling mean of the mean daily rate
-MODEL_TAILS = (0.005, 0.995)  # passage shares the model window covers
-VIEW_TAILS = (0.001, 0.999)  # ... and the view window
-MARGIN_DAYS = 5  # added beyond those dates
-EDGE_DAYS = 7  # days at each end of the model envelope...
-EDGE_SHARE = 0.1  # ... holding this share of the passage or more: `beyond_counting`
 NON_LEAP = 2001  # a non-leap year, to turn (month, day) into a season day and back
 
 
@@ -64,73 +53,36 @@ def from_dates(dates: list[str]) -> tuple[int, int]:
     return tuple(season_day_of(*map(int, d.split("-"))) for d in dates)
 
 
-def envelope(frame: pd.DataFrame, min_years: float) -> tuple[int, int]:
-    """The run of season days around the default window counted (`c >= COVERAGE_MIN`) in at least
-    `min_years` of the years of `frame` (a `trend.model_frame` over the whole counted season); the
-    default window's own days always belong to it."""
-    share = (frame["c"] >= COVERAGE_MIN).groupby(frame["doy"]).mean()
-    share = share.rolling(ENVELOPE_SMOOTH, center=True, min_periods=1).mean()
-    lo, hi = default_window()
-    ok = (share >= min_years) | ((share.index >= lo) & (share.index <= hi))
-    days = ok.index.to_numpy()
-    a = days[(days <= lo) & ~ok.to_numpy()]
-    b = days[(days >= hi) & ~ok.to_numpy()]
-    return int(a.max() + 1 if len(a) else days.min()), int(b.min() - 1 if len(b) else days.max())
+def counted_share(effort: pd.DataFrame, last_year: int) -> pd.Series:
+    """Share of the years `SYSTEMATIC_FROM`..`last_year` in which each season day of `PROFILE_DOY`
+    was counted, smoothed over `ENVELOPE_SMOOTH` days."""
+    e = effort[effort["state"] == "counted"]
+    years = e["date"].dt.year
+    e = e[(years >= SYSTEMATIC_FROM) & (years <= last_year)]
+    doy = pd.Series(season_day(pd.DatetimeIndex(e["date"])), index=e.index)
+    share = e["date"].dt.year.groupby(doy).nunique() / (last_year - SYSTEMATIC_FROM + 1)
+    share = share.reindex(range(PROFILE_DOY[0], PROFILE_DOY[1] + 1), fill_value=0.0)
+    return share.rolling(ENVELOPE_SMOOTH, center=True, min_periods=1).mean()
 
 
-def climatology(frame: pd.DataFrame) -> pd.Series:
-    """Mean birds per full counted day by season day, over the years it was counted, smoothed over
-    `CLIMATOLOGY_SMOOTH` days; NaN where never counted."""
-    rate = (frame["y"] / frame["c"]).where(frame["c"] >= COVERAGE_MIN)
-    mean = rate.groupby(frame["doy"]).mean()
-    return mean.rolling(CLIMATOLOGY_SMOOTH, center=True, min_periods=1).mean()
+def span(share: pd.Series, min_years: float) -> tuple[int, int]:
+    """The run of days around the best-counted day with `share >= min_years`."""
+    ok = (share >= min_years).to_numpy()
+    days = share.index.to_numpy()
+    peak = int(np.argmax(share.to_numpy()))
+    lo = hi = peak
+    while lo > 0 and ok[lo - 1]:
+        lo -= 1
+    while hi < len(ok) - 1 and ok[hi + 1]:
+        hi += 1
+    return int(days[lo]), int(days[hi])
 
 
-def passage_tails(clim: pd.Series, env: tuple[int, int], tails) -> tuple[float, float] | None:
-    """Season days by which `tails` of the passage within `env` have passed; None without birds."""
-    c = clim.loc[env[0] : env[1]].fillna(0)
-    if c.sum() <= 0:
-        return None
-    cum = np.cumsum(c.to_numpy()) / c.sum()
-    return tuple(float(np.interp(q, cum, c.index.to_numpy())) for q in tails)
-
-
-def edge_shares(clim: pd.Series, env: tuple[int, int]) -> tuple[float, float] | None:
-    """Shares of the passage within `env` in its first and last `EDGE_DAYS`; None without birds."""
-    c = clim.loc[env[0] : env[1]].fillna(0)
-    if c.sum() <= 0:
-        return None
-    return float(c.iloc[:EDGE_DAYS].sum() / c.sum()), float(c.iloc[-EDGE_DAYS:].sum() / c.sum())
-
-
-def extend(window, tails, env) -> tuple[int, int]:
-    """`window`, extended towards `tails` plus `MARGIN_DAYS`, but not beyond `env`."""
-    if tails is None:
-        return window
-    lo = min(window[0], max(env[0], int(np.floor(tails[0])) - MARGIN_DAYS))
-    hi = max(window[1], min(env[1], int(np.ceil(tails[1])) + MARGIN_DAYS))
-    return lo, hi
-
-
-def windows(frame: pd.DataFrame) -> dict:
-    """The rule's windows from `frame` (a `trend.model_frame` over the whole counted season, from
-    the taxon's start year): `model` and `view`, the envelopes and passage tails they come from,
-    the shares of the passage at the model envelope's edges (`edge_shares`) and `beyond_counting`
-    (`"early"`, `"late"`, both, or neither: `EDGE_SHARE` or more at that edge)."""
-    clim = climatology(frame)
-    env_m, env_v = envelope(frame, MODEL_MIN_YEARS), envelope(frame, VIEW_MIN_YEARS)
-    tails_m = passage_tails(clim, env_m, MODEL_TAILS)
-    model = extend(default_window(), tails_m, env_m)
-    view = extend(model, passage_tails(clim, env_v, VIEW_TAILS), env_v)
-    edges = edge_shares(clim, env_m)
-    beyond = [k for k, e in zip(("early", "late"), edges or ()) if e >= EDGE_SHARE]
+def windows(effort: pd.DataFrame, last_year: int) -> dict:
+    """The `model` and `view` windows, the same for every taxon (see the module docstring)."""
+    share = counted_share(effort, last_year)
     return {
         "method": METHOD,
-        "model": model,
-        "view": view,
-        "model_envelope": env_m,
-        "view_envelope": env_v,
-        "tails": tails_m,
-        "edge_shares": edges,
-        "beyond_counting": beyond,
+        "model": span(share, MODEL_MIN_YEARS),
+        "view": span(share, VIEW_MIN_YEARS),
     }

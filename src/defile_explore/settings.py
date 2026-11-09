@@ -14,7 +14,7 @@ Settings:
   a list of years, or `{from: Y}` / `{from: Y, to: Z}`: every year of the range with any bird aged
   (or sexed).
 - `model_window`, `view_window`: the season days the trend is fitted on and the season panels
-  show (`window.windows`). An override is `[MM-DD, MM-DD]`, inclusive.
+  show (`window.windows`, the same for every taxon). An override is `[MM-DD, MM-DD]`, inclusive.
 - `links`: external pages. eBird, eBird Status and Trends, Birds of the World, EBBA2 and
   Trektellen by rule (from the taxonomy's codes); others (`vogelwarte`, `migration_atlas`) only
   from `overrides.yaml`, where they need no reason.

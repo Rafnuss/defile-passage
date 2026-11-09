@@ -10,8 +10,10 @@ from defile_explore import benchmark as B
 from defile_explore import catalogue as C
 from defile_explore import daytime as Y
 from defile_explore import demography as G
+from defile_explore import edges as D
 from defile_explore import export as E
 from defile_explore import pipeline as L
+from defile_explore import profile as P
 from defile_explore import reliability as Q
 from defile_explore import remarks as M
 from defile_explore import season as S
@@ -131,48 +133,99 @@ def test_chances_count_days_reaching_each_threshold():
 # --- window ------------------------------------------------------------------------------------
 
 
-def season_frame(rate, counted_share, years: int = 10) -> pd.DataFrame:
-    """Season days 182..336 over `years` years: `rate(doy)` birds on counted days, each day counted
-    in the first `counted_share(doy)` share of the years."""
+def counted_effort(counted_share, last_year: int = 2025) -> pd.DataFrame:
+    """Effort days `SYSTEMATIC_FROM`..`last_year`, each season day of `PROFILE_DOY` counted in the
+    first `counted_share(doy)` share of the years."""
+    first = W.SYSTEMATIC_FROM
+    years = last_year - first + 1
     rows = []
-    for i in range(years):
-        for doy in range(182, 337):
+    for i, year in enumerate(range(first, last_year + 1)):
+        for doy in range(P.PROFILE_DOY[0], P.PROFILE_DOY[1] + 1):
+            date = pd.Timestamp(W.NON_LEAP, 1, 1) + pd.Timedelta(days=doy - 1)
+            date = pd.Timestamp(year, date.month, date.day)
             counted = i < round(counted_share(doy) * years)
-            rows.append(
-                {"year": 2000 + i, "doy": doy, "c": float(counted), "y": rate(doy) * counted}
-            )
+            rows.append({"date": date, "state": "counted" if counted else "uncertain"})
     return pd.DataFrame(rows)
 
 
-def test_a_passage_inside_the_default_window_keeps_it():
-    lo, hi = W.default_window()
-    f = season_frame(lambda d: 100.0 if 240 <= d <= 280 else 0.0, lambda d: 1.0)
-    w = W.windows(f)
-    assert w["model"] == (lo, hi) and w["view"] == (lo, hi) and w["beyond_counting"] == []
+def test_the_windows_are_where_enough_years_were_counted():
+    share = lambda d: 1.0 if 200 <= d <= 320 else (0.5 if 195 <= d <= 328 else 0.2)  # noqa: E731
+    w = W.windows(counted_effort(share), 2025)
+    half = W.ENVELOPE_SMOOTH // 2
+    assert 195 - half <= w["model"][0] <= 197 and 326 <= w["model"][1] <= 328 + half
+    assert w["view"] == P.PROFILE_DOY  # 20% of years everywhere: shown throughout
 
 
-def test_a_late_passage_extends_to_where_enough_years_were_counted():
-    lo, hi = W.default_window()  # 18 Nov = 322
-    share = lambda d: 1.0 if d <= hi else (0.5 if d <= 328 else 0.2)  # noqa: E731
-    w = W.windows(season_frame(lambda d: 100.0 if d >= 280 else 0.0, share))
-    assert hi < w["model"][1] <= 328 + W.ENVELOPE_SMOOTH // 2  # modelled while 1/3 counted
-    assert w["view"][1] == 336  # shown while 10% counted
-    assert w["model"][0] == lo and w["beyond_counting"] == ["late"]
+def test_a_gap_in_one_year_does_not_cut_the_window():
+    share = lambda d: 0.0 if d == 250 else 1.0  # noqa: E731  (one day never counted)
+    w = W.windows(counted_effort(share), 2025)
+    assert w["model"] == P.PROFILE_DOY
 
 
-def test_a_trickle_of_late_birds_is_not_passing_beyond_counting():
-    lo, hi = W.default_window()
-    share = lambda d: 1.0 if d <= hi else 0.0  # noqa: E731  (nothing counted after 18 Nov)
-    rate = lambda d: 100.0 if 260 <= d <= 290 else 1.0  # noqa: E731
-    w = W.windows(season_frame(rate, share))
-    assert w["edge_shares"][1] < W.EDGE_SHARE and w["beyond_counting"] == []
+def test_years_before_systematic_counting_do_not_count():
+    e = counted_effort(lambda d: 1.0)
+    early = pd.DataFrame({"date": pd.to_datetime(["1980-12-01"]), "state": ["counted"]})
+    w = W.windows(pd.concat([e, early]), 2025)
+    assert w["model"] == P.PROFILE_DOY
 
 
-def test_the_default_window_is_never_cut():
-    lo, hi = W.default_window()
-    share = lambda d: 0.0 if d < lo + 10 else 1.0  # noqa: E731  (start of the window not counted)
-    w = W.windows(season_frame(lambda d: 10.0, share))
-    assert w["model"][0] <= lo and w["model"][1] >= hi
+def counts_and_effort(rate, years=range(2000, 2010), sporadic=()):
+    """Every day 15 Jul - 15 Nov counted in full, plus `sporadic` (month, day) days; `rate(year,
+    date)` birds on each."""
+    dates = [
+        d
+        for y in years
+        for d in [
+            *pd.date_range(f"{y}-07-15", f"{y}-11-15"),
+            *(pd.Timestamp(y, m, x) for m, x in sporadic),
+        ]
+    ]
+    effort = pd.DataFrame({"date": dates, "state": "counted"})
+    days = pd.DataFrame({"date": dates, "count": [float(rate(d.year, d)) for d in dates]})
+    return days, effort, pd.Series(1.0, index=effort.index)
+
+
+def edges_of(rate, **kw):
+    days, effort, c = counts_and_effort(rate, **kw)
+    return D.edges_block(days, effort, c, 2000, 2009)
+
+
+def test_a_passage_inside_regular_counting_has_quiet_edges():
+    e = edges_of(lambda y, d: 100.0 if d.month in (9, 10) else 0.0)
+    assert e["early"]["level"] is None and e["late"]["level"] is None
+    assert e["beyond_counting"] == []
+
+
+def test_birds_passing_at_the_end_every_year_are_beyond_counting():
+    e = edges_of(lambda y, d: float(d.dayofyear))  # rising to the end of counting
+    assert e["late"]["level"] == "consistent" and e["late"]["q10"] >= D.EDGE_INDEX
+    assert e["early"]["level"] is None and e["beyond_counting"] == ["late"]
+
+
+def test_birds_at_the_end_in_one_year_only_are_some_years():
+    def rate(y, d):
+        if y == 2003 and d.month == 11 and d.day > 10:
+            return 2000.0
+        return 100.0 if d.month in (9, 10) else 0.0
+
+    e = edges_of(rate)
+    assert e["late"]["index"] >= D.EDGE_INDEX and e["late"]["level"] == "some_years"
+    assert e["beyond_counting"] == []
+
+
+def test_sporadic_late_days_are_not_the_edge():
+    late_days = [(11, 22), (11, 29), (12, 6)]  # counted on picked days after regular counting
+
+    def rate(y, d):
+        return 5000.0 if (d.month, d.day) in late_days else 100.0 if d.month in (9, 10) else 0.0
+
+    e = edges_of(rate, sporadic=late_days)
+    assert e["late"]["level"] is None
+    assert (
+        D.regular_seasons(counts_and_effort(rate, sporadic=late_days)[1])["last"]
+        .dt.day.eq(15)
+        .all()
+    )
 
 
 def test_a_window_override_is_read_as_dates(tmp_path):

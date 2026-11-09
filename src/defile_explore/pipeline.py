@@ -12,7 +12,8 @@ derived from the same data and fit: `season`, `daytime`, `age`, `sex`, `records`
 the trend's `benchmark` (cached like the trend) and
 `reliability`, with the taxon's `settings`, `window`, `links` and
 `diagnostics`. The trend is fitted
-on the taxon's model window, the season panels show its view window (`defile_explore.window`).
+on the model window, the season panels show the view window, the same two for every taxon
+(`defile_explore.window`).
 
 Each block names its `method` (`<name>@<version>`), matched by a section of defileViz's method
 page; bump the version when what a block means changes.
@@ -31,6 +32,7 @@ from defile_explore import accounts as A
 from defile_explore import benchmark as B
 from defile_explore import daytime as Y
 from defile_explore import demography as G
+from defile_explore import edges as D
 from defile_explore import export as E
 from defile_explore import profile as P
 from defile_explore import release as R
@@ -349,22 +351,17 @@ def daytime_parts(trend: dict | None, season: dict, last_year: int) -> list[floa
     return None if np.isnan(q).any() else q
 
 
-def window_block(rule: dict, settings: dict) -> dict:
-    """The taxon's windows as dates, the envelopes they come from, and where the passage reaches
-    the edge of counting."""
+def window_block(rule: dict, settings: dict, edges: dict) -> dict:
+    """The windows as dates (the rule's, the same for every taxon, unless overridden), and whether
+    the taxon still passes where regular counting starts or stops (`edges.edges_block`, from the
+    counts, whatever the window)."""
     return {
         "method": rule["method"],
         "model": W.as_dates(settings["model_window"].value),
         "view": W.as_dates(settings["view_window"].value),
         "default": W.as_dates(W.default_window()),
-        "model_envelope": W.as_dates(rule["model_envelope"]),
-        "view_envelope": W.as_dates(rule["view_envelope"]),
-        "edge_shares": (
-            {k: round(e, 3) for k, e in zip(("early", "late"), rule["edge_shares"])}
-            if rule["edge_shares"]
-            else None
-        ),
-        "beyond_counting": rule["beyond_counting"],
+        "edges": {k: v for k, v in edges.items() if k != "beyond_counting"},
+        "beyond_counting": edges["beyond_counting"],
     }
 
 
@@ -382,8 +379,11 @@ def diagnostics(job, frame, trend, daytime, age, window) -> dict:
     flags = []
     if job["profile_source"] != "own":
         flags.append("borrowed_profile")
-    if window["beyond_counting"] and job["taxon"]["tier"] == "full":
-        flags.append("passage_beyond_counting")
+    if job["taxon"]["tier"] == "full":
+        if window["beyond_counting"]:
+            flags.append("passage_beyond_counting")
+        elif any(window["edges"][e]["level"] == "some_years" for e in ("early", "late")):
+            flags.append("passage_beyond_counting_some_years")
     if trend:
         a = pd.DataFrame(trend["annual"])
         d["interval_ratio"] = float((a["q90"] / a["q10"].clip(lower=1)).median())
@@ -415,10 +415,11 @@ def build_taxon(job: dict) -> tuple[str, dict]:
         P.annual_index(d, effort, c, start)[["year", "c_mean", "index"]], on="year", how="left"
     )
     season_frame = T.model_frame(days, effort, c, start, last, P.PROFILE_DOY)
-    rule = W.windows(season_frame)
+    rule = W.windows(effort, last)
     settings |= X.resolve_windows(taxon_id, rule, job["overrides"])
     model_w, view_w = settings["model_window"].value, settings["view_window"].value
-    window = window_block(rule, settings)
+    edges = D.edges_block(days, effort, c, start, last)
+    window = window_block(rule, settings, edges)
     trend = trend_block(job, start, model_w) if settings["trend"].value else None
     if trend:
         trend["min_coverage"] = T.MIN_COVERAGE

@@ -1,15 +1,15 @@
 """The weather effects of every taxon with a production trend, found on odd years and confirmed on
 even ones (`WEATHER_PLAN.md`, "the broad panel").
 
-Run from the repository root, one thread a process, at low priority:
-OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 nice -n 10 uv run --with
-'pyarrow<20' python scripts/hierarchical/weather_panel.py > logs/hierarchical/weather_panel.log
+Run from the repository root, one thread a process, at low priority: OPENBLAS_NUM_THREADS=1
+OMP_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 nice -n 10 uv run --with 'pyarrow<20' python
+scripts/hierarchical/weather_panel.py > logs/hierarchical/weather_panel.log
 
 Each taxon's daily frame is production's (`pipeline` job, `settings`: start year, model window,
 trend or not; species only, not the groups of species), its daily weather terms the production
 profile's weighted means, standardised on its counted days. Each of `--arms` (`run_steps.ARMS`) is
-fitted three times: all years, odd years, even years (the other years' days left uncounted).
-Writes `logs/hierarchical/panel/fits_<arms>.csv` (one row per taxon, arm and half) and
+fitted three times: all years, odd years, even years (the other years' days left uncounted). Writes
+`logs/hierarchical/panel/fits_<arms>.csv` (one row per taxon, arm and half) and
 `evidence_<arms>.csv`: the counted days in bins of each term (`BINS`) and in wind sectors, with
 their birds over the usual for the date and year (the last arm's fit on all years without its
 weather and episodes).
@@ -68,14 +68,16 @@ def taxon_fits(job: dict) -> list[dict]:
 
 
 def evidence(f: pd.DataFrame, raw: pd.DataFrame, usual: np.ndarray, taxon: dict) -> list[dict]:
-    """The counted days in bins of each term and in wind sectors: days, birds, and birds over
-    the usual for the date and year (`usual`: the fit without its weather and episodes)."""
+    """The counted days in bins of each term and in wind sectors: days, birds, and birds over the
+    usual for the date and year (`usual`: the fit without its weather and episodes)."""
     on = f.c.gt(0).to_numpy()
     expected = f.c.to_numpy() * usual
     groups = {}
     for term, (edges, labels) in BINS.items():
         if term in raw:
-            groups[term] = pd.cut(raw[term].to_numpy(), [*edges, np.inf], labels=labels, right=False)
+            groups[term] = pd.cut(
+                raw[term].to_numpy(), [*edges, np.inf], labels=labels, right=False
+            )
     speed = np.hypot(raw.wind_u100, raw.wind_v100).to_numpy()
     origin = (np.degrees(np.arctan2(raw.wind_u100, raw.wind_v100)).to_numpy() + 180) % 360
     sector = np.array(SECTORS)[((origin + 22.5) // 45).astype(int) % 8]
@@ -110,7 +112,7 @@ def fits_of(job: dict) -> list[dict]:
     settings, _ = X.resolve(taxon, job["demography"], counted, job["overrides"], last)
     start = settings["start_year"].value
     c = P.coverage(effort, profile)
-    rule = W.windows(T.model_frame(days, effort, c, start, last, P.PROFILE_DOY))
+    rule = W.windows(effort, last)
     settings |= X.resolve_windows(taxon["taxon_id"], rule, job["overrides"])
     if not settings["trend"].value:
         return [], []
@@ -130,7 +132,9 @@ def fits_of(job: dict) -> list[dict]:
             fit = fit_arm(f, years, doy_range, terms[ARMS[arm]])
             if half == "all" and arm == ARGS.arms[-1]:
                 usual = np.exp(
-                    T.eta_draws(fit, f.year, f.doy, fit.beta[None], without=("weather", "episode"))[0]
+                    T.eta_draws(
+                        fit, f.year, f.doy, fit.beta[None], without=("weather", "episode")
+                    )[0]
                 )
                 support = evidence(f, raw, usual, taxon)
             columns = fit.design.columns_of("weather")

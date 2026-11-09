@@ -124,7 +124,7 @@ flowchart TD
 | #   | Step                                                                                               | Module                 | For                          |
 | --- | -------------------------------------------------------------------------------------------------- | ---------------------- | ---------------------------- |
 | 1   | Read the counts and the surveys (who counted when), per day and per hour                           | `release`, `export`    | all                          |
-| 2   | Start year (counted in full from) and season window (widened if still passing at its edges)        | `settings`, `window`   | all                          |
+| 2   | Start year (counted in full from) and season window (from counting coverage, one for all taxa)     | `settings`, `window`   | all                          |
 | 3   | Time-of-day profile p(t): a GAM over date and civil dawn-to-dusk time, on the hourly counts        | `profile`              | all (group's if few timed)   |
 | 4   | Coverage c: each counted day's share of p(t) in the minutes counted                                | `profile`              | all                          |
 | 5   | Birds per full day, count / c (only when c >= 0.5); also used to choose the window (2)             | `profile`, `season`    | all; on the page only via 10 |
@@ -176,7 +176,8 @@ src/defile_explore/
   season.py      the season day by day (gap-filled by the trend, else from the counts)
   daytime.py     passage through the day, as counted
   demography.py  age and sex
-  window.py      each taxon's model and view windows
+  window.py      the model and view windows, the same for every taxon
+  edges.py       whether a taxon still passes where regular counting starts or stops
   accounts.py    the written accounts (content/accounts/), checked and cut per taxon
   remarks.py     what the counters and reports wrote about a day (record days)
   benchmark.py   each trend tested on its own data: gap transplant, recent seasons

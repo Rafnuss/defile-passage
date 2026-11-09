@@ -6,14 +6,15 @@ reasons. Three claims, each classed `show`, `caveat` (shown, with a sentence on 
 - `totals`: the gap-filled annual totals. Judged mainly by the benchmark (`benchmark.py`): how far
   the fill misses birds actually counted (`FILL_ERROR`, median |log(estimate / counted)|), and how
   often its 80% intervals hold them (`MIN_COVER80`); then by how much of each year is filled and
-  how wide the intervals are.
+  how wide the intervals are, and whether the passage continues beyond regular counting
+  (`beyond_counting`, `edges.edges_block`: those birds are in no total).
 - `trend`: the smooth total over the years (the long-term change). Needs the totals, and a smooth
   whose 95% band is not too wide (`SMOOTH_BAND`, median over years of q97.5 / q2.5).
 - `season`: the passage dates. Judged by the width of the 80% bands of the median passage date
   and of the 10% and 90% dates (the wider of the two), against `PASSAGE_BAND` (days); by the birds
   behind them (`SEASON_BIRDS`: the model's smooth timing keeps those bands narrow even for a few
-  birds a season); and by whether much of the passage falls where counting thins out
-  (`window.EDGE_SHARE`).
+  birds a season); and by whether the passage continues beyond regular counting
+  (`beyond_counting`).
 
 Every reason is a code with the level it sets; a claim takes its worst reason's level. `elements`
 applies the classes to what a page draws (`ELEMENTS`: each field of the export that rests on a
@@ -40,7 +41,7 @@ Explore's.
 import numpy as np
 import pandas as pd
 
-METHOD = "reliability@3"
+METHOD = "reliability@4"
 CLASSES = ("show", "caveat", "hide")  # in order of severity
 FILL_ERROR = (0.15, 0.4)  # benchmark gap error: caveat above the first, hide above the second
 MIN_TRIALS = 6  # gap trials for the benchmark to count as a test
@@ -133,6 +134,7 @@ def classes(x: dict) -> dict:
                 else None
             ),
             "mostly_filled": "caveat" if x["observed_share"] < MIN_OBSERVED else None,
+            "beyond_counting": "caveat" if x["beyond_counting"] else None,
             "wide_intervals": "caveat" if x["interval_ratio"] > INTERVAL_RATIO else None,
             # the benchmark measures a borrowed profile's error; untested, it is a doubt
             "borrowed_profile": "caveat" if x["profile"] != "own" and not tested else None,

@@ -648,6 +648,49 @@ under way by 18 July); late, Common Crane (30% in the last week), Redwing, Hen H
 Buzzard, Peregrine and Northern Lapwing. Red Kite (8%) is no longer flagged. The page words it as
 "much of its passage falls outside the counting season".
 
+**One pair of windows for every taxon, from counting coverage alone (`window@3`, 2026-11-09,
+asked by the user: "this would make the analysis much easier").** `window@1` extended each taxon's
+model window to 0.5% / 99.5% of its mean passage plus 5 days, within the days its own coverage
+reached in a third of its years, and never below the default window: 22 different model windows
+over the trend taxa, each resting on a passage estimate. Now a season day is in the model window
+when it was counted (`state == "counted"`) in at least a third of the years since 1993
+(`SYSTEMATIC_FROM`), smoothed over 7 days, and in the view window at 10%; both are clipped to
+`PROFILE_DOY`. No passage, no margin, no per-taxon coverage enters the rule (the taxon's `c` in
+August or November depends on its time-of-day profile, and would split the window again). On the
+2025 release: model 14 Jul - 1 Dec, view 11 Jul - 2 Dec, containing every `window@2` model window
+(widest 14 Jul - 28 Nov). Every taxon's totals, shares and passage dates are now over the same
+days; a taxon passing inside the default window gains about two weeks of sparsely counted days
+(late November: 35-45% of years counted) for the trend to fill, mostly near zero. The export
+drops `model_envelope` and `view_envelope`, read by nothing. The default window stays the standard
+period of the yearly index. The floor at the default window is dropped: the rule's window
+contains it.
+
+**Passage beyond counting is judged from the counts, not the window (`edges@1`,
+`reliability@4`, 2026-11-09, asked by the user: "it should be flagged independently of the
+window we choose").** `edge_shares` measured the share of the mean passage in the model window's
+first and last week, so changing the window changed the flag: with `window@3`, Eurasian Curlew
+gained it and Redwing, Lapwing, Common Merganser and Purple Heron lost it. Now each year has its
+own counting season, the days of regular counting (a counted day in a run of 7 days with at
+least 5 counted; it ends between 8 Nov and 13 Dec). Late in the season the count goes on
+sporadically, on days picked for their weather when birds are expected (confirmed by the user):
+counted with them, the late edge read busier than it is, and they are left out. At each end the
+edge index is birds per full counted day in the first or last 7 days of regular counting against
+the whole season's, each a ratio estimator pooled over years (Σ birds / Σ c, `c >= 0.5`, no gap
+filled), and a bootstrap over years gives its q10. `consistent` (q10 >= 1: birds pass at the
+edge at least as fast as on an average day, in most years) is `beyond_counting`; it is now a
+caveat on the totals as well as on the passage dates, since those birds are in no total.
+`some_years` (only the pooled index >= 1) changes no class: a QA flag
+(`passage_beyond_counting_some_years`) and the numbers in `window.edges`. On the 2025 release:
+consistent early, Common and Alpine Swift, Sand Martin, Black Kite, Black-headed and Mediterranean
+Gull, gull sp., gull/tern sp., shorebird sp.; consistent late, Hen Harrier only. Some years late,
+19 taxa, among them Common Crane (5x the average day, from late flights in about one year in
+eight), Red Kite, Common Buzzard, Northern Lapwing (these three near the consistent level),
+Peregrine and Redwing. The late list moves with the definition of regular counting (Buzzard,
+Lapwing and Yellow-legged Gull are consistent when the regular days are taken narrower); the
+early list does not. Rejected: the mean of each year's share (dominated by years with a few
+birds), filling gaps by interpolation (it carried the first well-covered day's rate back over
+short July mornings), and each year's last counted day as the end (the weather-picked days).
+
 **The smooth passage dates are drawn only when the season claim is `show` (`reliability@3`,
 2026-10-09, asked by the user).** The lines on the timing panel (10%, half and 90% of the smooth
 season passed) read as a finding, and a caveat has no room on them, so a caveat hides them
