@@ -215,8 +215,8 @@ def summary(days: pd.DataFrame, years: pd.DataFrame) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--data-dir", default=os.path.join(ROOT, "data"))
-    ap.add_argument("--export", default=os.path.join(ROOT, "data", E.EXPORT_DIR))
+    ap.add_argument("--data-dir", default=ROOT)
+    ap.add_argument("--export", default=os.path.join(ROOT, E.EXPORT_DIR))
     ap.add_argument("--out", default=os.path.join(ROOT, "logs", "qa", "explore"))
     ap.add_argument("--taxa", nargs="+", help="English names (default: every taxon with a trend)")
     ap.add_argument("--workers", type=int, default=8)

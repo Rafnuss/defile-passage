@@ -47,7 +47,7 @@ def local(t: pd.Series) -> pd.Series:
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--data-dir", default=os.path.join(ROOT, "data"))
+    ap.add_argument("--data-dir", default=ROOT)
     ap.add_argument("--out", default=os.path.join(ROOT, "logs", "qa", "explore"))
     args = ap.parse_args(argv)
 

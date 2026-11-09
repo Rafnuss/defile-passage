@@ -33,17 +33,18 @@ the two repos (the dataset would wait on the model, and each model change would 
 counts), and one combined Zenodo deposit (it needs an assembly step, the hand-made combination
 this avoids).
 
-**`data/` laid out with defile-dataset's names (2026-11-09, requested by the user).** `raw/`
+**Generated folders laid out as in defile-dataset (2026-11-09, requested by the user).** At the
+repository root, not under `data/` (amended the same day at the user's request): `raw/`
 (the dataset release, ERA5 weather, eBird French names), `interim/` (the cache), `output/explore/`
 (the export) and `output/zenodo/` (the passage tables, as defile-dataset's own Zenodo upload is
 `output/zenodo/`), `output/site/` (the methods site, formerly `logs/site/`, as defile-dataset publishes its audit from
 `output/audit/`), `archive/` (the October research inputs, read only by `scripts/research/`). The
 Zenodo folder has `DATA_GUIDE.md` and `DATA_DICTIONARY.md` as defile-dataset's does, and the
 record's own DOI (`passage.PASSAGE_DOI`, 10.5281/zenodo.24084746).
-Replaces `count/`, `weather/`, `cache/`, `explore/`, `passage/` and five research folders at the
-top. The release asset names (`explore.zip`, `passage.zip`) and the site's `data/explore/` copy
-are unchanged. Kept under `data/` rather than at the top as in defile-dataset, so `.gitignore`
-and `--data-dir` still cover everything generated.
+Replaces `count/`, `weather/`, `cache/`, `explore/`, `passage/` and five research folders under
+`data/`. The release asset names (`explore.zip`, `passage.zip`) and the site's `data/explore/` copy
+are unchanged. `--data-dir` (default: the repo root) is the folder holding `raw/`, `interim/` and
+`output/`.
 
 **Passage tables are analysis-ready numbers (`passage-tables@2`, 2026-11-09, requested by the
 user).** Two tables: `daily_passage` (count, coverage, passage with its 80% interval) and

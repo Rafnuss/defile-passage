@@ -163,7 +163,7 @@ def fits_of(job: dict) -> list[dict]:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 3) // 3))
-    parser.add_argument("--data-dir", type=Path, default=ROOT / "data")
+    parser.add_argument("--data-dir", type=Path, default=ROOT)
     parser.add_argument("--arms", nargs="+", default=["W3"], help="the last gives the evidence")
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)

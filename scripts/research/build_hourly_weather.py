@@ -34,7 +34,7 @@ parser.add_argument("--taxa", nargs="+", default=PILOT_TAXA)
 parser.add_argument(
     "--scope-table", type=Path, default=ROOT / "scripts/research/weather_species.tsv"
 )
-parser.add_argument("--out", type=Path, default=ROOT / "data/archive/hourly-weather")
+parser.add_argument("--out", type=Path, default=ROOT / "archive/hourly-weather")
 args = parser.parse_args()
 args.out.mkdir(parents=True, exist_ok=True)
 surveys = parse_surveys(pd.read_csv(args.dataset / "survey.csv", low_memory=False))

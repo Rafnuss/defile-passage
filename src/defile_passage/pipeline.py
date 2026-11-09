@@ -1,7 +1,7 @@
 """The Explore build: one shared stage, then one function per taxon that makes all its blocks.
 
 `load_shared` reads the release and computes what every taxon needs (effort, daily and hourly
-counts, taxa, the time-of-day profiles, age and sex rows), cached on disk under `data/interim/` keyed
+counts, taxa, the time-of-day profiles, age and sex rows), cached on disk under `interim/` keyed
 by the release and the code that produced it. `taxon_jobs` cuts it into one job per taxon, and
 `build_taxon` turns a job into the taxon's species
 file:
@@ -46,7 +46,7 @@ from defile_passage import weather as H
 from defile_passage import window as W
 from defile_passage.phenology import phenology_block
 
-CACHE_DIR = "interim"  # under the data dir: the build's cache, always safe to delete
+CACHE_DIR = "interim"  # under --data-dir (the repo root): the build's cache, always safe to delete
 RECORD_DAYS = 15  # top days listed
 KEY_YEARS = 10  # "typical season": the last this many complete seasons
 BEST_HOURS_SHARE = 0.6  # best hours: the fewest hours holding this share of a peak day

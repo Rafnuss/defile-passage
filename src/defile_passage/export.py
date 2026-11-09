@@ -117,10 +117,10 @@ ROLLUP_MAX_SHARE = 0.9
 EXCLUDED_TIER = "excluded"
 
 # French names: the eBird taxonomy in French (France), joined on `ebird_code`; no API key needed.
-# Downloaded once into the data dir by `scripts/build_explore.py` (`--refresh-names` to update).
+# Downloaded once into raw/ by `scripts/build_explore.py` (`--refresh-names` to update).
 EBIRD_TAXONOMY_URL = "https://api.ebird.org/v2/ref/taxonomy/ebird?fmt=csv&locale=fr_FR"
 EBIRD_TAXONOMY_FILE = os.path.join("raw", "ebird_taxonomy_fr_FR.csv")
-EXPORT_DIR = os.path.join("output", "explore")  # under the data dir, the passage tables beside
+EXPORT_DIR = os.path.join("output", "explore")  # under --data-dir (the repo root); zenodo/ beside
 # Taxa whose `ebird_code` is no longer in the eBird taxonomy.
 FRENCH_NAME_OVERRIDES = {"avibase-81B32602": "Corneille mantelée"}  # hoocro4, Corvus c. cornix
 

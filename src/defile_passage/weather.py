@@ -2,7 +2,7 @@
 block. Part of `defile_passage`.
 
 Hourly ERA5 reanalysis at Défilé (`LOCATION`; plain ERA5, 0.25°) from the Open-Meteo archive,
-downloaded by `fetch` into `<data dir>/weather/` (one file a year), and read by `hourly` as the UTC
+downloaded by `fetch` into `raw/weather/` (one file a year), and read by `hourly` as the UTC
 hour [t, t + 1): rain, radiation and sunshine accumulated over the hour (Open-Meteo stamps them at
 the hour's end), the others the mean of the hour's two ends. Nothing comes from the forecast repo.
 
@@ -45,7 +45,7 @@ from defile_passage import reliability as Q
 from defile_passage.profile import PROFILE_DOY
 
 METHOD = "weather@1"
-WEATHER_DIR = os.path.join("raw", "weather")  # under the data dir
+WEATHER_DIR = os.path.join("raw", "weather")  # under --data-dir (the repo root)
 LOCATION = (46.117215, 5.914877)  # the count site
 FIRST_YEAR = 1992  # one year before the first counts: the first days' 24-hour changes
 URL = "https://archive-api.open-meteo.com/v1/archive"

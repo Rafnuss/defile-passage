@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """Builds the Explore export for defile-website from the defile-dataset release tables.
 
-Reads the defile-dataset release in `data/raw/dataset/` (put there with `--dataset`) and writes
-`data/output/explore/`: `manifest.json`, `taxa.json` (with the picker's fields, `defile_passage.catalogue`),
+Reads the defile-dataset release in `raw/dataset/` (put there with `--dataset`) and writes
+`output/explore/`: `manifest.json`, `taxa.json` (with the picker's fields, `defile_passage.catalogue`),
 `effort.json` and `species/<taxon_id>.json` (`defile_passage.pipeline.build_taxon`), with French names from the eBird taxonomy (downloaded
 once, no key) and the written accounts from `content/accounts/`. The shared stage (~2.5 min of time-of-day profiles) and
-each taxon's trend fit and benchmark are cached in `data/interim/`, so a rebuild after a change to one block
+each taxon's trend fit and benchmark are cached in `interim/`, so a rebuild after a change to one block
 refits nothing: ~5.5 min in full on 12 cores, ~15 s with nothing changed. A full build also writes
-the passage tables (`data/output/zenodo/`, `defile_passage.passage`). `--dataset vYYYY.N` downloads a
+the passage tables (`output/zenodo/`, `defile_passage.passage`). `--dataset vYYYY.N` downloads a
 dataset release; `--dataset <defile-dataset output folder>` copies a local build to try it, and an
 export from one cannot be published. Publish with `scripts/publish_explore.py`.
 
 Usage:
     python scripts/build_explore.py --dataset v2026.1     # download a dataset release, then build
     python scripts/build_explore.py --dataset ../defile-dataset/output   # a local dataset build
-    python scripts/build_explore.py                       # rebuild from data/raw/dataset/
+    python scripts/build_explore.py                       # rebuild from raw/dataset/
     python scripts/build_explore.py --taxa "Red Kite" avibase-ED5A7E8F   # only these species files
     python scripts/build_explore.py --skip-trend          # without the trend model
     python scripts/build_explore.py --skip-benchmark      # trends without their benchmark
@@ -70,8 +70,8 @@ def select(taxa: pd.DataFrame, wanted: list[str] | None) -> list[str]:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--data-dir", default=os.path.join(ROOT, "data"))
-    ap.add_argument("--out", default=os.path.join(ROOT, "data", E.EXPORT_DIR))
+    ap.add_argument("--data-dir", default=ROOT)
+    ap.add_argument("--out", default=os.path.join(ROOT, E.EXPORT_DIR))
     ap.add_argument(
         "--dataset", help="defile-dataset release tag (vYYYY.N), or a local output folder"
     )
@@ -90,7 +90,7 @@ def main(argv=None) -> int:
 
     if args.dataset:
         dataset = R.fetch_dataset(args.dataset, args.data_dir)
-        print(f"Dataset {dataset['tag'] or 'from ' + dataset['source']} in data/raw/dataset/")
+        print(f"Dataset {dataset['tag'] or 'from ' + dataset['source']} in raw/dataset/")
     dataset = R.dataset_release(args.data_dir)
     names_path = os.path.join(args.data_dir, E.EBIRD_TAXONOMY_FILE)
     if args.refresh_names or not os.path.exists(names_path):

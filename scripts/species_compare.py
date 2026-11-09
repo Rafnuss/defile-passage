@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Species comparison page of the Explore site (`compare/`): every taxon on one figure, one row
 each, for the abundance trend, the passage dates, and the shift of the passage dates. It reads
-`data/output/explore/` only; the figures are drawn in the browser (Plotly), so the filters (group,
+`output/explore/` only; the figures are drawn in the browser (Plotly), so the filters (group,
 species or grouping, tier, class on defile-website, name; edited in a panel and applied together),
 the views and the sorts redraw them without a rebuild, and are kept in the page's URL so a view can
 be shared.
@@ -28,7 +28,7 @@ What each figure draws, and from which field:
   intervals carrying reconstruction uncertainty and between-year residual variation.
 
 Usage:
-    python scripts/species_compare.py          # -> data/output/site/compare/index.html
+    python scripts/species_compare.py          # -> output/site/compare/index.html
 """
 
 import argparse
@@ -816,8 +816,8 @@ def write(export: str, out: str) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--export", default=os.path.join(ROOT, "data", EXPORT_DIR))
-    ap.add_argument("--out", default=os.path.join(ROOT, "data", "output", "site", "compare"))
+    ap.add_argument("--export", default=os.path.join(ROOT, EXPORT_DIR))
+    ap.add_argument("--out", default=os.path.join(ROOT, "output", "site", "compare"))
     args = ap.parse_args(argv)
     print("->", write(args.export, args.out))
     return 0

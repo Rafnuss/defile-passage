@@ -111,7 +111,7 @@ def run_species(work):
     calendar = calendar[
         E.in_window(pd.Series(calendar)).to_numpy() & (doy >= bounds[0]) & (doy <= bounds[1])
     ]
-    weather = W.hourly(str(ROOT / "data"))
+    weather = W.hourly(str(ROOT))
     truth = obs.groupby("year")["count"].sum()
     rows, diagnostics = [], []
     for fold in folds:
@@ -313,7 +313,7 @@ def main():
             for s in args.species
             for kind in ("observations", "components")
         ]
-        sources += list((ROOT / "data/raw/weather").glob("*.csv"))
+        sources += list((ROOT / "raw/weather").glob("*.csv"))
         metadata = dict(
             mask_mode=args.mask_mode,
             species=args.species,

@@ -283,8 +283,8 @@ whose text contains every word typed (e.g. <code>raptors caveat</code>).</p>
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--export", default=os.path.join(ROOT, "data", EXPORT_DIR))
-    ap.add_argument("--out", default=os.path.join(ROOT, "data/output/site/qa"))
+    ap.add_argument("--export", default=os.path.join(ROOT, EXPORT_DIR))
+    ap.add_argument("--out", default=os.path.join(ROOT, "output/site/qa"))
     args = ap.parse_args(argv)
     manifest = json.load(open(os.path.join(args.export, "manifest.json")))
     taxa = json.load(open(os.path.join(args.export, "taxa.json")))

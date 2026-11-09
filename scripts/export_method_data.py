@@ -18,9 +18,9 @@ def main():
     target.mkdir(parents=True, exist_ok=True)
     for path in target.glob("*.json"):
         path.unlink()
-    manifest = json.loads((ROOT / "data" / EXPORT_DIR / "manifest.json").read_text())
+    manifest = json.loads((ROOT / EXPORT_DIR / "manifest.json").read_text())
     for path in sorted(
-        (ROOT / "data" / CACHE_DIR).glob("shared-*.pkl"),
+        (ROOT / CACHE_DIR).glob("shared-*.pkl"),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     ):
@@ -37,7 +37,7 @@ def main():
         on = np.flatnonzero(slots > 0)
         effort[str(row.date.date())] = [[int(i), round(float(slots[i]), 8)] for i in on]
     (target / "effort.json").write_text(json.dumps(effort, separators=(",", ":")))
-    for path in (ROOT / "data" / EXPORT_DIR / "species").glob("*.json"):
+    for path in (ROOT / EXPORT_DIR / "species").glob("*.json"):
         data = json.loads(path.read_text())
         source = shared.source[data["taxon_id"]]
         profile = shared.profiles[data["taxon_id"] if source == "own" else source]

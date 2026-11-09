@@ -8,7 +8,7 @@ each taxon's passage goes with the main weather variables. Interpretability firs
 
 - **Weather is self-contained.** The ERA5 reanalysis at Défilé from the Open-Meteo archive
   (`models=era5`, the point of `LOCATION`), downloaded by `fetch_weather.py` into
-  `data/raw/weather/`. Nothing is read from the forecast repo (the research runs did, from its cache).
+  `raw/weather/`. Nothing is read from the forecast repo (the research runs did, from its cache).
 - **Every term in every taxon's model.** No selection of variables: the model carries the whole
   menu below, and Explore shows a taxon's effect only where it is clear (the display rule below).
   Taxa use the weather differently (soaring raptors, waterbirds, passerines); one set of terms,

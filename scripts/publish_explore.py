@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Publishes a local build: the export (`data/output/explore/`), the passage tables
-(`data/output/zenodo/`) and the documentation site (`data/output/site/`) as assets of a GitHub
-release of this repo, then starts the Pages workflow that deploys the site.
+"""Publishes a local build: the export (`output/explore/`), the passage tables (`output/zenodo/`)
+and the documentation site (`output/site/`) as assets of a GitHub release of this repo, then starts
+the Pages workflow that deploys the site.
 
 The build takes 30-40 min on a GitHub runner and ~5.5 min here, so it runs here and only its result
 goes online. defile-website downloads `explore.zip` from the same release when it deploys (its
@@ -28,9 +28,9 @@ from defile_passage.export import EXPORT_DIR as EXPORT
 from defile_passage.passage import PASSAGE_DIR as PASSAGE
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EXPORT_DIR = os.path.join(ROOT, "data", EXPORT)
+EXPORT_DIR = os.path.join(ROOT, EXPORT)
 PASSAGE_DIR = os.path.join(os.path.dirname(EXPORT_DIR), PASSAGE)
-VIEWER_DIR = os.path.join(ROOT, "data", "output", "site")
+VIEWER_DIR = os.path.join(ROOT, "output", "site")
 ZIP_DIR = os.path.join(ROOT, "logs", "publish")
 DEV_TAG = "dev"  # rolling pre-release: the preview, which defile-website deploys by default
 EXPORT_ASSET = "explore.zip"  # the name defile-website downloads

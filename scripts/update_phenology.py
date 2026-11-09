@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    export = ROOT / "data" / EXPORT_DIR
+    export = ROOT / EXPORT_DIR
     for path in (export / "species").glob("*.json"):
         data = json.loads(path.read_text())
         data["season"]["phenology"] = phenology_block(data["season"])

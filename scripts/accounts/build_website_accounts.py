@@ -30,7 +30,7 @@ with (review / "reference/source_taxa.csv").open(encoding="utf-8-sig") as handle
         for r in csv.DictReader(handle)
         if r["source"] == "historical"
     }
-with (root / "data/raw/dataset/taxonomy.csv").open(encoding="utf-8-sig") as handle:
+with (root / "raw/dataset/taxonomy.csv").open(encoding="utf-8-sig") as handle:
     taxa = {r["taxon_id"]: r for r in csv.DictReader(handle)}
 
 names_fr.update(
@@ -243,9 +243,9 @@ paths = [
     "../defile-dataset/output/text/paper_text.csv",
     "content/accounts/review/reference/annual-totals.csv",
     "content/accounts/review/reference/source_taxa.csv",
-    "data/raw/dataset/taxonomy.csv",
-    "data/raw/dataset/count.csv",
-    "data/raw/dataset/survey.csv",
+    "raw/dataset/taxonomy.csv",
+    "raw/dataset/count.csv",
+    "raw/dataset/survey.csv",
     "content/accounts/year-accounts.tsv",
     "content/accounts/species-sections.tsv",
 ]

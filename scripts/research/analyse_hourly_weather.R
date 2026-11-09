@@ -12,7 +12,7 @@ source(here("scripts", "research", "hourly_uncertainty.R"))
 # Read data -----------------------------------------------------------------
 # Run from defile-passage; arguments optionally override input and output folders.
 args <- commandArgs(trailingOnly = TRUE)
-input_dir <- if (length(args) >= 1) args[1] else here("data", "archive", "hourly-weather")
+input_dir <- if (length(args) >= 1) args[1] else here("archive", "hourly-weather")
 output_dir <- if (length(args) >= 2) args[2] else here("logs", "hourly-weather-v2")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 frame <- read_csv(file.path(input_dir, "model_frame.csv"), show_col_types = FALSE)

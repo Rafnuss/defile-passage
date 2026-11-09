@@ -1,4 +1,4 @@
-"""The observations of the hierarchical line, built from the release in `data/raw/dataset/`.
+"""The observations of the hierarchical line, built from the release in `raw/dataset/`.
 
 Run from the repository root (after copying a release with `build_explore.py --dataset`): uv run
 --with 'pyarrow<20' python scripts/hierarchical/build_inputs.py > logs/hierarchical/inputs.log

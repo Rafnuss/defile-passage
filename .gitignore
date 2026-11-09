@@ -1,5 +1,8 @@
-# generated or copied, never committed
-data/
+# generated or copied, never committed (the layout of defile-dataset)
+raw/
+interim/
+output/
+archive/
 logs/
 
 .venv/
@@ -15,5 +18,4 @@ __pycache__/
 website/node_modules/
 website/public/data/
 website/.vite/
-output/playwright/
 .playwright-cli/

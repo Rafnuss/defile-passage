@@ -7,7 +7,7 @@ source(here("scripts", "research", "hourly_uncertainty.R"))
 set.seed(20261010)
 args <- commandArgs(trailingOnly = TRUE)
 output_dir <- if (length(args)) args[1] else here("logs", "hourly-weather-v2")
-data <- read_csv(here("data", "archive", "hourly-weather", "validation_masks.csv"), show_col_types = FALSE) |>
+data <- read_csv(here("archive", "hourly-weather", "validation_masks.csv"), show_col_types = FALSE) |>
   mutate(year_factor = factor(year), day_id = factor(date), log_rain = log1p(rain_mm), log_previous_rain = log1p(rain_previous_24h_mm), radiation_100 = radiation_w_m2 / 100)
 
 # Regression: observed zero tails cannot imply enormous Gaussian rate variance.

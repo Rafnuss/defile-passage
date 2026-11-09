@@ -31,17 +31,17 @@ uv run pytest
 
 The counts come from a defile-dataset release: `dataset.zip` on its GitHub release `vYYYY.N`
 (made there by `scripts/release_dataset.py`). `--dataset vYYYY.N` downloads it into
-`data/raw/dataset/`, checks each table against the sha256 the dataset build gave it, and records
+`raw/dataset/`, checks each table against the sha256 the dataset build gave it, and records
 the tag in `release.json` and in the export's manifest. To try a dataset build before it is
 released, `--dataset ../defile-dataset/output` copies it instead; such an export can only go to
 the `dev` preview (below), and only if that dataset build is from committed code. A release without `parent_taxon_id` in `taxonomy.csv` is refused.
 
-A full build writes the Explore export (`data/output/explore/`) and the passage tables (`data/output/zenodo/`,
+A full build writes the Explore export (`output/explore/`) and the passage tables (`output/zenodo/`,
 `defile_passage.passage`): daily passage, season totals and passage dates of the 96 taxa with a
 trend, as a Frictionless data package for Zenodo. Both come from the same species files.
 
 ```bash
-# download a dataset release into data/raw/dataset/, then build data/output/explore/ and data/output/zenodo/
+# download a dataset release into raw/dataset/, then build output/explore/ and output/zenodo/
 uv run python scripts/build_explore.py --dataset v2026.1 > logs/build.log 2>&1
 # or try a local dataset build (not publishable)
 uv run python scripts/build_explore.py --dataset ../defile-dataset/output > logs/build.log 2>&1
@@ -50,13 +50,13 @@ uv run python scripts/build_explore.py --dataset ../defile-dataset/output > logs
 uv run python scripts/build_explore.py > logs/build.log 2>&1
 uv run python scripts/build_explore.py --taxa "Red Kite" "Hen Harrier"   # only these taxa
 
-# Documentation homepage, QA viewer and species comparison in data/output/site/
+# Documentation homepage, QA viewer and species comparison in output/site/
 npm ci --prefix website
 uv run python scripts/build_site.py
 
 # Refresh only QA pages, without rebuilding the documentation frontend
 uv run python scripts/explore_viewer.py
-# species compared (trend, passage dates, their shift) -> data/output/site/compare/
+# species compared (trend, passage dates, their shift) -> output/site/compare/
 uv run python scripts/species_compare.py
 ```
 
@@ -64,7 +64,7 @@ uv run python scripts/species_compare.py
 
 The [methods website](https://raphaelnussbaumer.com/defile-passage/) is the technical companion to defile-website: one continuous illustrated guide at the root, an expandable QA decision table at `qa/`, and the species comparison at `compare/`, each its own page. defile-website links directly to a chapter or section with the selected species in `?species=<taxon_id>`. Old taxon URLs redirect to validation in the methods guide; the comparison's earlier URLs (`qa/compare.html`, `compare.html`) redirect to `compare/`.
 
-The Vue sources and interactive method figures live in `website/`; the Python scripts still generate the QA output. Both read the same `data/output/explore/` export. Building documentation never fits statistical models. See [website/README.md](website/README.md) for editing and preview commands.
+The Vue sources and interactive method figures live in `website/`; the Python scripts still generate the QA output. Both read the same `output/explore/` export. Building documentation never fits statistical models. See [website/README.md](website/README.md) for editing and preview commands.
 
 ## Publish
 
@@ -89,25 +89,26 @@ Time, on a 12-core Mac (all cores, `--workers` to change): a build after a new r
 code change in the model takes about 5.5 minutes (the shared stage of time-of-day profiles,
 about 2.5 minutes, then the 96 trend fits and their benchmark in parallel); one with nothing
 changed takes about 15 seconds, and a change to a block downstream of the trend refits nothing
-(`data/interim/`, `--no-cache` to ignore it). The build is verbose (pygam warnings, per-taxon
+(`interim/`, `--no-cache` to ignore it). The build is verbose (pygam warnings, per-taxon
 progress): redirect it to `logs/` and grep, as above; the summary at the end gives the tiers,
 trends and stories. A build that stops silently with no traceback was killed from outside
 (a second build started on the same folder, or a closed terminal): run it again.
 
-`data/` and `logs/` are generated and never committed. `data/` uses defile-dataset's folder names:
+The generated folders sit at the top of the repository, named as in defile-dataset, and are never
+committed:
 
 ```
-data/
-  raw/                 what the build reads, downloaded, never edited
-    dataset/           the defile-dataset release (`--dataset`)
-    weather/           hourly ERA5 at the site, one file a year (Open-Meteo)
-    ebird_taxonomy_fr_FR.csv   French names (`--refresh-names`)
-  interim/             the build's cache: shared stage, trend/ and benchmark/ fits; safe to delete
-  output/
-    explore/           the export defile-website reads (explore.zip)
-    zenodo/            the passage tables, DATA_GUIDE.md, DATA_DICTIONARY.md (passage.zip, Zenodo)
-    site/              methods guide, QA and comparison (viewer.zip, GitHub Pages)
-  archive/             inputs of the closed research lines (scripts/research/), not built
+raw/                   what the build reads, downloaded, never edited
+  dataset/             the defile-dataset release (`--dataset`)
+  weather/             hourly ERA5 at the site, one file a year (Open-Meteo)
+  ebird_taxonomy_fr_FR.csv   French names (`--refresh-names`)
+interim/               the build's cache: shared stage, trend/ and benchmark/ fits; safe to delete
+output/
+  explore/             the export defile-website reads (explore.zip)
+  zenodo/              the passage tables, DATA_GUIDE.md, DATA_DICTIONARY.md (passage.zip, Zenodo)
+  site/                methods guide, QA and comparison (viewer.zip, GitHub Pages)
+archive/               inputs of the closed research lines (scripts/research/), not built
+logs/                  build logs and scratch
 ```
 
 ## Group taxa are read as everything below them
@@ -196,7 +197,7 @@ src/defile_passage/
   timeofday.py   the time-of-day GAM
   profile.py     effort adjustment: time-of-day profile, coverage, annual index
   trend.py       the trend GAM: smooth trend, season, timing shift, weather, gap-filled totals
-  weather.py     hourly ERA5 at the site (Open-Meteo archive, data/raw/weather/), daily weather terms,
+  weather.py     hourly ERA5 at the site (Open-Meteo archive, raw/weather/), daily weather terms,
                  the weather block
   pipeline.py    the build: a cached shared stage, then build_taxon (all blocks of one taxon)
   settings.py    per-taxon settings by rule; overrides.yaml holds the exceptions, with reasons

@@ -5,7 +5,7 @@ pipeline per taxon, settings, caches, QA viewer) is done: `DECISIONS.md` -> Pipe
 
 ## Phase 2: review and refine
 
-Go through `data/output/site/qa/index.html` (`scripts/explore_viewer.py`) in batches: raptors; pigeons,
+Go through `output/site/qa/index.html` (`scripts/explore_viewer.py`) in batches: raptors; pigeons,
 storks, cranes and other large birds; passerines. A fix is a better rule (preferred) or an
 override with its reason. The viewer stays a model-inspection tool (everything that helps judge a
 fit, in detail); the visitors' page is designed in defile-website. What the first full build shows:

@@ -19,12 +19,12 @@ assert (
 observations = observations[observations.training_eligible].copy()
 components = components[components.observation_id.isin(observations.observation_id)].copy()
 observations["source"] = "historical"
-recent = pd.read_csv(ROOT / "data/archive/mixed-weather-intervals/observations.csv")
+recent = pd.read_csv(ROOT / "archive/mixed-weather-intervals/observations.csv")
 recent = recent[
     recent.english_name.isin(observations.english_name)
     & in_window(pd.to_datetime(recent.date, format="ISO8601"))
 ].copy()
-recent_components = pd.read_csv(ROOT / "data/archive/mixed-weather-intervals/hour_components.csv")
+recent_components = pd.read_csv(ROOT / "archive/mixed-weather-intervals/hour_components.csv")
 recent_components = recent_components[
     recent_components.observation_id.isin(recent.observation_id)
 ].copy()

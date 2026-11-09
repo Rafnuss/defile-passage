@@ -7,7 +7,7 @@ source(here("scripts", "research", "hourly_uncertainty.R"))
 set.seed(20261010)
 args <- commandArgs(trailingOnly = TRUE)
 output_dir <- if (length(args)) args[1] else here("logs", "hourly-weather-v2")
-grid <- read_csv(here("data", "archive", "hourly-weather", "prediction_hours.csv"), show_col_types = FALSE) |>
+grid <- read_csv(here("archive", "hourly-weather", "prediction_hours.csv"), show_col_types = FALSE) |>
   filter(closure_exposure_hours > 0) |>
   mutate(exposure_hours = closure_exposure_hours, log_rain = log1p(rain_mm), log_previous_rain = log1p(rain_previous_24h_mm), radiation_100 = radiation_w_m2 / 100)
 fits <- readRDS(file.path(output_dir, "model_fits.rds"))

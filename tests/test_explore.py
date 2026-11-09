@@ -1,7 +1,6 @@
 """Tests for the Explore export (src/defile_passage/), on small synthetic release tables, and on
-the real release when it is present in `data/raw/dataset/`: the export must reconcile with
-`count.csv`, and with the dataset's own daily totals when its interim build sits next to this
-repo."""
+the real release when it is present in `raw/dataset/`: the export must reconcile with `count.csv`,
+and with the dataset's own daily totals when its interim build sits next to this repo."""
 
 import json
 import os
@@ -17,7 +16,7 @@ from defile_passage import release as C
 from defile_passage import trend as T
 
 DAY = "2023-08-01"
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "..")
 DATASET_DAILY = os.path.join(
     os.path.dirname(__file__),
     "..",
@@ -272,7 +271,7 @@ def test_json_values():
 
 @pytest.mark.skipif(
     not os.path.exists(os.path.join(DATA_DIR, C.DATASET_DIR, "count.csv")),
-    reason="no release copied into data/raw/dataset/",
+    reason="no release copied into raw/dataset/",
 )
 def test_real_release_reconciles():
     surveys, counts, *_ = E.read_release(DATA_DIR)

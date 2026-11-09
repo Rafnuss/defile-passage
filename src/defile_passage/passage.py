@@ -1,5 +1,5 @@
 """The passage tables: analysis-ready numbers from the trend model, as a tabular data package
-(`data/output/zenodo/`, with `DATA_GUIDE.md` and `DATA_DICTIONARY.md` as in defile-dataset's Zenodo
+(`output/zenodo/`, with `DATA_GUIDE.md` and `DATA_DICTIONARY.md` as in defile-dataset's Zenodo
 upload), for the Zenodo record beside the counts and for the data paper.
 
 Read from the species files of the export, so they hold the numbers the page draws; nothing is

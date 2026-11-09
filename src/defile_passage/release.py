@@ -8,8 +8,8 @@ change to one copy is carried to the other by hand, as a decision (DECISIONS.md 
 The release is defile-dataset's `dataset.zip` on its GitHub release `vYYYY.N`: the Zenodo upload
 (`count.csv`, `survey.csv`, `taxonomy.csv`, `datapackage.json` and its guides) and the build's
 `metadata.json` (the sha256 of each file). `scripts/build_explore.py --dataset vYYYY.N` downloads
-it into `data/raw/dataset/` (`fetch_dataset`); `--dataset <defile-dataset output folder>` copies a
-local build instead, to try one before it is released, and such an export cannot be published.
+it into `raw/dataset/` (`fetch_dataset`); `--dataset <defile-dataset output folder>` copies a local
+build instead, to try one before it is released, and such an export cannot be published.
 `release.json` beside the tables says which it was.
 """
 
@@ -42,7 +42,7 @@ TIMEZONE = "Europe/Paris"
 # Défilé de l'Écluse (lat, lon), as `LOCATIONS["Defile"]` in the forecast's weather layer.
 SITE = (46.117215, 5.914877)
 
-DATASET_DIR = os.path.join("raw", "dataset")  # under the data dir
+DATASET_DIR = os.path.join("raw", "dataset")  # under --data-dir (the repo root)
 METADATA_FILE = "metadata.json"  # at the root of the release zip
 DATASET_METADATA_PATH = ("audit", METADATA_FILE)  # in a defile-dataset output folder
 

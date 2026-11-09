@@ -37,7 +37,7 @@ export default defineConfig({
   plugins: [vue(), guideEdits()],
   base: "./",
   build: {
-    outDir: "../data/output/site",
+    outDir: "../output/site",
     emptyOutDir: true,
     chunkSizeWarningLimit: 1200,
     rolldownOptions: {

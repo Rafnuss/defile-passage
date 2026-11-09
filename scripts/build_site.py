@@ -2,7 +2,7 @@
 """Build the illustrated documentation and QA pages from the existing Explore export.
 
 Run `npm ci --prefix website` once, then `uv run python scripts/build_site.py`. The result is
-data/output/site/, ready for local preview or publication; no models are fitted.
+output/site/, ready for local preview or publication; no models are fitted.
 
 Order matters: prepare optional illustrations, let Vite replace the site directory, then add the QA
 and comparison pages, historical redirects and build provenance. See website/README.md for source
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SITE = ROOT / "data" / "output" / "site"
+SITE = ROOT / "output" / "site"
 
 
 def redirect(page: Path, target: str) -> None:

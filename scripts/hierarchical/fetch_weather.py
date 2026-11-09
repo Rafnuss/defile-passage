@@ -1,4 +1,4 @@
-"""Download the hourly ERA5 weather at Défilé from the Open-Meteo archive into `data/raw/weather/`.
+"""Download the hourly ERA5 weather at Défilé from the Open-Meteo archive into `raw/weather/`.
 
 Run from the repository root (34 requests, one a year, paced for the free API's limits): uv run
 python scripts/hierarchical/fetch_weather.py > logs/hierarchical/fetch_weather.log

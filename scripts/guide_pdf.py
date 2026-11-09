@@ -19,7 +19,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-SITE = ROOT / "data" / "output" / "site"
+SITE = ROOT / "output" / "site"
 OUT = ROOT / "logs" / "methods-guide.pdf"
 SPECIES = "avibase-451D6FC8"  # Red Kite, the guide's default example
 SCALE = 0.8  # the page drawn at 80%: body text about 9 pt
