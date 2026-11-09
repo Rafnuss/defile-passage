@@ -64,6 +64,16 @@ leave out every value classed hide (a day, a trend, a set of dates, or the shift
 `daily_passage` for every taxon. defile-website maps `season.phenology` to `shift` and words the
 two reasons (changed together).
 
+**Passage tables hold model estimates only (`passage-tables@4`, 2026-11-09, last pass before
+the Zenodo upload).** `phenology` keeps a taxon only when its season comes from the trend model
+(`season.source: gam`): the six taxa whose model totals are hidden had dates from the counts and
+no `daily_passage` rows, in a record of model estimates. The guide counts the taxa of
+`daily_passage` (90, not the 31 of `trend`) and says the species-and-no-passerines rule applies to
+change over the years only (dates are given for passerines and groups). `passage` stays the mean
+of the draws, so the daily sums add up; the dictionary says it can exceed `passage_upper_95` on a
+day counted almost in full. `PASSAGE_DOI` is the record's version DOI (24084747), as
+`release.DATASET_DOI` is for the counts; 24084746 is the concept DOI.
+
 **Passage tables: daily passage plus one row per taxon for trend and phenology
 (`passage-tables@3`, 2026-11-09, requested by the user).** Three tables, each column kept only if
 it cannot be derived from another: `daily_passage` (count, coverage, passage and its 80% interval);

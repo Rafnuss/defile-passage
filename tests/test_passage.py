@@ -126,12 +126,17 @@ def test_passage_tables(tmp_path):
         {"taxon_id": "b"} | species,
         {"taxon_id": "p", "taxon_rank": "species", "order": "Passeriformes"},
         {"taxon_id": "s", "taxon_rank": "spuh", "order": "Accipitriformes"},
+        {"taxon_id": "c"} | species,
     ]
     (export / "taxa.json").write_text(json.dumps(taxa))
     (export / "species" / "a.json").write_text(json.dumps(_species("a")))
     (export / "species" / "b.json").write_text(json.dumps({"taxon_id": "b", "trend": None}))
     for other in ("p", "s"):  # the tables follow the classes, not the taxon
         (export / "species" / f"{other}.json").write_text(json.dumps(_species(other)))
+    counts = _species("c")  # its season from the counts: no dates in the model's tables
+    counts["season"]["source"] = "counts"
+    counts["reliability"]["elements"] |= {"trend.days.total": "hide", "key_numbers.trend": "hide"}
+    (export / "species" / "c.json").write_text(json.dumps(counts))
     manifest = {"built_at": "now", "git_sha": "abc", "dataset_release": "v2026.1"}
     (export / "manifest.json").write_text(json.dumps(manifest))
 

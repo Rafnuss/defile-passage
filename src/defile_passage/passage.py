@@ -25,12 +25,14 @@ from .export import dumps
 from .release import DATASET_DOI
 from .trend import CHANGE_RECENT
 
-METHOD = "passage-tables@3"
+METHOD = "passage-tables@4"
 PASSAGE_DIR = "zenodo"  # beside the export (output/), like defile-dataset's Zenodo upload
 NAME = "defile-passage-estimates"
-TITLE = "Modelled passage of migrating birds at Défilé de l'Écluse, France"
+TITLE = (
+    "Défilé de l'Écluse modelled passage"  # as the counts' "Défilé de l'Écluse migration counts"
+)
 LICENSE = {"name": "CC-BY-4.0", "path": "https://creativecommons.org/licenses/by/4.0/"}
-PASSAGE_DOI = "10.5281/zenodo.24084746"  # this package's own Zenodo record
+PASSAGE_DOI = "10.5281/zenodo.24084747"  # this version of the Zenodo record (as DATASET_DOI)
 DATASET_URL = "https://doi.org/{doi}"
 DATASET_GITHUB_URL = "https://github.com/Rafnuss/defile-dataset/releases/tag/{tag}"
 QUANTILES = (10, 50, 90)  # the passage dates: 10, 50 and 90% of the season passed
@@ -40,6 +42,7 @@ DECADE = 10  # the phenology slopes (days per year) given per decade
 RELIABILITY = {"show": "reliable", "caveat": "caveat", "hide": "unreliable"}
 RELIABLE = "reliable or caveat (usable with care); unreliable values are not published"
 UNRELIABLE = "unreliable"
+GAM = "gam"  # `season.source` when the season is the trend model's gap-filled days
 
 # What is published: what the website shows. A value classed hide by `reliability` (an unreliable
 # day, trend, set of dates, or shifts alone) is left out; that includes every change over the
@@ -66,7 +69,12 @@ TABLES = {
         ("date", "date", "local calendar date (Europe/Paris)"),
         ("count", "integer", "birds counted on the day (main direction); empty when not counted"),
         ("coverage", "number", "share (0-1) of the day's passage in the minutes counted"),
-        ("passage", "number", "estimated full-day passage (birds): mean over the model's draws"),
+        (
+            "passage",
+            "number",
+            "estimated full-day passage (birds): mean over the model's draws, so it can lie above"
+            " passage_upper_95 on a day counted almost in full",
+        ),
         ("passage_lower_95", "number", "lower end of the 95% interval of passage"),
         ("passage_upper_95", "number", "upper end of the 95% interval of passage"),
         ("reliability", "string", f"of passage: {RELIABLE}"),
@@ -201,6 +209,8 @@ def tables(export_dir: str) -> dict[str, pd.DataFrame]:
         trend = _trend(d, cls)
         if trend["reliability"] != UNRELIABLE:
             rows["trend"].append(trend)
+        if d["season"].get("source") != GAM:
+            continue  # dates from the counts, not the model: the days they rest on are hidden
         phen = _phenology(d, cls)
         if phen["shifts_reliability"] == UNRELIABLE:
             phen |= {k: None for k in phen if k.startswith("shift")}
@@ -264,7 +274,7 @@ def datapackage(manifest: dict) -> dict:
 
 def guide(manifest: dict, t: dict[str, pd.DataFrame]) -> str:
     """`DATA_GUIDE.md`: how to read the tables, as defile-dataset's guide does for the counts."""
-    n = len(t["trend"])
+    n = t["daily_passage"]["taxon_id"].nunique()
     files = {
         "daily_passage": "a taxon on one day of its seasonal window, counted or not",
         "trend": "a taxon: its typical passage and how it changed",
@@ -314,11 +324,13 @@ def guide(manifest: dict, t: dict[str, pd.DataFrame]) -> str:
         " `reliable` or `caveat` (usable with care; shown with a warning on the website). A day,"
         " trend or set of dates that failed a test is left out, and so are its shifts when only"
         " they failed.",
-        "- **Which taxa.** `daily_passage` covers every taxon with a trend model. `trend` and"
-        ' `phenology` cover species only (no "sp." or slash groups, whose numbers depend on how'
-        " many birds were identified) and no passerines: they are counted systematically only"
-        " from 2008, with growing attention since, so their change over time follows the counting"
-        " effort more than the birds.",
+        "- **Which taxa.** `daily_passage` covers every taxon with a trend model whose daily"
+        " passage passed the tests, and `phenology` has its dates for each of them. Change over"
+        " the years (`trend`, and the `shift_*` columns of `phenology`) is given for species only"
+        ' (no "sp." or slash groups, whose numbers depend on how many birds were identified) and'
+        " not for passerines: they are counted systematically only from 2008, with growing"
+        " attention since, so their change over time follows the counting effort more than the"
+        " birds.",
         "",
         "## Example: species that declined",
         "",
