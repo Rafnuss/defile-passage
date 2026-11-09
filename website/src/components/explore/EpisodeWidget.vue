@@ -29,7 +29,7 @@ const props = defineProps({
   theta: { type: Number, required: true },
   minCoverage: { type: Number, required: true },
   // trend.episodes: {doy, base: {year: [...]}, weather: {year: [...]}, episode: {year: [...]}},
-  // weather and episode as log multipliers of base (defile-explore `trend.episode_curves`)
+  // weather and episode as log multipliers of base (defile-passage `trend.episode_curves`)
   episodes: { type: Object, required: true },
   // the species' days, columnar: {date: [...], count: [...], c: [...]}
   days: { type: Object, required: true },

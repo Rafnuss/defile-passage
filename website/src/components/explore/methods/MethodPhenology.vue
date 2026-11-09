@@ -76,7 +76,7 @@ const props = defineProps({
 });
 
 const s = computed(() => props.data.season);
-// From the trend's gap-filled days (defile-explore `season.source`), else from the counts
+// From the trend's gap-filled days (defile-passage `season.source`), else from the counts
 const filled = computed(() => s.value.source === "gam");
 const years = computed(() => s.value.years.slice().reverse());
 const year = ref(years.value[0]);
@@ -94,7 +94,7 @@ const doyOf = (mmdd) => {
   return Math.round((Date.UTC(2001, m - 1, d) - Date.UTC(2001, 0, 1)) / 86400000) + 1;
 };
 
-// The season's running total over the model window (as defile-explore season.py sums it), blank
+// The season's running total over the model window (as defile-passage season.py sums it), blank
 // days on the straight line between their counted neighbours; null outside the window
 function running(share, doy) {
   const [w0, w1] = props.data.window.model.map(doyOf);

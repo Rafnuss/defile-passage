@@ -1,4 +1,6 @@
-# defile-explore
+# defile-passage
+
+Formerly defile-explore (renamed 9 November 2026: the repo models the passage, not the page).
 
 The statistics behind the **Explore** page of [defileViz](https://github.com/Rafnuss/defileViz):
 long-term trends, phenology, time of day and the other per-species views of the bird migration
@@ -51,7 +53,7 @@ uv run python scripts/species_compare.py
 
 ## Documentation website
 
-The [methods website](https://raphaelnussbaumer.com/defile-explore/) is the technical companion to defileViz: one continuous illustrated guide at the root, an expandable QA decision table under `qa/`, and the species comparison at `qa/compare.html`. defileViz links directly to a chapter or section with the selected species in `?species=<taxon_id>`. Old taxon URLs redirect to validation in the methods guide; comparison URLs remain valid.
+The [methods website](https://raphaelnussbaumer.com/defile-passage/) is the technical companion to defileViz: one continuous illustrated guide at the root, an expandable QA decision table under `qa/`, and the species comparison at `qa/compare.html`. defileViz links directly to a chapter or section with the selected species in `?species=<taxon_id>`. Old taxon URLs redirect to validation in the methods guide; comparison URLs remain valid.
 
 The Vue sources and interactive method figures live in `website/`; the Python scripts still generate the QA output. Both read the same `data/explore/` export. Building documentation never fits statistical models. See [website/README.md](website/README.md) for editing and preview commands.
 

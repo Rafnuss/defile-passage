@@ -6,7 +6,7 @@ Development is paused as of 12 October 2026. [MODEL_SPECIFICATION.md](MODEL_SPEC
 
 ## Code and saved evidence
 
-Run commands from the `defile-explore` repository root. The selected model uses `simple_rate_model.py` and `run_era5_features.py --variants soaring`. `prepare_historical_transfer.R` defines the base design; `prepare_era5_features.py` defines the added predictors. The runner reads the frozen forty-context designs in `logs/history-episode/design/`, not arbitrary new surveys. This is a reproducible research candidate, not a new production pipeline.
+Run commands from the `defile-passage` repository root. The selected model uses `simple_rate_model.py` and `run_era5_features.py --variants soaring`. `prepare_historical_transfer.R` defines the base design; `prepare_era5_features.py` defines the added predictors. The runner reads the frozen forty-context designs in `logs/history-episode/design/`, not arbitrary new surveys. This is a reproducible research candidate, not a new production pipeline.
 
 Existing results need no refitting. The selected outputs are in `logs/era5-features/soaring/`: `group_scores.csv`, `era_scores.csv`, `species_scores.csv`, `season_scores.csv`, `paired_scores.csv`, `paired_season_scores.csv`, `runtime.csv`, `diagnostics.csv`, `cv_checks.csv`, and `fits/`. Input hashes and feature audits are under `logs/era5-features/`. Generated data and fits remain ignored by Git and must be preserved locally for reproduction.
 

@@ -6,6 +6,15 @@ still open.
 
 ## Repository
 
+**Renamed defile-explore to defile-passage (2026-11-09, requested by the user).** The repo
+produces modelled passage (gap-filled daily passage, season totals, passage dates, trends), which
+will be deposited on Zenodo as a derived dataset next to the counts and described in the data
+paper's method appendix. "Explore" stays the name of the defileViz page and of the export it
+reads (`data/explore/`, `explore.zip`, `build_explore.py`). The GitHub repo and its Pages site
+moved (`raphaelnussbaumer.com/defile-passage/`; the old path is a 404, release downloads
+redirect). Still to rename: the Python package `defile_explore` and the distribution names in
+`pyproject.toml` and `website/package.json`, in one change once the working tree is committed.
+
 **Methods move to the Explore documentation site (2026-10-26, requested by the user).** The illustrated methods formerly in defileViz's six modals now belong to `website/` in this repository, as a continuous homepage with a species selector and stable chapter/section anchors. The site uses defileViz's palette and typography, with equations and implementation references for a technical audience. QA remains a full diagnostic viewer under `qa/`, with species comparison alongside it. defileViz's information links preserve the taxon and open the relevant documentation section. This supersedes the 2026-10-09 decision to keep method modals in defileViz. `scripts/build_site.py` assembles the frontend, existing export and Python QA pages into `logs/site/`; publication keeps the `viewer.zip` release asset name and existing export checks. Site-only changes need no model fitting for local preview; publication continues to require a full export matching HEAD and a site built from committed code. Legacy root-level taxon and comparison pages redirect to `qa/`.
 
 **Methods narrative and seasonal windows (2026-10-26, requested by the user).** Keep only a basic description of the standardised input dataset; recording and cleaning conventions belong to defile-dataset. Open with a branching diagram that distinguishes observed totals, reconstructed seasons, smooth long-term passage and the separate classified-bird summaries. Species selection belongs in the first chapter alongside eligibility, comparable years and windows. Illustrate windows with one selectable complete season: standard and analysis periods, actual daily survey hours and raw species counts on one date axis. Windows are chosen across comparable years and stay fixed when the example year changes. Explain the derived results before their reliability checks.

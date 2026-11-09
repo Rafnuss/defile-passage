@@ -6,10 +6,10 @@ export function doyLabel(doy, locale) {
 
 // --- solar time -------------------------------------------------------------------------------
 // The export gives hours of the day in local apparent solar time (hour 12 starts at the sun's
-// transit over the Défilé, defile-explore `export.solar_shift`). The page shows clock time: the
+// transit over the Défilé, defile-passage `export.solar_shift`). The page shows clock time: the
 // solar hour plus the day's shift, as there.
 
-const SITE_LON = 5.914877; // defile-explore release.SITE
+const SITE_LON = 5.914877; // defile-passage release.SITE
 
 /** Offset of Europe/Paris from UTC (hours) at local noon on a date. */
 function zoneOffset(date) {
@@ -25,7 +25,7 @@ function zoneOffset(date) {
 
 /**
  * Hours from solar time to clock time at the Défilé on a date (clock = solar + shift): the zone's
- * offset, less the longitude's and the equation of time (NOAA's series), as defile-explore
+ * offset, less the longitude's and the equation of time (NOAA's series), as defile-passage
  * `export.solar_shift`.
  */
 export function solarShift(date) {

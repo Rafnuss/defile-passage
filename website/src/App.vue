@@ -119,7 +119,7 @@
   </main>
   <footer class="site-footer">
     <span>Défilé Explore · Methods & quality assurance</span
-    ><a href="https://github.com/Rafnuss/defile-explore">Source code ↗</a
+    ><a href="https://github.com/Rafnuss/defile-passage">Source code ↗</a
     ><a href="#main">Back to top ↑</a>
   </footer>
 </template>

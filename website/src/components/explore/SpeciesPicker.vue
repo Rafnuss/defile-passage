@@ -117,7 +117,7 @@ const props = defineProps({
 });
 const emit = defineEmits(["update:modelValue"]);
 
-// The picker's filters: the highlights (defile-explore `catalogue.highlight`), the groups
+// The picker's filters: the highlights (defile-passage `catalogue.highlight`), the groups
 // (`catalogue.group`), and everything
 const FILTERS = ["highlight", "raptors", "waterbirds", "passerines", "other", "all"];
 const SORTS = ["taxonomic", "common"];
