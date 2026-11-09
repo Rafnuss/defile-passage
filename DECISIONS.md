@@ -46,6 +46,13 @@ Replaces `count/`, `weather/`, `cache/`, `explore/`, `passage/` and five researc
 are unchanged. `--data-dir` (default: the repo root) is the folder holding `raw/`, `interim/` and
 `output/`.
 
+**The passage descriptor says what the dictionary says (2026-11-09, requested by the user).**
+`datapackage.json` marks a column `required` exactly when `DATA_DICTIONARY.md` calls it "Always
+filled" (both from `passage._filled`), and the reliability columns carry their values as an
+`enum` (`passage.RELIABILITY_VALUES`). No `foreignKeys` to `taxonomy.csv`: Frictionless resolves
+a key only within its own package, and the taxonomy is in the counts record, so a validator
+reported the key as broken; the link is the descriptor's `sources` and the dictionary's "Links".
+
 **One interval level: 95% (2026-11-09, requested by the user).** A filled day's interval is 95%
 (`trend.FILLED_DAY_INTERVAL`, `q2.5`/`q97.5` in `trend.days`), replacing the 80% `q10`/`q90`,
 as the season totals: in the export, the passage tables, the methods site and defile-website's

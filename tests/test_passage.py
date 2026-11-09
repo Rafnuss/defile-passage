@@ -166,6 +166,14 @@ def test_passage_tables(tmp_path):
         assert table.columns.tolist() == [c for c, _, _ in columns]
     package = json.loads((tmp_path / "passage" / "datapackage.json").read_text())
     assert package["built_at"] == "now" and "v2026.1" in package["sources"][0]["release"]
+    dictionary = (tmp_path / "passage" / "DATA_DICTIONARY.md").read_text()
+    for resource in package["resources"]:  # "Always filled" and `required` say the same
+        for field in resource["schema"]["fields"]:
+            required = field["constraints"]["required"]
+            row = f"| `{field['name']}` | {field['type']} | {'yes' if required else ''} |"
+            assert row in dictionary.split(f"## {resource['path']}")[1]
+    phen = package["resources"][2]["schema"]["fields"]
+    assert phen[-1]["constraints"]["enum"] == ["reliable", "read_with_care"]
 
 
 def test_preview_names_the_dataset_build():

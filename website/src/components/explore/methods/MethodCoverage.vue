@@ -86,7 +86,8 @@
       For example, <Tex e="R_d=100" /> birds and <Tex e="c_d=0.6" /> give an expected observed count
       of <Tex e="\mu_d=60" />. This is the average count predicted for those conditions;
       <Tex e="N_d" /> is the number actually recorded on that day and can be smaller or larger than
-      that average. The next section describes the variation around that average.
+      that average. The <a href="#model-m-scatter">next section</a> describes the variation around
+      that average.
     </p>
     <details id="coverage-m-solar" class="method-detail">
       <summary>Solar time, daylight and how the profile is fitted</summary>

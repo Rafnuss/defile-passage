@@ -3,11 +3,11 @@
     <section id="model-m-fill">
       <h5><span class="sec-n">1</span>Three cases for reconstructing a full day</h5>
       <p>
-        The model of chapter 2 gives the <em>expected</em> full-day passage <Tex e="R_d" />: the
-        average over days like this one, with the same date, year and weather. What we want here is
-        the number of birds that actually passed on that day, the full-day total <Tex e="F_d" />:
-        the birds counted plus those missed. To estimate <Tex e="F_d" />, we distinguish three cases
-        based on the original daily coverage <Tex e="c_d" />:
+        The model of <a href="#model">chapter 2</a> gives the <em>expected</em> full-day passage
+        <Tex e="R_d" />: the average over days like this one, with the same date, year and weather.
+        What we want here is the number of birds that actually passed on that day, the full-day
+        total <Tex e="F_d" />: the birds counted plus those missed. To estimate <Tex e="F_d" />, we
+        distinguish three cases based on the original daily coverage <Tex e="c_d" />:
       </p>
       <p v-if="!data.trend" class="callout callout-info">
         {{ name }} has no fitted daily count model. Choose a species with a fitted model to inspect
@@ -50,9 +50,9 @@
       </div>
       <p v-if="data.trend">
         For an uncounted day (case 1), we predict the expected full-day passage <Tex e="R_d" /> from
-        the model of chapter 2, using its date, year, weather and surrounding episode. We draw 1 000
-        possible totals around this expectation. For a partly counted day (case 3), the observed
-        birds provide extra information, as explained next.
+        the model of <a href="#model">chapter 2</a>, using its date, year, weather and surrounding
+        episode. We draw 1 000 possible totals around this expectation. For a partly counted day
+        (case 3), the observed birds provide extra information, as explained next.
       </p>
     </section>
     <section v-if="data.trend" id="reconstruction-m-condition">
@@ -77,14 +77,15 @@
       <h6>Use the counted hours to update the intensity</h6>
       <p>
         To use what the counted hours say about this particular day, we write the negative binomial
-        of section 2.2 in its two equivalent parts: the <strong>intensity</strong>
-        <Tex e="\lambda_d" />, how busy this day is, and the Poisson count given that intensity.
-        Written so, the observed count updates the intensity, and the updated intensity predicts the
-        uncounted hours. This is a <strong>Gamma–Poisson model</strong>. The intensity
-        <Tex e="\lambda_d" /> has a Gamma distribution with mean <Tex e="R_d" /> and shape
-        <Tex e="\theta" />, the same dispersion parameter fitted above. We write Gamma distributions
-        using shape and rate, so their mean is shape divided by rate. Given that intensity, the
-        observed count <Tex e="N_d" /> is Poisson with mean <Tex e="c_d\lambda_d" />:
+        of <a href="#model-m-scatter">section 2.2</a> in its two equivalent parts: the
+        <strong>intensity</strong> <Tex e="\lambda_d" />, how busy this day is, and the Poisson
+        count given that intensity. Written so, the observed count updates the intensity, and the
+        updated intensity predicts the uncounted hours. This is a
+        <strong>Gamma–Poisson model</strong>. The intensity <Tex e="\lambda_d" /> has a Gamma
+        distribution with mean <Tex e="R_d" /> and shape <Tex e="\theta" />, the same dispersion
+        parameter fitted above. We write Gamma distributions using shape and rate, so their mean is
+        shape divided by rate. Given that intensity, the observed count <Tex e="N_d" /> is Poisson
+        with mean <Tex e="c_d\lambda_d" />:
       </p>
       <div class="eq">
         <Tex

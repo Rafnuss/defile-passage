@@ -27,7 +27,7 @@
           increased by <Tex e="\mu_d^2/\theta" />. A small value of <Tex e="\theta" /> allows much
           greater variation between days; as the value of <Tex e="\theta" /> grows, the distribution
           approaches the Poisson. We estimate one <Tex e="\theta" /> for each species, jointly with
-          the model’s smoothing parameters (section 4).
+          the model’s smoothing parameters (<a href="#model-m-smooth">section 4</a>).
         </p>
         <NegBinWidget :name="name" :species-theta="trend.theta" />
       </section>
@@ -300,15 +300,17 @@
           <li>
             <strong>Smoothing parameters and count dispersion.</strong> Smoothing parameters control
             how strongly curves are kept smooth and effects are kept small. The dispersion parameter
-            <Tex e="\theta" /> of the negative binomial distribution (section 2) controls the
-            remaining variability of daily counts around their predicted values.
+            <Tex e="\theta" /> of the negative binomial distribution (<a href="#model-m-scatter"
+              >section 2</a
+            >) controls the remaining variability of daily counts around their predicted values.
           </li>
         </ul>
         <p>
-          Each group of coefficients has the prior given in the table of section 3: it keeps curves
-          smooth and effects small unless the counts support more. The strength of these priors, all
-          but the weather’s, is estimated from the counts too, together with <Tex e="\theta" />. The
-          fitting therefore alternates between the two groups of parameters:
+          Each group of coefficients has the prior given in the table of
+          <a href="#model-m-model">section 3</a>: it keeps curves smooth and effects small unless
+          the counts support more. The strength of these priors, all but the weather’s, is estimated
+          from the counts too, together with <Tex e="\theta" />. The fitting therefore alternates
+          between the two groups of parameters:
         </p>
         <ol>
           <li>
@@ -329,8 +331,9 @@
           Estimating the strength of the priors from the data, then the coefficients given them, is
           known as <strong>empirical Bayes</strong>. After fitting, a joint Gaussian approximation
           describes uncertainty around the coefficient estimates. Draws from that approximation
-          produce plausible combinations of curves and effects. Chapter 3 uses them to draw the
-          birds missed during uncounted periods.
+          produce plausible combinations of curves and effects.
+          <a href="#reconstruction">Chapter 3</a> uses them to draw the birds missed during
+          uncounted periods.
         </p>
         <p>
           For fitting, we use daily counts with coverage of at least

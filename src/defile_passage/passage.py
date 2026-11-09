@@ -43,6 +43,11 @@ DECADE = 10  # the phenology slopes (days per year) given per decade
 RELIABILITY = {"show": "reliable", "caveat": "read_with_care", "hide": "not_shown"}
 RELIABLE = "reliable or read_with_care (borderline in a test); values not shown are not published"
 UNRELIABLE = RELIABILITY["hide"]
+# the published values, for the dictionary and the descriptor's enum
+RELIABILITY_VALUES = {
+    RELIABILITY["show"]: "passed the reliability tests",
+    RELIABILITY["caveat"]: 'a test was borderline; shown with "Read with care" on the website',
+}
 GAM = "gam"  # `season.source` when the season is the trend model's gap-filled days
 
 # What is published: what the website shows. A value classed hide by `reliability` (an unreliable
@@ -229,14 +234,32 @@ def dataset_name(manifest: dict) -> str:
     return tag or f"build {(manifest.get('dataset_git_sha') or '')[:7]} (preview, not a release)"
 
 
-def datapackage(manifest: dict) -> dict:
-    """The Frictionless descriptor: the tables, their columns, and what they were made from."""
+def _filled(t: dict[str, pd.DataFrame]) -> dict[str, set[str]]:
+    """Table -> its columns with a value on every row ("Always filled", `required`)."""
+    return {name: {c for c in df.columns if df[c].notna().all()} for name, df in t.items()}
+
+
+def _field(column: str, typ: str, desc: str, required: bool) -> dict:
+    field = {"name": column, "type": typ, "description": desc}
+    constraints = {"required": required}
+    if column.endswith("reliability"):
+        constraints["enum"] = list(RELIABILITY_VALUES)
+        field["x-enumDescriptions"] = {
+            v: {"description": m} for v, m in RELIABILITY_VALUES.items()
+        }
+    return {**field, "constraints": constraints}
+
+
+def datapackage(manifest: dict, t: dict[str, pd.DataFrame] | None = None) -> dict:
+    """The Frictionless descriptor: the tables, their columns, and what they were made from.
+
+    With the tables `t`, a column filled on every row is `required`, as "Always filled" in
+    `DATA_DICTIONARY.md`.
+    """
+    filled = _filled(t) if t is not None else {}
+    # No `foreignKeys` to taxonomy.csv: Frictionless resolves them only within this package, and
+    # the taxonomy is in the counts record (`sources`, and the dictionary's "Links").
     tag = manifest.get("dataset_release")
-    taxonomy = {
-        "fields": "taxon_id",
-        "reference": {"resource": "taxonomy", "fields": "taxon_id"},
-        "description": f"taxonomy.csv of the counts record, https://doi.org/{DATASET_DOI}",
-    }
     return {
         "name": NAME,
         "id": DATASET_URL.format(doi=PASSAGE_DOI),
@@ -260,10 +283,9 @@ def datapackage(manifest: dict) -> dict:
                 "format": "csv",
                 "schema": {
                     "fields": [
-                        {"name": c, "type": t, "description": desc} for c, t, desc in columns
+                        _field(c, typ, desc, c in filled.get(name, ())) for c, typ, desc in columns
                     ],
                     "primaryKey": ["taxon_id"] + (["date"] if name == "daily_passage" else []),
-                    "foreignKeys": [taxonomy],
                 },
             }
             for name, columns in TABLES.items()
@@ -365,6 +387,7 @@ def dictionary(t: dict[str, pd.DataFrame]) -> str:
         " definitions are in `datapackage.json` (Frictionless Data format).",
         "",
     ]
+    filled = _filled(t)
     for name, columns in TABLES.items():
         key = "`taxon_id`" + (" and `date`" if name == "daily_passage" else "")
         lines += [
@@ -379,16 +402,15 @@ def dictionary(t: dict[str, pd.DataFrame]) -> str:
             "| --- | --- | --- | --- |",
         ]
         for c, typ, desc in columns:
-            filled = "yes" if t[name][c].notna().all() else ""
-            lines.append(f"| `{c}` | {typ} | {filled} | {desc[0].upper() + desc[1:]}. |")
+            mark = "yes" if c in filled[name] else ""
+            lines.append(f"| `{c}` | {typ} | {mark} | {desc[0].upper() + desc[1:]}. |")
         lines.append("")
     lines += [
         "Reliability values (`reliability`, `*_reliability`):",
         "",
         "| Value | Meaning |",
         "| --- | --- |",
-        "| `reliable` | passed the reliability tests |",
-        '| `read_with_care` | a test was borderline; shown with "Read with care" on the website |',
+        *[f"| `{v}` | {m} |" for v, m in RELIABILITY_VALUES.items()],
         "",
     ]
     return "\n".join(lines)
@@ -408,7 +430,7 @@ def write(export_dir: str, out_dir: str) -> dict[str, int]:
     for name, df in t.items():
         df.to_csv(os.path.join(out_dir, f"{name}.csv"), index=False)
     with open(os.path.join(out_dir, "datapackage.json"), "w", encoding="utf-8") as f:
-        f.write(dumps(datapackage(manifest)))
+        f.write(dumps(datapackage(manifest, t)))
     for file, text in (
         ("DATA_GUIDE.md", guide(manifest, t)),
         ("DATA_DICTIONARY.md", dictionary(t)),
