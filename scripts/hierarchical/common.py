@@ -56,8 +56,8 @@ def logistic(X: np.ndarray, y: np.ndarray, ridge: float = 1e-4) -> np.ndarray:
 
 
 def load_species(name: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Observations (`weather_stop` flagged) and their hourly components of one species,
-    1993-2025, from `build_inputs.py`."""
+    """Observations (`weather_stop` flagged) and their hourly components of one species, 1993-2025,
+    from `build_inputs.py`."""
     stem = INPUTS / name.replace(" ", "_")
     obs = pd.read_csv(f"{stem}_observations.csv")
     parts = pd.read_csv(f"{stem}_components.csv")

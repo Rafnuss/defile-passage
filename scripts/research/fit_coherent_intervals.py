@@ -222,7 +222,7 @@ for context in manifest.itertuples():
                 fit.x,
                 jac=True,
                 method="L-BFGS-B",
-                options={"gtol": tolerance/10, "ftol": 1e-15, "maxiter": 1000, "maxls": 100},
+                options={"gtol": tolerance / 10, "ftol": 1e-15, "maxiter": 1000, "maxls": 100},
             )
         fit.x = solve_triangular(scale.T, fit.x, lower=False)
         fit.fun, fit.jac = objective(fit.x)
@@ -260,8 +260,16 @@ for context in manifest.itertuples():
         information = (information + information.T) / 2
         assert np.linalg.eigvalsh(information).min() > 0
         covariance = np.linalg.inv(information)
-    np.savez(args.out / f"{key}_optimization_checkpoint.npz", parameters=fit.x, gradient=fit.jac, gradient_check=gradient_check, value=fit.fun)
-    assert gradient_check < 1e-3 and np.max(abs(fit.jac)) < 1e-3, f"gradient {np.max(abs(fit.jac)):.6g}; derivative error {gradient_check:.6g}"
+    np.savez(
+        args.out / f"{key}_optimization_checkpoint.npz",
+        parameters=fit.x,
+        gradient=fit.jac,
+        gradient_check=gradient_check,
+        value=fit.fun,
+    )
+    assert (
+        gradient_check < 1e-3 and np.max(abs(fit.jac)) < 1e-3
+    ), f"gradient {np.max(abs(fit.jac)):.6g}; derivative error {gradient_check:.6g}"
     rng = np.random.default_rng(20261012 + int(context.fold))
     parameters = rng.multivariate_normal(fit.x, covariance, args.draws)
     count_draws = np.zeros((len(testing), args.draws))

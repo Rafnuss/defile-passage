@@ -1,18 +1,18 @@
 """A mock-up of the Explore page's weather section, from the broad panel's `W3` fits.
 
-Run from the repository root after `weather_panel.py --arms W3` and `weather_patterns.py`:
-uv run python scripts/hierarchical/weather_mockup.py
+Run from the repository root after `weather_panel.py --arms W3` and `weather_patterns.py`: uv run
+python scripts/hierarchical/weather_mockup.py
 
 Writes `logs/hierarchical/panel/weather_mockup.html` (self-contained). Per species: each term's
 effect for its contrast with its 95% interval and class; beside it, the counted days in bins of the
 term, as birds over the usual for the date and year; the wind as a rose (5 m/s from each of eight
-directions against calm, the direction and speed terms together), a petal faded when not clear
-and marked when fewer than `MIN_SECTOR_DAYS` counted days had wind from that sector.
+directions against calm, the direction and speed terms together), a petal faded when not clear and
+marked when fewer than `MIN_SECTOR_DAYS` counted days had wind from that sector.
 
-Classes (the rule proposed to `reliability.py`): `show` when clear on all years (interval
-excludes 1, at least `MIN_EFFECT`) and both halves (odd, even years) point the same way (wind:
-preferred directions within `MAX_ANGLE`); `caveat` when clear but a half points the other way;
-`hide` otherwise. `confirmed` when the halves are each clear and agree (`weather_patterns.status`).
+Classes (the rule proposed to `reliability.py`): `show` when clear on all years (interval excludes
+1, at least `MIN_EFFECT`) and both halves (odd, even years) point the same way (wind: preferred
+directions within `MAX_ANGLE`); `caveat` when clear but a half points the other way; `hide`
+otherwise. `confirmed` when the halves are each clear and agree (`weather_patterns.status`).
 """
 
 import json
@@ -34,21 +34,25 @@ TERMS = {  # term: (heading, contrast in words, evidence bins)
     "sunshine": ("Sunshine", "a sunny day against an overcast one", "sunshine"),
     "boundary_layer": ("Thermals", "air mixed 500 m higher", "boundary_layer"),
     "pressure_change": ("Rising pressure", "5 hPa higher than the day before", "pressure_change"),
-    "temperature_anomaly": ("Cold day", "3 °C colder than usual for the date", "temperature_anomaly"),
+    "temperature_anomaly": (
+        "Cold day",
+        "3 °C colder than usual for the date",
+        "temperature_anomaly",
+    ),
 }
 
 
 def same_way(row_all: pd.Series, halves: list[pd.Series], term: str) -> bool:
     if term == "wind_direction":
-        return all(
-            abs((h.origin - row_all.origin + 180) % 360 - 180) <= MAX_ANGLE for h in halves
-        )
+        return all(abs((h.origin - row_all.origin + 180) % 360 - 180) <= MAX_ANGLE for h in halves)
     return all(np.sign(h.log_effect) == np.sign(row_all.log_effect) for h in halves)
 
 
 def rose(fit: pd.Series, sectors: pd.DataFrame) -> list[dict]:
     """5 m/s from each sector against calm: the direction and speed terms together."""
-    (a, sa), (b, sb), (c, sc) = (per_unit(fit, k) for k in ("wind_u100", "wind_v100", "wind_speed"))
+    (a, sa), (b, sb), (c, sc) = (
+        per_unit(fit, k) for k in ("wind_u100", "wind_v100", "wind_speed")
+    )
     days = sectors.set_index("bin").days if len(sectors) else pd.Series(dtype=float)
     out = []
     for k, name in enumerate(SECTORS):

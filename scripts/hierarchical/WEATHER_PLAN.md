@@ -23,15 +23,15 @@ each taxon's passage goes with the main weather variables. Interpretability firs
 Each is a daily value, the time-of-day profile's weighted mean over the day's hours (the hours the
 taxon flies), standardised on counted days in the fit; effects are reported back in physical units.
 
-| theme       | term              | hourly value                                               |
-| ----------- | ----------------- | ---------------------------------------------------------- |
-| rain        | `rain`            | log(1 + mm in the hour)                                    |
-| sun         | `sunshine`        | share of the hour with sunshine (ERA5 direct > 120 W/m²)   |
-| thermals    | `boundary_layer`  | boundary-layer height (km), the depth of thermal mixing    |
-| wind        | `wind_u`, `wind_v` | wind at 100 m toward the east and the north (m/s)         |
-| wind        | `wind_speed`      | wind speed at 100 m (m/s)                                  |
-| front       | `pressure_change` | sea-level pressure minus 24 hours earlier (hPa)            |
-| front       | `temperature_anomaly` | 2 m temperature minus its 1993–2025 mean for the date and hour (°C) |
+| theme    | term                  | hourly value                                                        |
+| -------- | --------------------- | ------------------------------------------------------------------- |
+| rain     | `rain`                | log(1 + mm in the hour)                                             |
+| sun      | `sunshine`            | share of the hour with sunshine (ERA5 direct > 120 W/m²)            |
+| thermals | `boundary_layer`      | boundary-layer height (km), the depth of thermal mixing             |
+| wind     | `wind_u`, `wind_v`    | wind at 100 m toward the east and the north (m/s)                   |
+| wind     | `wind_speed`          | wind speed at 100 m (m/s)                                           |
+| front    | `pressure_change`     | sea-level pressure minus 24 hours earlier (hPa)                     |
+| front    | `temperature_anomaly` | 2 m temperature minus its 1993–2025 mean for the date and hour (°C) |
 
 Low cloud and the rain hinge (above 1 mm) of `RSW` are dropped: low cloud overlaps sunshine, the
 hinge is hard to explain. Not available in the archive's ERA5: CAPE, sensible heat flux.
@@ -41,21 +41,23 @@ hinge is hard to explain. Not available in the archive's ERA5: CAPE, sensible he
 1. **Accuracy.** On the realistic masks (new inputs, five draws, ten core species): `P`, `RSW`
    and `W` (the terms above), with the downloaded weather. `W` should be no worse than `RSW`
    (season error, daily MAE, wet and dry days, both eras); it does not have to be better.
+
 2. **Effects.** `W` fitted on all counted days of each taxon; each term's effect as a multiplier
    for a fixed physical contrast, with its 95% interval from the posterior draws:
 
-   | term                  | contrast                                      |
-   | --------------------- | --------------------------------------------- |
-   | rain                  | 1 mm an hour all day against dry              |
-   | sunshine              | a sunny day against an overcast one (1 vs 0)  |
-   | boundary layer        | 500 m deeper                                  |
-   | wind                  | 5 m/s from the preferred direction (and its direction) |
-   | wind speed            | 5 m/s more, any direction                     |
-   | pressure change       | 5 hPa rise in 24 hours                        |
-   | temperature anomaly   | 3 °C colder than usual for the date           |
+   | term                | contrast                                               |
+   | ------------------- | ------------------------------------------------------ |
+   | rain                | 1 mm an hour all day against dry                       |
+   | sunshine            | a sunny day against an overcast one (1 vs 0)           |
+   | boundary layer      | 500 m deeper                                           |
+   | wind                | 5 m/s from the preferred direction (and its direction) |
+   | wind speed          | 5 m/s more, any direction                              |
+   | pressure change     | 5 hPa rise in 24 hours                                 |
+   | temperature anomaly | 3 °C colder than usual for the date                    |
 
 3. **Collinearity.** Correlations between the daily terms; where two are above 0.7 their separate
    effects are not shown apart (one combined statement instead).
+
 4. **Stability.** The same effect in 1993–2013 and 2014–2025 (fitted apart), to flag a `caveat`.
 
 ## Display rule (to `reliability.py` when it goes to production)

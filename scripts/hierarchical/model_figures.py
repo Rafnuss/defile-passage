@@ -71,8 +71,12 @@ def main():
     mask = pd.read_csv(MASKS / f"draw{args.draw}.csv", parse_dates=["date"])
     mask["hide_from"] = pd.to_datetime(mask.hide_from, utc=True)
     hidden = apply_mask(obs, mask).to_numpy()
-    timed = obs[~hidden & obs.year.ge(TIMED_FROM).to_numpy() & obs.exposure_hours.le(1).to_numpy()
-        & ~obs.weather_stop.to_numpy()]
+    timed = obs[
+        ~hidden
+        & obs.year.ge(TIMED_FROM).to_numpy()
+        & obs.exposure_hours.le(1).to_numpy()
+        & ~obs.weather_stop.to_numpy()
+    ]
     sample = parts[parts.observation_id.isin(timed.observation_id)].merge(
         timed[["observation_id", "count"]], on="observation_id"
     )

@@ -1,5 +1,5 @@
-"""The day's weather at the count site, for the trend model's weather terms and the `weather` block.
-Part of `defile_explore`.
+"""The day's weather at the count site, for the trend model's weather terms and the `weather`
+block. Part of `defile_explore`.
 
 Hourly ERA5 reanalysis at Défilé (`LOCATION`; plain ERA5, 0.25°) from the Open-Meteo archive,
 downloaded by `fetch` into `<data dir>/weather/` (one file a year), and read by `hourly` as the UTC
@@ -111,8 +111,11 @@ COEF_DRAWS = 2000
 def fetch(data_dir: str, last_year: int) -> list[int]:
     """Download the years `FIRST_YEAR`..`last_year` not yet in `<data_dir>/weather/`, and the
     current calendar year every time, up to yesterday (ERA5 runs a few days behind); the years
-    fetched. A year that cannot be fetched is reported and skipped: `trend.with_weather` refuses a
-    modelled day without weather."""
+    fetched.
+
+    A year that cannot be fetched is reported and skipped: `trend.with_weather` refuses a
+    modelled day without weather.
+    """
     folder = os.path.join(data_dir, WEATHER_DIR)
     os.makedirs(folder, exist_ok=True)
     fetched = []
@@ -133,7 +136,9 @@ def fetch(data_dir: str, last_year: int) -> list[int]:
             "hourly": ",".join(VARIABLES),
         }
         try:
-            with urllib.request.urlopen(f"{URL}?{urllib.parse.urlencode(query)}", timeout=300) as r:
+            with urllib.request.urlopen(
+                f"{URL}?{urllib.parse.urlencode(query)}", timeout=300
+            ) as r:
                 frame = pd.DataFrame(json.load(r)["hourly"])
         except OSError as error:  # offline, or the archive not there yet: the fit says if needed
             print(f"Weather {year} not downloaded: {error}")
@@ -156,8 +161,8 @@ def files_key(data_dir: str) -> str:
 
 
 def hourly(data_dir: str) -> pd.DataFrame:
-    """The hourly terms (`TERMS`, own units) per UTC hour [t, t + 1), indexed by its start, on
-    the days of the profile's season (`profile.PROFILE_DOY`); empty without weather files."""
+    """The hourly terms (`TERMS`, own units) per UTC hour [t, t + 1), indexed by its start, on the
+    days of the profile's season (`profile.PROFILE_DOY`); empty without weather files."""
     folder = os.path.join(data_dir, WEATHER_DIR)
     paths = sorted(os.listdir(folder)) if os.path.isdir(folder) else []
     if not paths:
@@ -195,7 +200,9 @@ def hourly(data_dir: str) -> pd.DataFrame:
         },
         index=raw.index,
     )
-    keep = (day >= PROFILE_DOY[0] - 1) & (day <= PROFILE_DOY[1] + 1) & (raw.index.year > FIRST_YEAR)
+    keep = (
+        (day >= PROFILE_DOY[0] - 1) & (day <= PROFILE_DOY[1] + 1) & (raw.index.year > FIRST_YEAR)
+    )
     return w[keep].astype("float32")
 
 
@@ -206,8 +213,11 @@ def season_doy(times) -> np.ndarray:
 
 
 def daily_terms(dates: pd.Series, doy: np.ndarray, profile: np.ndarray, weather: pd.DataFrame):
-    """Each date's terms (`TERMS`, own units): the time-of-day profile's weighted mean of the hourly
-    terms over the day's solar slots. `doy`: the dates' season days (`trend.season_day`)."""
+    """Each date's terms (`TERMS`, own units): the time-of-day profile's weighted mean of the
+    hourly terms over the day's solar slots.
+
+    `doy`: the dates' season days (`trend.season_day`).
+    """
     calendar = pd.DatetimeIndex(dates)
     noon = calendar + pd.Timedelta(hours=12)
     utc_noon = noon.tz_localize(E.TIMEZONE).tz_convert("UTC").tz_localize(None)
@@ -247,8 +257,8 @@ def _summary(log_effect: np.ndarray) -> dict:
 
 
 def _origin(b: pd.DataFrame) -> np.ndarray:
-    """Where the wind that raises passage most comes from, degrees (the coefficients point to
-    where it blows)."""
+    """Where the wind that raises passage most comes from, degrees (the coefficients point to where
+    it blows)."""
     return (np.degrees(np.arctan2(b.wind_u, b.wind_v)) + 180) % 360
 
 
@@ -275,9 +285,9 @@ def _bins(values: np.ndarray, edges, names, y, expected) -> list[dict]:
 
 
 def weather_block(fits: dict, frame: pd.DataFrame, raw: pd.DataFrame, sd: pd.Series, seed=0):
-    """The `weather` block from the fits on all years and on odd and even years alone
-    (`fits`: `{"all", "odd", "even"}` of `trend.fit`), the model frame and the raw terms of its
-    days (own units) with their scale."""
+    """The `weather` block from the fits on all years and on odd and even years alone (`fits`:
+    `{"all", "odd", "even"}` of `trend.fit`), the model frame and the raw terms of its days (own
+    units) with their scale."""
     from defile_explore import trend as T  # trend imports this module
 
     draws = {

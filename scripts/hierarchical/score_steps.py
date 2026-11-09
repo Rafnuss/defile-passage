@@ -19,7 +19,12 @@ from common import LOGS
 
 BOOT = 200
 LADDER = ["P", "R", "RS", "RSW", "D", "I"]
-BASE = {"De": "D", "W": "RSW", "W2": "W", "W3": "W"}  # an arm off the ladder is compared with `P` and with this one
+BASE = {
+    "De": "D",
+    "W": "RSW",
+    "W2": "W",
+    "W3": "W",
+}  # an arm off the ladder is compared with `P` and with this one
 rng = np.random.default_rng(1)
 
 

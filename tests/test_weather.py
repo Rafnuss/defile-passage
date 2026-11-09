@@ -27,7 +27,9 @@ def test_daily_terms_are_the_profile_weighted_mean():
     weather = hourly_table(days, np.random.default_rng(0))
     weather[:] = 0.0
     weather["rain"] = 2.0  # constant: the mean is the value
-    weather.loc[weather.index.hour < 3, "sunshine"] = 1.0  # at night: the profile gives it no weight
+    weather.loc[
+        weather.index.hour < 3, "sunshine"
+    ] = 1.0  # at night: the profile gives it no weight
     out = W.daily_terms(pd.Series(days), T.season_day(days), flat_profile(), weather)
     assert np.allclose(out["rain"], 2.0)
     assert np.allclose(out["sunshine"], 0.0)
@@ -36,9 +38,7 @@ def test_daily_terms_are_the_profile_weighted_mean():
 def test_fit_recovers_a_weather_effect_and_the_smooth_leaves_it_out():
     rng = np.random.default_rng(1)
     years = np.arange(2010, 2020)
-    dates = pd.DatetimeIndex(
-        [d for y in years for d in pd.date_range(f"{y}-08-01", f"{y}-10-31")]
-    )
+    dates = pd.DatetimeIndex([d for y in years for d in pd.date_range(f"{y}-08-01", f"{y}-10-31")])
     frame = pd.DataFrame({"date": dates, "year": dates.year, "doy": T.season_day(dates)})
     frame["c"] = 1.0
     terms = pd.DataFrame(rng.normal(size=(len(frame), len(W.TERMS))), columns=W.TERMS)

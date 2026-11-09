@@ -1,8 +1,8 @@
 """Each taxon's weather effects from `W` fitted on all counted days, as the page would show them.
 
 Run from the repository root after the full fits (`run_steps.py --arms W We --masks
-logs/hierarchical/full --draws 0 --out logs/hierarchical/full-fits`):
-uv run python scripts/hierarchical/weather_effects.py > logs/hierarchical/weather_effects.log
+logs/hierarchical/full --draws 0 --out logs/hierarchical/full-fits`): uv run python
+scripts/hierarchical/weather_effects.py > logs/hierarchical/weather_effects.log
 
 An effect is the multiplier of the day's expected passage for a fixed contrast in physical units
 (`CONTRASTS`), with its 95% interval (normal on the log scale, from the posterior draws' standard
@@ -52,8 +52,8 @@ def per_unit(row: pd.Series, term: str) -> tuple[float, float]:
 
 def effects(row: pd.Series) -> pd.DataFrame:
     """The effects of one fit (`run_steps.py`'s `_fit.csv` row): one row per contrast, with
-    `log_effect`, `se`, `clear`; the wind's preferred direction (`origin`, degrees) and its
-    test (`chi2`) on the `wind_direction` row."""
+    `log_effect`, `se`, `clear`; the wind's preferred direction (`origin`, degrees) and its test
+    (`chi2`) on the `wind_direction` row."""
     rows = []
     for term, (contrast, label) in CONTRASTS.items():
         if f"beta_{term}" not in row or pd.isna(row[f"beta_{term}"]):
@@ -62,7 +62,9 @@ def effects(row: pd.Series) -> pd.DataFrame:
         rows.append(
             {"term": term, "contrast": label, "log_effect": b * contrast, "se": s * abs(contrast)}
         )
-    (a, sa), (b, sb), (c, sc) = (per_unit(row, k) for k in ("wind_u100", "wind_v100", "wind_speed"))
+    (a, sa), (b, sb), (c, sc) = (
+        per_unit(row, k) for k in ("wind_u100", "wind_v100", "wind_speed")
+    )
     strength = np.hypot(a, b)
     origin = (np.degrees(np.arctan2(a, b)) + 180) % 360  # the vector is where the wind blows to
     rows.append(
@@ -133,7 +135,9 @@ def main():
     for term, t in table.groupby("term", sort=False):
         print(f"\n## {term}: {t.contrast.iloc[0]}\n")
         cols = ["english_name", "effect", "lo", "hi", "class"]
-        cols += [c for c in ("effect_1993_2013", "effect_2014_2025") if c in t and t[c].notna().any()]
+        cols += [
+            c for c in ("effect_1993_2013", "effect_2014_2025") if c in t and t[c].notna().any()
+        ]
         cols += ["contrast"] if term == "wind_direction" else []
         print(t[cols].to_string(index=False, float_format=lambda v: f"{v:.2f}"))
     print("\n## Classes\n")

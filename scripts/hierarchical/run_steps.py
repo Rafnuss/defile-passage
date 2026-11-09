@@ -1,6 +1,7 @@
 """Fit the ladder's daily steps on the realistic masks and predict what each mask hides.
 
-Run from the repository root, after `fetch_weather.py` (the hourly ERA5 table): uv run --with 'pyarrow<20' python scripts/hierarchical/run_steps.py --arms P R RS RSW   >
+Run from the repository root, after `fetch_weather.py` (the hourly ERA5 table): uv run --with
+'pyarrow<20' python scripts/hierarchical/run_steps.py --arms P R RS RSW   >
 logs/hierarchical/steps.log
 
 Per species and mask draw: production's time-of-day profile from the retained hours timed to the
@@ -11,7 +12,8 @@ under an early-end mask.
 
 Arms (README "Steps"): `P` production; `R` + rain (the research hybrid's two terms); `RS` + daily
 radiation and low cloud; `RSW` + daily wind u and v; `W` the weather plan's terms
-(`WEATHER_PLAN.md`) `We` (diagnostic: each `W` effect again for 1993-2013); `W2` `W` and the second menu; `W3` `W` and yesterday's rain (the proposal); `D` `RSW` with a daily AR(1) process in place
+(`WEATHER_PLAN.md`) `We` (diagnostic: each `W` effect again for 1993-2013); `W2` `W` and the second
+menu; `W3` `W` and yesterday's rain (the proposal); `D` `RSW` with a daily AR(1) process in place
 of the episode block (and `De`, a diagnostic: rain terms of their own for 1993-2013); `I` `D` with
 the time-of-day profile moved by each hour's weather (`intraday_effect`), which changes the
 coverage of every observation. Daily terms are the time-of-day profile's weighted means over the
@@ -73,9 +75,12 @@ CLIMATE_DAYS = 31  # the temperature anomaly's normal: the mean over this many d
 def hourly_weather() -> pd.DataFrame:
     """ERA5 at Defile per UTC hour [t, t+1), from `fetch_weather.py`: rain, radiation and sunshine
     accumulated over the hour (Open-Meteo's value at t+1), the others the mean of the hour's two
-    ends. Wind u and v toward the east and north, at 10 m (`RSW`) and 100 m (`W`); the pressure
-    and temperature changes over 24 hours; the temperature's departure from its mean for the date
-    and hour; the rain of the same hour the day before."""
+    ends.
+
+    Wind u and v toward the east and north, at 10 m (`RSW`) and 100 m (`W`); the pressure and
+    temperature changes over 24 hours; the temperature's departure from its mean for the date and
+    hour; the rain of the same hour the day before.
+    """
     raw = pd.concat([pd.read_csv(p) for p in sorted(WEATHER_DIR.glob("era5_*.csv"))])
     raw.index = pd.to_datetime(raw.pop("time"), utc=True)
     raw = raw.sort_index().asfreq("h")
@@ -236,7 +241,9 @@ def species_slots(species: str, parts: pd.DataFrame) -> np.ndarray:
         if len(slots) == len(parts):
             return slots
     slots = interval_slots(parts)
-    part = cache.with_suffix(f".{os.getpid()}.npy")  # written whole, then moved: jobs run in parallel
+    part = cache.with_suffix(
+        f".{os.getpid()}.npy"
+    )  # written whole, then moved: jobs run in parallel
     np.save(part, slots)
     os.replace(part, cache)
     return slots
@@ -278,7 +285,9 @@ def main():
             mask["hide_from"] = pd.to_datetime(mask.hide_from, utc=True)
             hidden = apply_mask(obs, mask).to_numpy()
             timed = obs[
-                ~hidden & obs.year.ge(TIMED_FROM).to_numpy() & obs.exposure_hours.le(1).to_numpy()
+                ~hidden
+                & obs.year.ge(TIMED_FROM).to_numpy()
+                & obs.exposure_hours.le(1).to_numpy()
                 & ~obs.weather_stop.to_numpy()
             ]
             sample = parts[parts.observation_id.isin(timed.observation_id)].merge(

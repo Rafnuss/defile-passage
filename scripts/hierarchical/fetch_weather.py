@@ -1,7 +1,7 @@
 """Download the hourly ERA5 weather at Défilé from the Open-Meteo archive into `data/weather/`.
 
-Run from the repository root (34 requests, one a year, paced for the free API's limits):
-uv run python scripts/hierarchical/fetch_weather.py > logs/hierarchical/fetch_weather.log
+Run from the repository root (34 requests, one a year, paced for the free API's limits): uv run
+python scripts/hierarchical/fetch_weather.py > logs/hierarchical/fetch_weather.log
 
 Plain ERA5 (`models=era5`, 0.25°), GMT, wind in m/s. Open-Meteo gives accumulated variables
 (precipitation, radiation, sunshine) over the hour ending at the time stamp and the others at the

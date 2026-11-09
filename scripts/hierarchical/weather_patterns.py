@@ -1,16 +1,16 @@
 """Patterns in the broad panel's weather effects: odd years find, even years confirm.
 
-Run from the repository root after `weather_panel.py` (every `fits_<arms>.csv` is read):
-uv run --with matplotlib python scripts/hierarchical/weather_patterns.py \
-    > logs/hierarchical/weather_patterns.log
+Run from the repository root after `weather_panel.py` (every `fits_<arms>.csv` is read): uv run
+--with matplotlib python scripts/hierarchical/weather_patterns.py \     >
+logs/hierarchical/weather_patterns.log
 
 Effects from `weather_effects.effects`, per taxon, arm and half. A taxon's effect is `replicated`
-when it is clear on odd years and clear with the same sign on even years (for the wind's
-direction: a clear direction within `MAX_ANGLE` of the odd years'); `not confirmed` when clear on
-odd years only; `opposite` when the halves are clear with opposite signs; `none` when not clear
-on odd years. Groups by family (`flight_groups.tsv`). Writes `logs/hierarchical/panel/`
-`effects.csv`, `status.csv`, `groups.csv` and `heatmap_<arm>.png` (all years' effects, every cell
-drawn; faded when not clear on all years; a dot when replicated).
+when it is clear on odd years and clear with the same sign on even years (for the wind's direction:
+a clear direction within `MAX_ANGLE` of the odd years'); `not confirmed` when clear on odd years
+only; `opposite` when the halves are clear with opposite signs; `none` when not clear on odd years.
+Groups by family (`flight_groups.tsv`). Writes `logs/hierarchical/panel/` `effects.csv`,
+`status.csv`, `groups.csv` and `heatmap_<arm>.png` (all years' effects, every cell drawn; faded
+when not clear on all years; a dot when replicated).
 """
 
 import argparse
@@ -76,8 +76,15 @@ def heatmap(table: pd.DataFrame, arm: str, path):
                 colour = 1 - FADE * (1 - colour)
             ax.add_patch(plt.Rectangle((j, i), 1, 1, color=colour))
             mark = " ●" if r.status == "replicated" else ""
-            ax.text(j + 0.5, i + 0.5, f"{np.exp(r.log_effect):.2g}{mark}", ha="center",
-                    va="center", fontsize=6, color="black" if r.clear else "0.5")
+            ax.text(
+                j + 0.5,
+                i + 0.5,
+                f"{np.exp(r.log_effect):.2g}{mark}",
+                ha="center",
+                va="center",
+                fontsize=6,
+                color="black" if r.clear else "0.5",
+            )
     ax.set_xlim(0, len(cols))
     ax.set_ylim(len(names), 0)
     ax.set_xticks(np.arange(len(cols)) + 0.5, [COLUMNS[c] for c in cols], fontsize=7)
@@ -101,7 +108,9 @@ def main():
     fits = pd.concat(pd.read_csv(p) for p in sorted(PANEL.glob("fits_*.csv")))
     groups = pd.read_csv(GROUPS, sep="\t").set_index("family").group
     fits["group"] = fits.family.map(groups)
-    assert fits.group.notna().all(), f"families without a group: {set(fits.family[fits.group.isna()])}"
+    assert (
+        fits.group.notna().all()
+    ), f"families without a group: {set(fits.family[fits.group.isna()])}"
     keys = ["taxon_id", "english_name", "group", "arm", "half", "birds", "counted_days"]
     table = pd.concat(
         [effects(row).assign(**{k: row[k] for k in keys}) for _, row in fits.iterrows()],
@@ -119,32 +128,62 @@ def main():
     table.to_csv(PANEL / "effects.csv", index=False)
 
     pd.set_option("display.width", 250)
-    print(f"{fits.taxon_id.nunique()} taxa: " + ", ".join(
-        f"{g} {n}" for g, n in fits.drop_duplicates("taxon_id").group.value_counts().items()))
+    print(
+        f"{fits.taxon_id.nunique()} taxa: "
+        + ", ".join(
+            f"{g} {n}" for g, n in fits.drop_duplicates("taxon_id").group.value_counts().items()
+        )
+    )
     for arm in sorted(table.arm.unique()):
         t = table[table.arm.eq(arm) & table.half.eq("all")]
         counts = t.pivot_table(index="term", columns="status", values="taxon_id", aggfunc="count")
         print(f"\n## {arm}: odd years find, even confirm (taxa)\n")
-        print(counts.fillna(0).astype(int).reindex(columns=["replicated", "not confirmed",
-              "opposite", "none"], fill_value=0).to_string())
-        g = t.groupby(["group", "term"]).agg(
-            taxa=("taxon_id", "nunique"),
-            median_effect=("log_effect", lambda e: np.exp(e.median())),
-            clear_up=("log_effect", lambda e: (t.loc[e.index, "clear"] & e.gt(0)).sum()),
-            clear_down=("log_effect", lambda e: (t.loc[e.index, "clear"] & e.lt(0)).sum()),
-            replicated=("status", lambda s: s.eq("replicated").sum()),
-        ).reset_index()
+        print(
+            counts.fillna(0)
+            .astype(int)
+            .reindex(columns=["replicated", "not confirmed", "opposite", "none"], fill_value=0)
+            .to_string()
+        )
+        g = (
+            t.groupby(["group", "term"])
+            .agg(
+                taxa=("taxon_id", "nunique"),
+                median_effect=("log_effect", lambda e: np.exp(e.median())),
+                clear_up=("log_effect", lambda e: (t.loc[e.index, "clear"] & e.gt(0)).sum()),
+                clear_down=("log_effect", lambda e: (t.loc[e.index, "clear"] & e.lt(0)).sum()),
+                replicated=("status", lambda s: s.eq("replicated").sum()),
+            )
+            .reset_index()
+        )
         g.to_csv(PANEL / f"groups_{arm}.csv", index=False)
         print(f"\n## {arm}: by group (all years; median effect over the group's taxa)\n")
-        print(g.pivot(index="term", columns="group", values="median_effect")[
-            [c for c in GROUP_ORDER if c in set(g.group)]].to_string(float_format=lambda v: f"{v:.2f}"))
+        print(
+            g.pivot(index="term", columns="group", values="median_effect")[
+                [c for c in GROUP_ORDER if c in set(g.group)]
+            ].to_string(float_format=lambda v: f"{v:.2f}")
+        )
         print(f"\n## {arm}: by group, taxa clearly up / down / replicated\n")
-        g["summary"] = g.clear_up.astype(str) + "/" + g.clear_down.astype(str) + "/" + g.replicated.astype(str) + " of " + g.taxa.astype(str)
-        print(g.pivot(index="term", columns="group", values="summary")[
-            [c for c in GROUP_ORDER if c in set(g.group)]].to_string())
+        g["summary"] = (
+            g.clear_up.astype(str)
+            + "/"
+            + g.clear_down.astype(str)
+            + "/"
+            + g.replicated.astype(str)
+            + " of "
+            + g.taxa.astype(str)
+        )
+        print(
+            g.pivot(index="term", columns="group", values="summary")[
+                [c for c in GROUP_ORDER if c in set(g.group)]
+            ].to_string()
+        )
         wind = t[t.term.eq("wind_direction") & t.clear]
         print(f"\n## {arm}: preferred wind direction of the taxa with a clear one\n")
-        print(wind.groupby("group").origin.apply(lambda o: " ".join(f"{v:.0f}" for v in sorted(o))).to_string())
+        print(
+            wind.groupby("group")
+            .origin.apply(lambda o: " ".join(f"{v:.0f}" for v in sorted(o)))
+            .to_string()
+        )
         heatmap(table, arm, PANEL / f"heatmap_{arm}.png")
 
 

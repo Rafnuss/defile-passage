@@ -1,19 +1,19 @@
 """The observations of the hierarchical line, built from the release in `data/count/dataset/`.
 
-Run from the repository root (after copying a release with `build_explore.py --dataset`):
-uv run --with 'pyarrow<20' python scripts/hierarchical/build_inputs.py > logs/hierarchical/inputs.log
+Run from the repository root (after copying a release with `build_explore.py --dataset`): uv run
+--with 'pyarrow<20' python scripts/hierarchical/build_inputs.py > logs/hierarchical/inputs.log
 
 `survey_complete` decides a zero: every bird that passed during a complete survey is in its counts,
 so a core species absent from it was counted at zero. A weather stop is a complete survey in which
 no bird passed (`DECISIONS.md` -> weather stops are zero passage): its coverage counts, with zero
 birds, and it is flagged `weather_stop` (left out of the time-of-day profile, as production does).
 
-One observation per survey and species, 1993-2025, inside the season window. A Trektellen survey
-is split into its clock hours when every bird of the species in it is timed to one hour (the
-dataset's point times or single-hour intervals); otherwise it stays whole. A species-date with an
-entry the dataset cannot place inside its survey, or with presence only, is unknown and left out.
-Components split each observation at clock hours: `fraction` (hours), `tau` (position between
-civil dawn and dusk) and `doy` (non-leap) of each piece. Writes `logs/hierarchical/inputs/`.
+One observation per survey and species, 1993-2025, inside the season window. A Trektellen survey is
+split into its clock hours when every bird of the species in it is timed to one hour (the dataset's
+point times or single-hour intervals); otherwise it stays whole. A species-date with an entry the
+dataset cannot place inside its survey, or with presence only, is unknown and left out. Components
+split each observation at clock hours: `fraction` (hours), `tau` (position between civil dawn and
+dusk) and `doy` (non-leap) of each piece. Writes `logs/hierarchical/inputs/`.
 """
 
 import numpy as np
@@ -55,9 +55,7 @@ def main():
     taxa = taxa[taxa.english_name.isin(CORE)]
     assert set(taxa.english_name) == set(CORE), "core species missing from the taxonomy"
     counts = pd.read_csv(RELEASE / "count.csv", low_memory=False)
-    counts = counts[
-        counts.count_category.eq(MAIN_CATEGORY) & counts.taxon_id.isin(taxa.taxon_id)
-    ]
+    counts = counts[counts.count_category.eq(MAIN_CATEGORY) & counts.taxon_id.isin(taxa.taxon_id)]
     timing = H.count_timing(counts, surveys).merge(
         surveys[["survey_id", "date", "recording_era"]], on="survey_id"
     )

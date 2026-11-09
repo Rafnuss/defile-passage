@@ -20,7 +20,12 @@ from pathlib import Path
 
 from common import CORE, LOGS, ROOT
 
-THREAD_VARS = ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS")
+THREAD_VARS = (
+    "OPENBLAS_NUM_THREADS",
+    "OMP_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+)
 NICE = 10
 RUN = [
     "uv",
@@ -36,7 +41,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--arms", nargs="+", required=True)
     parser.add_argument(
-        "--sets", nargs="+", required=True, help="<masks folder>:<out folder>, in logs/hierarchical"
+        "--sets",
+        nargs="+",
+        required=True,
+        help="<masks folder>:<out folder>, in logs/hierarchical",
     )
     parser.add_argument("--species", nargs="+", default=list(CORE))
     parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 3) // 3))
