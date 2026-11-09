@@ -1,6 +1,6 @@
 """How far each claim a taxon's trend makes can be trusted: the `reliability` block.
 
-Defined here, applied by defileViz: the page filters on the classes and can say why from the
+Defined here, applied by defile-website: the page filters on the classes and can say why from the
 reasons. Three claims, each classed `show`, `caveat` (shown, with a sentence on why) or `hide`:
 
 - `totals`: the gap-filled annual totals. Judged mainly by the benchmark (`benchmark.py`): how far
@@ -18,7 +18,7 @@ reasons. Three claims, each classed `show`, `caveat` (shown, with a sentence on 
 
 Every reason is a code with the level it sets; a claim takes its worst reason's level. `elements`
 applies the classes to what a page draws (`ELEMENTS`: each field of the export that rests on a
-claim, and the claim): defileViz shows, caveats or hides each one by it, with no rule of its own.
+claim, and the claim): defile-website shows, caveats or hides each one by it, with no rule of its own.
 A field in `NO_CAVEAT` is hidden rather than caveated: lines drawn over the counts, where a caveat
 has no room and a doubtful line reads as a finding. A field in `COUNTS_FALLBACK` (the season block,
 from the trend's gap-filled days) is built from the counts instead where its claim is hidden

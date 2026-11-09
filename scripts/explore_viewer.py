@@ -91,12 +91,12 @@ INDEX_COLUMNS = (  # header, definition: the index's tooltips and its legend
     ("taxon", "English name; expand for display decisions and validation inputs."),
     (
         "group",
-        "The species picker's group in defileViz (`taxa.json` `group`, by order). ★: in "
+        "The species picker's group in defile-website (`taxa.json` `group`, by order). ★: in "
         "the default highlight list (`content/highlights.tsv`).",
     ),
     (
         "story",
-        "How much of the defileViz page rests on the trend model: full (trend totals "
+        "How much of the defile-website page rests on the trend model: full (trend totals "
         "shown), caveat (shown with a caveat), counts (no trend, or its totals hidden: counts only).",
     ),
     ("from", "Start year (`settings.start_year`): nothing before it is adjusted or modelled."),

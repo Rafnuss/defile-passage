@@ -4,7 +4,7 @@ the documentation site (`logs/site/`) as assets of a GitHub release of this repo
 Pages workflow that deploys the site.
 
 The build takes 30-40 min on a GitHub runner and ~5.5 min here, so it runs here and only its result
-goes online. defileViz downloads `explore.zip` from the same release when it deploys (its
+goes online. defile-website downloads `explore.zip` from the same release when it deploys (its
 `scripts/fetch-explore.mjs`); `passage.zip` is the Zenodo upload of the passage tables. Refused: an
 export built from a local defile-dataset folder rather than a dataset release, from uncommitted
 code, from another commit than HEAD or from a commit not pushed; a `--taxa` build since the last
@@ -29,8 +29,8 @@ EXPORT_DIR = os.path.join(ROOT, "data", "explore")
 PASSAGE_DIR = os.path.join(ROOT, "data", "passage")
 VIEWER_DIR = os.path.join(ROOT, "logs", "site")
 ZIP_DIR = os.path.join(ROOT, "logs", "publish")
-DEV_TAG = "dev"  # rolling pre-release: the preview, which defileViz deploys by default
-EXPORT_ASSET = "explore.zip"  # the name defileViz downloads
+DEV_TAG = "dev"  # rolling pre-release: the preview, which defile-website deploys by default
+EXPORT_ASSET = "explore.zip"  # the name defile-website downloads
 PASSAGE_ASSET = "passage.zip"  # the passage tables, the Zenodo upload
 VIEWER_ASSET = "viewer.zip"  # documentation + QA; the name the Pages workflow downloads
 PAGES_WORKFLOW = "pages.yml"

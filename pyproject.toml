@@ -1,7 +1,7 @@
 [project]
 name = "defile-passage"
 version = "0.1.0"
-description = "Statistics behind defileViz's Explore page: trends, phenology and passage of migrating birds at Défilé de l'Écluse"
+description = "Statistics behind defile-website's Explore page: trends, phenology and passage of migrating birds at Défilé de l'Écluse"
 requires-python = ">=3.11,<3.12"
 
 # Exact pins, the versions defile-migration-forecast and defile-dataset use, so the release is read

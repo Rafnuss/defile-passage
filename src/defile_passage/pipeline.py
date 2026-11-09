@@ -15,7 +15,7 @@ the trend's `benchmark` (cached like the trend) and
 on the model window, the season panels show the view window, the same two for every taxon
 (`defile_passage.window`).
 
-Each block names its `method` (`<name>@<version>`), matched by a section of defileViz's method
+Each block names its `method` (`<name>@<version>`), matched by a section of defile-website's method
 page; bump the version when what a block means changes.
 """
 

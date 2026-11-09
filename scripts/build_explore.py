@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the Explore export for defileViz from the defile-dataset release tables.
+"""Builds the Explore export for defile-website from the defile-dataset release tables.
 
 Reads the defile-dataset release in `data/count/dataset/` (put there with `--dataset`) and writes
 `data/explore/`: `manifest.json`, `taxa.json` (with the picker's fields, `defile_passage.catalogue`),
@@ -155,7 +155,7 @@ def main(argv=None) -> int:
     if not args.taxa:
         highlights = C.load_highlights(taxa["taxon_id"])
         taxa = C.catalogue(taxa, shared.taxonomy, ebird, pages, shared.last_year, highlights)
-        # Each taxon's links, for the list of a group's members in defileViz
+        # Each taxon's links, for the list of a group's members in defile-website
         taxa["links"] = taxa["taxon_id"].map(lambda i: pages[i]["links"])
         sizes["taxa.json"] = write(os.path.join(args.out, "taxa.json"), E.records(taxa))
         passage_dir = os.path.join(os.path.dirname(args.out), P.PASSAGE_DIR)

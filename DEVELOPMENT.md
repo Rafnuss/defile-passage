@@ -8,7 +8,7 @@ pipeline per taxon, settings, caches, QA viewer) is done: `DECISIONS.md` -> Pipe
 Go through `logs/site/qa/index.html` (`scripts/explore_viewer.py`) in batches: raptors; pigeons,
 storks, cranes and other large birds; passerines. A fix is a better rule (preferred) or an
 override with its reason. The viewer stays a model-inspection tool (everything that helps judge a
-fit, in detail); the visitors' page is designed in defileViz. What the first full build shows:
+fit, in detail); the visitors' page is designed in defile-website. What the first full build shows:
 
 - Windows (`DECISIONS.md` -> Pipeline, `window@3`): re-run `scripts/benchmark_trend.py` (it reads
   each taxon's model window) on the shared window, 14 Jul - 1 Dec.
@@ -32,14 +32,14 @@ fit, in detail); the visitors' page is designed in defileViz. What the first ful
 ### Trend reliability
 
 The benchmark runs on every trend taxon and each claim is classed (`DECISIONS.md` -> Pipeline,
-`reliability@2`); the viewer flags on every page and figure what defileViz will caveat or hide.
+`reliability@2`); the viewer flags on every page and figure what defile-website will caveat or hide.
 Open:
 
 - Review the thresholds on the viewer (index columns totals / trend / season), now that the
   blown-up bands are fixed (`DECISIONS.md` -> Pipeline, information floor).
 - Passerine trends from 2007 rise 20-140x in some taxa (Common Reed Bunting, Common Linnet):
   check that identification and recording effort did not grow with them before showing a trend.
-- defileViz: implement the filter from `reliability.elements` and the caveat sentences from the
+- defile-website: implement the filter from `reliability.elements` and the caveat sentences from the
   reason codes.
 - Filled days from the hours within the day: `trend.days` uses only a day's count and coverage.
   Measure first whether passage is correlated from hour to hour beyond the profile (residuals of
@@ -65,7 +65,7 @@ review. Open:
   such as Western Marsh Harrier), then the French and German labels.
 - The modals are English only, and quote the benchmark's medians by hand (`MethodReliability.vue`
   `STATS`): written into `manifest.json` by the build instead, if they drift too often.
-- `ExploreMethod.vue.orig` in defileViz is the single modal before the split, kept for the review:
+- `ExploreMethod.vue.orig` in defile-website is the single modal before the split, kept for the review:
   delete it once the split is accepted.
 - The timing panel could select a season the same way as the totals (a click on its row).
 

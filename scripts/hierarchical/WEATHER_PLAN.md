@@ -74,7 +74,7 @@ Wording: "associated with, at the same date", never "caused by".
 
 The weather block from `weather_design.py` into `trend.py` (no AR(1)), the weather table in the
 cache key, a `trend` method version bump, a new `weather` block in the export (a contract change
-with defileViz), drawn first in `explore_viewer.py`; tests; a `DECISIONS.md` entry that replaces
+with defile-website), drawn first in `explore_viewer.py`; tests; a `DECISIONS.md` entry that replaces
 "Daily ERA5 weather at Défilé ... dropped for Explore".
 
 ## The broad panel (2026-10-13)

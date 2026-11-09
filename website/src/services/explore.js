@@ -51,7 +51,7 @@ export function clock(h, step = 1) {
   return `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
-// Same picker helpers as defileViz.
+// Same picker helpers as defile-website.
 export const taxonName = (taxon, locale) =>
   (locale === "fr" && taxon.french_name) || taxon.english_name;
 export const isGroup = (taxon) => taxon.taxon_rank === "spuh" || taxon.taxon_rank === "slash";

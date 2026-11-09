@@ -1,5 +1,5 @@
-"""Explore export: the defile-dataset release tables -> the JSON files defileViz's Explore page
-reads.
+"""Explore export: the defile-dataset release tables -> the JSON files defile-website's Explore
+page reads.
 
 Unlike `src/data/counts.py`, nothing here is a model choice: every value is a plain aggregation
 of the release tables (`count.csv`, `survey.csv`, `taxonomy.csv`), following
@@ -59,7 +59,7 @@ from defile_passage.release import (
     parse_surveys,
 )
 
-# Bump when a field's meaning changes, so defileViz can refuse an export it does not understand.
+# Bump when a field's meaning changes, so defile-website can refuse an export it does not understand.
 DEFINITIONS_VERSION = 2  # 2: hours of the day in solar time
 
 # Default comparison window (month, day), inclusive. A window for annual totals, not a filter:
@@ -74,7 +74,7 @@ TIER_FULL_MIN_YEARS = 5
 TIER_RARE_MAX_DAYS = 10
 
 # Start year: the first year a taxon's counts are comparable from (`start_year`); earlier years
-# are exported raw but get no adjusted value, and defileViz crops its annual series there.
+# are exported raw but get no adjusted value, and defile-website crops its annual series there.
 # Systematic daily counting began in 1993. Its targets were always raptors, herons and egrets,
 # storks, pigeons and corvids, and other large birds counted individually (cranes, geese, ducks); passerines were hardly
 # recorded before 2007, when the number of passerine taxa doubles and their birds rise 15-fold

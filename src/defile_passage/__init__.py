@@ -1,4 +1,4 @@
-"""Defile-explore: the data and statistics behind defileViz's Explore page.
+"""Defile-passage: the data and statistics behind defile-website's Explore page.
 
 - `release`: reading the defile-dataset release tables.
 - `export`: a raw aggregation of those tables (daily totals, effort, taxa), written as

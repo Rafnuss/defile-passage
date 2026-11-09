@@ -1,6 +1,6 @@
 # Bilingual accounts for the Explore page
 
-Prepared on 9 October 2026. These are editorial drafts for defileViz, based on the maintained annual and paper text extracts. French is the reference language; each English version follows the same observations, historical scope and level of uncertainty. Website prose states observations directly without citing reports. The original source extracts and release tables are copied unchanged from defile-dataset into `data/count/dataset/`. The accounts and their workflow are maintained here in defile-passage.
+Prepared on 9 October 2026. These are editorial drafts for defile-website, based on the maintained annual and paper text extracts. French is the reference language; each English version follows the same observations, historical scope and level of uncertainty. Website prose states observations directly without citing reports. The original source extracts and release tables are copied unchanged from defile-dataset into `data/count/dataset/`. The accounts and their workflow are maintained here in defile-passage.
 
 ## Read the drafts
 

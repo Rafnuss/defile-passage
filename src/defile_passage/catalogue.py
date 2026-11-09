@@ -1,5 +1,5 @@
-"""Where each taxon sits in defileViz's species picker: the `taxa.json` fields that sort, group and
-filter the list (`catalogue`).
+"""Where each taxon sits in defile-website's species picker: the `taxa.json` fields that sort,
+group and filter the list (`catalogue`).
 
 - `taxon_order`: eBird's taxonomic sequence (`TAXON_ORDER`, by `ebird_code`); a combined series
   takes its first member's.

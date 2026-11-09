@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repo.
 
 ## What this project does
 
-Computes the statistics behind defileViz's Explore page from the defile-dataset release: a JSON
+Computes the statistics behind defile-website's Explore page from the defile-dataset release: a JSON
 file per taxon (daily counts, effort, time-of-day profile, GAM trend and gap-filled totals, ...)
 plus `taxa.json`, `effort.json` and `manifest.json`. `README.md` has the layout
 and the commands.
@@ -30,9 +30,9 @@ defile-migration-forecast and this repo share no code and import nothing from ea
 add a dependency on the forecast repo or a shared package; carrying a change across is a decision
 for the user, logged in the table in `DECISIONS.md` -> Repository.
 
-## The output is a contract with defileViz
+## The output is a contract with defile-website
 
-defileViz (`src/services/explore.js`, `src/components/explore/`) reads `taxa.json` (names,
+defile-website (`src/services/explore.js`, `src/components/explore/`) reads `taxa.json` (names,
 `tier`, and the picker's `taxon_order`, `group`, `season_birds`, `story`, `highlight` from
 `catalogue.py`),
 `effort.json` (`annual`) and `species/<taxon_id>.json`: `trend` (`annual`, `passage_q`, `season`,
@@ -46,7 +46,7 @@ profile's prediction for the same days and minutes),
 `diagnostics` is not read. Renaming or reshaping a field breaks the page: change both repos
 together. `scripts/explore_viewer.py` draws every block and is where a block is checked first.
 Each block names its `method` (`name@version`): bump the version when what the block means
-changes. Hours of the day are solar time (`export.solar_shift`); defileViz converts them to the
+changes. Hours of the day are solar time (`export.solar_shift`); defile-website converts them to the
 clock with the same formula (`solarShift`). The files are strict JSON (`export.dumps`: no NaN).
 
 The passage tables (`data/passage/`, `passage.py`) are a second contract, with the Zenodo record
@@ -55,7 +55,7 @@ renamed or changed in meaning bumps `passage.METHOD`.
 
 `reliability` classes each trend claim (`totals`, `trend`, `season`) as `show`, `caveat` or `hide`
 with reason codes, and `elements` gives each drawn field resting on a claim its class
-(`reliability.ELEMENTS`). The rule and its thresholds live in `reliability.py`; defileViz only
+(`reliability.ELEMENTS`). The rule and its thresholds live in `reliability.py`; defile-website only
 looks fields up in `elements` and words the reasons. Change a threshold here, never add a filter of its own there.
 
 ## Written accounts
@@ -87,7 +87,7 @@ done for all taxa; otherwise add an exception to `src/defile_passage/overrides.y
   go to the rolling `dev` preview only.
 - The build runs locally, never in CI (30-40 min on a runner): `scripts/publish_explore.py`
   uploads the export, the passage tables and the viewer to a release, from which Pages and
-  defileViz deploy and the passage tables go to Zenodo. It refuses a build from uncommitted code
+  defile-website deploy and the passage tables go to Zenodo. It refuses a build from uncommitted code
   and a versioned release from a dataset that is not a release; never loosen those checks.
 - Builds are verbose (pygam warnings, per-taxon progress): redirect to `logs/` and grep.
 - `data/cache/` holds the shared stage and each taxon's trend fit, keyed by the release and by

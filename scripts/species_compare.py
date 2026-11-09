@@ -50,8 +50,8 @@ def num(x):
 
 
 def element_class(sp: dict, element: str) -> tuple[str, list[str]]:
-    """The class defileViz gives `element`, and the reason codes of its claim; `counts` for a field
-    from the counts alone (no trend)."""
+    """The class defile-website gives `element`, and the reason codes of its claim; `counts` for a
+    field from the counts alone (no trend)."""
     rel = sp.get("reliability")
     if not rel or element not in rel["elements"]:
         return "counts", []
@@ -185,7 +185,7 @@ BODY = """
   <label><input type="checkbox" value="full" checked> full</label>
   <label><input type="checkbox" value="short"> short</label>
   <label><input type="checkbox" value="rare"> rare</label></fieldset>
- <fieldset id="f-cls"><legend>On defileViz</legend>
+ <fieldset id="f-cls"><legend>On defile-website</legend>
   <label><input type="checkbox" value="show" checked> shown</label>
   <label><input type="checkbox" value="caveat" checked> caveated</label>
   <label><input type="checkbox" value="hide"> hidden</label>
