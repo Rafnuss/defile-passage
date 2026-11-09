@@ -541,13 +541,31 @@ def reliability_inputs(**kw) -> dict:
         "season_birds": 500.0,
         "beyond_counting": [],
         "profile": "own",
+        "order": "Accipitriformes",
+        "taxon_rank": "species",
     }
     return x | kw
 
 
 def test_a_well_tested_taxon_shows_every_claim():
     c = Q.classes(reliability_inputs())
-    assert [c[k]["class"] for k in ("totals", "trend", "season")] == ["show"] * 3
+    assert [c[k]["class"] for k in ("totals", "trend", "season", "shift")] == ["show"] * 4
+
+
+def test_change_over_the_years_is_hidden_for_passerines_and_groups():
+    for kw, code in (
+        ({"order": "Passeriformes"}, "effort_varies"),
+        ({"taxon_rank": "spuh"}, "group_taxon"),
+    ):
+        c = Q.classes(reliability_inputs(**kw))
+        assert c["trend"]["class"] == c["shift"]["class"] == "hide"
+        assert code in [r["code"] for r in c["trend"]["reasons"]]
+        assert c["totals"]["class"] == c["season"]["class"] == "show"  # the seasons stay
+
+
+def test_the_shift_takes_the_seasons_reasons():
+    c = Q.classes(reliability_inputs(season_birds=20.0))
+    assert c["shift"] == c["season"]
 
 
 def test_a_bad_fill_hides_the_totals_and_the_trend_with_them():
@@ -603,7 +621,8 @@ def test_each_element_takes_its_claims_class():
         "passage": [{"year": 2000, "lo": 250.0, "hi": 255.0}],
     }
     bench = {"gap": {"abs_log_err": 0.05, "cover80": 0.9, "n": 30}}
-    q = Q.reliability_block(trend, bench, {"beyond_counting": []}, "own")
+    taxon = {"order": "Accipitriformes", "taxon_rank": "species"}
+    q = Q.reliability_block(trend, bench, {"beyond_counting": []}, "own", taxon)
     assert q["trend"]["class"] == "hide" and q["totals"]["class"] == "show"
     assert q["elements"]["trend.annual.smooth"] == q["elements"]["key_numbers.trend"] == "hide"
     assert q["elements"]["trend.annual.total"] == "show"

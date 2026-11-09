@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -47,11 +48,22 @@ def test_neither_tag_nor_folder(tmp_path):
 
 def _species(taxon_id):
     years = [2020, 2021]
-    fit = {"year": years, "date": [250.0, 251.0], "lo": [248.0, 249.0], "hi": [252.0, 253.0]}
+    fit = {
+        "year": years,
+        "date": [250.0, 251.0],
+        "slope": 0.12,
+        "slope_lo": -0.05,
+        "slope_hi": 0.3,
+    }
     return {
         "taxon_id": taxon_id,
+        "key_numbers": {
+            "passage": {"q10": 240.2, "q50": 250.0, "q90": 260.0},
+            "typical_season": {"median": 8.0},
+        },
         "trend": {
             "method": "trend-gam@3",
+            "change": [{"from": 2020, "to": 2021, "change": -0.221, "lo": -0.5, "hi": 0.1}],
             "first_year": 2020,
             "last_year": 2021,
             "window": ["07-14", "12-01"],
@@ -60,8 +72,8 @@ def _species(taxon_id):
                 "c": [0.5, 0.0],
                 "count": [3, 0],
                 "total": [6.0, 2.0],
-                "q10": [4.0, 0.0],
-                "q90": [8.0, 5.0],
+                "q2.5": [3.0, 0.0],
+                "q97.5": [9.0, 7.0],
             },
             "annual": [
                 {
@@ -95,7 +107,12 @@ def _species(taxon_id):
             "totals": {"class": "show"},
             "trend": {"class": "caveat"},
             "season": {"class": "show"},
-            "elements": {"trend.days.total": "show", "trend.annual.smooth": "caveat"},
+            "elements": {
+                "trend.days.total": "show",
+                "key_numbers.trend": "caveat",
+                "season.phenology": "hide",
+                "key_numbers.passage": "show",
+            },
         },
     }
 
@@ -103,26 +120,42 @@ def _species(taxon_id):
 def test_passage_tables(tmp_path):
     export = tmp_path / "explore"
     (export / "species").mkdir(parents=True)
+    species = {"taxon_rank": "species", "order": "Accipitriformes"}
     taxa = [
-        {"taxon_id": "a", "english_name": "A", "scientific_name": "Aa"},
-        {"taxon_id": "b", "english_name": "B", "scientific_name": "Bb"},
+        {"taxon_id": "a"} | species,
+        {"taxon_id": "b"} | species,
+        {"taxon_id": "p", "taxon_rank": "species", "order": "Passeriformes"},
+        {"taxon_id": "s", "taxon_rank": "spuh", "order": "Accipitriformes"},
     ]
     (export / "taxa.json").write_text(json.dumps(taxa))
     (export / "species" / "a.json").write_text(json.dumps(_species("a")))
     (export / "species" / "b.json").write_text(json.dumps({"taxon_id": "b", "trend": None}))
+    for other in ("p", "s"):  # the tables follow the classes, not the taxon
+        (export / "species" / f"{other}.json").write_text(json.dumps(_species(other)))
     manifest = {"built_at": "now", "git_sha": "abc", "dataset_release": "v2026.1"}
     (export / "manifest.json").write_text(json.dumps(manifest))
 
     rows = P.write(str(export), str(tmp_path / "passage"))
-    assert rows == {"daily_passage": 2, "seasonal_passage": 2}
-    days = pd.read_csv(tmp_path / "passage" / "daily_passage.csv")
+    assert rows == {"daily_passage": 6, "trend": 3, "phenology": 3}
+    days = pd.read_csv(tmp_path / "passage" / "daily_passage.csv").query("taxon_id == 'a'")
     assert days["count"].isna().tolist() == [False, True]  # not counted: no count
     assert days["reliability"].tolist() == ["reliable"] * 2
-    seasons = pd.read_csv(tmp_path / "passage" / "seasonal_passage.csv")
-    first = seasons.iloc[0]
-    assert (first["window_start"], first["window_end"]) == ("2020-07-14", "2020-12-01")
-    assert (first["date_50"], first["date_50_lower_80"]) == ("2020-09-06", "2020-09-04")  # leap
-    assert first["trend_reliability"] == "caveat" and pd.isna(first["passage_reliability"])
+    trend = pd.read_csv(tmp_path / "passage" / "trend.csv").iloc[0]
+    assert (trend["change"], trend["change_lower_95"], trend["reliability"]) == (
+        -22.1,
+        -50,
+        "caveat",
+    )
+    assert pd.isna(trend["change_recent"])  # no span from 2011
+    phen = pd.read_csv(tmp_path / "passage" / "phenology.csv").iloc[0]
+    assert (phen["first_year"], phen["date_50"], phen["dates_reliability"]) == (
+        2020,
+        "09-07",
+        "reliable",
+    )
+    assert pd.isna(phen["shift_50"]) and pd.isna(
+        phen["shifts_reliability"]
+    )  # unreliable: left out
     for name, columns in P.TABLES.items():
         table = pd.read_csv(tmp_path / "passage" / f"{name}.csv")
         assert table.columns.tolist() == [c for c, _, _ in columns]
@@ -135,3 +168,16 @@ def test_preview_names_the_dataset_build():
     preview["dataset_git_sha"] = "fbbba31bf104"
     assert P.dataset_name(preview) == "build fbbba31 (preview, not a release)"
     assert P.datapackage(preview)["sources"][0]["release"] is None
+
+
+def test_smooth_change():
+    from defile_passage import trend as T
+
+    years = np.arange(2000, 2021)
+    smooth = np.tile(np.linspace(100, 50, len(years)), (200, 1))
+    smooth[:, 0] *= np.linspace(0.9, 1.1, 200)  # spread over the draws
+    whole, recent = T.smooth_change(years, smooth)
+    assert (whole["from"], whole["to"], recent["from"]) == (2000, 2020, 2020 - T.CHANGE_RECENT)
+    assert whole["lo"] < whole["change"] == -0.5 < whole["hi"]
+    assert recent["change"] == round(50 / 75 - 1, 3)
+    assert T.smooth_change(years, np.zeros((5, len(years)))) == []  # nothing to change from

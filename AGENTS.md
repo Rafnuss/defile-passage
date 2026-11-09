@@ -35,7 +35,7 @@ for the user, logged in the table in `DECISIONS.md` -> Repository.
 defile-website (`src/services/explore.js`, `src/components/explore/`) reads `taxa.json` (names,
 `tier`, and the picker's `taxon_order`, `group`, `season_birds`, `story`, `highlight` from
 `catalogue.py`),
-`effort.json` (`annual`) and `species/<taxon_id>.json`: `trend` (`annual`, `passage_q`, `season`,
+`effort.json` (`annual`) and `species/<taxon_id>.json`: `trend` (`annual`, `change` (read only by the passage tables), `passage_q`, `season`,
 `episodes` (`base`, `weather`, `episode`), `window`, `theta`, `kappa`, `first_year`, `last_year`, `days`: every window day
 gap-filled, drawn by the year panel), `season` (`source`, `share`, `count`, `c`, `passage` with
 `q50_lo`/`q50_hi`, `chances`), `weather` (`effects` with `class`, `confirmed`, `counted`; `wind`
@@ -53,7 +53,7 @@ The passage tables (`output/zenodo/`, `passage.py`) are a second contract, with 
 and the data paper. They are read from the species files, never from a model of their own: a column
 renamed or changed in meaning bumps `passage.METHOD`.
 
-`reliability` classes each trend claim (`totals`, `trend`, `season`) as `show`, `caveat` or `hide`
+`reliability` classes each trend claim (`totals`, `trend`, `season`, `shift`) as `show`, `caveat` or `hide`
 with reason codes, and `elements` gives each drawn field resting on a claim its class
 (`reliability.ELEMENTS`). The rule and its thresholds live in `reliability.py`; defile-website only
 looks fields up in `elements` and words the reasons. Change a threshold here, never add a filter of its own there.

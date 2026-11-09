@@ -45,7 +45,11 @@
       when less than 60% of a typical season’s total was counted, when the intervals are wide, or
       when the passage continues beyond regular counting. The long-term trend needs the totals and a
       95% band that is not too wide; the passage dates need narrow bands and at least 50 birds in a
-      typical season.
+      typical season. Change over the years (the long-term trend and the shift in passage dates) is
+      hidden for passerines, counted systematically only from 2008 and with growing attention since,
+      so that their change follows the counting effort more than the birds; and for groups of
+      species (“sp.”), whose numbers follow how many birds were identified. Their seasons and
+      passage dates are still shown.
     </p>
     <table v-if="data.reliability" class="table table-sm small">
       <thead>

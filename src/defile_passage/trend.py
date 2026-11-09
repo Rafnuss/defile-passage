@@ -113,8 +113,9 @@ MIN_RATE = 0.1
 IRLS_MAX_ITER = 100
 IRLS_TOL = 1e-8
 DRAWS = 1000
+CHANGE_RECENT = 10  # the recent change in the smooth trend: over this many years to the last
 QUANTILES = (0.025, 0.1, 0.5, 0.9, 0.975)
-FILLED_DAY_INTERVAL = (0.1, 0.9)  # a filled day: its mean and this 80% interval
+FILLED_DAY_INTERVAL = (0.025, 0.975)  # a filled day: its mean and this 95% interval
 PASSAGE_QUANTILES = (0.1, 0.5, 0.9)  # passage dates: 10%, half and 90% of the season passed
 
 # One BLAS thread per worker (`worker_pool`): numpy's OpenBLAS otherwise starts one per core in every
@@ -827,6 +828,31 @@ def annual_totals(
     out["observed_share"] = out["observed"] / out["total"]
     out["smooth"] = np.median(smooth, axis=0)
     out["smooth_q2.5"], out["smooth_q97.5"] = np.quantile(smooth, [0.025, 0.975], axis=0)
+    out.attrs["smooth"] = smooth  # the draws, for `smooth_change`
+    return out
+
+
+def smooth_change(years: np.ndarray, smooth: np.ndarray) -> list[dict]:
+    """Relative change of the smooth trend (draws `smooth`, one column per year of `years`) to the
+    last year, from the first year and from `CHANGE_RECENT` years before: median and 95% interval
+    over the draws.
+
+    None for a span that starts at no birds (Eurasian Bullfinch from 2007).
+    """
+    out = []
+    for start in (years[0], years[-1] - CHANGE_RECENT):
+        i = np.flatnonzero(years == start)
+        if not len(i) or start == years[-1]:
+            continue
+        base = smooth[:, i[0]]
+        if np.median(base) <= 0:
+            continue
+        ratio = smooth[:, -1] / np.where(base > 0, base, np.nan) - 1
+        lo, mid, hi = np.nanquantile(ratio, [0.025, 0.5, 0.975])
+        out.append(
+            {"from": int(start), "to": int(years[-1]), "change": round(float(mid), 3)}
+            | {"lo": round(float(lo), 3), "hi": round(float(hi), 3)}
+        )
     return out
 
 
@@ -905,8 +931,8 @@ def passage_quantiles(f: Fit, years: np.ndarray, qs=PASSAGE_QUANTILES) -> pd.Dat
 
 def filled_days(frame: pd.DataFrame, totals: np.ndarray, c: pd.Series) -> pd.DataFrame:
     """Every day of `frame`: its coverage `c` (by date; 0 if not counted), the birds counted, and
-    its gap-filled full-day total from the `fill_draws` draws `totals`: the mean and an 80%
-    interval.
+    its gap-filled full-day total from the `fill_draws` draws `totals`: the mean and a 95%
+    interval, as the season totals.
 
     The model's value for the day, counted or not: the birds counted plus the posterior predictive
     of the hours not counted, which leans on the day's own count when much of it was counted and
@@ -922,8 +948,8 @@ def filled_days(frame: pd.DataFrame, totals: np.ndarray, c: pd.Series) -> pd.Dat
             "c": frame["date"].map(c).fillna(0.0).round(3).to_numpy(),
             "count": (frame["y"] + frame["extra"]).to_numpy(),
             "total": totals.mean(axis=0).round(1),
-            "q10": q[0],
-            "q90": q[1],
+            "q2.5": q[0],
+            "q97.5": q[1],
         }
     )
 
@@ -981,6 +1007,7 @@ def taxon_trend(
         block = W.weather_block({"all": f, **halves}, frame, raw, sd, seed=seed)
     totals = fill_draws(f, frame, 1.0, seed=seed, kappa=kappa)
     a = annual_totals(f, frame, seed=seed, kappa=kappa, totals=totals)
+    change = smooth_change(a["year"].to_numpy(), a.attrs["smooth"])
     a = a.drop(columns=["total"]).rename(columns={"q50": "total"})
     a["observed_share"] = a["observed"] / a["total"]
     birds = [c for c in a.columns if c not in ("year", "observed_share")]
@@ -995,6 +1022,7 @@ def taxon_trend(
         "theta": f.theta,
         "kappa": kappa,
         "annual": a,
+        "change": change,
         "passage": peak_doy(f, years, seed=seed),
         "passage_q": passage_quantiles(f, years),
         "season": {"doy": np.arange(doy_range[0], doy_range[1] + 1), **curves},

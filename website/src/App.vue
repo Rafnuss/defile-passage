@@ -181,7 +181,7 @@ const chapters = [
     intro:
       "Each day's total is the birds counted plus an estimate of the birds missed, with its uncertainty: from the fitted model, updated by the counted hours where there are some.",
     technical:
-      "trend.fill_draws produces 1 000 joint draws. trend.days exports full-day means and 80% intervals; season.source identifies the reconstructed series or the count/coverage fallback.",
+      "trend.fill_draws produces 1 000 joint draws. trend.days exports full-day means and 95% intervals; season.source identifies the reconstructed series or the count/coverage fallback.",
     modules: ["trend", "season", "reliability"],
   },
   {

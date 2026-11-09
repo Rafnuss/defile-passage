@@ -46,8 +46,37 @@ Replaces `count/`, `weather/`, `cache/`, `explore/`, `passage/` and five researc
 are unchanged. `--data-dir` (default: the repo root) is the folder holding `raw/`, `interim/` and
 `output/`.
 
+**One interval level: 95% (2026-11-09, requested by the user).** A filled day's interval is 95%
+(`trend.FILLED_DAY_INTERVAL`, `q2.5`/`q97.5` in `trend.days`), replacing the 80% `q10`/`q90`,
+as the season totals: in the export, the passage tables, the methods site and defile-website's
+year panel (changed together).
+
+**Change over the years hidden for passerines and groups, on the website and in the tables
+(`reliability@5`, 2026-11-09, requested by the user).** Two `hide` reasons on the `trend` claim
+and on a new `shift` claim (`season.phenology`, which also takes the `season` claim's reasons):
+`effort_varies` for the orders in `reliability.EFFORT_ORDERS` (Passeriformes: counted
+systematically only from 2008 with growing attention since; median change +1600% against +21%
+for raptors, which the other tests do not see) and `group_taxon` for ranks not in `TREND_RANKS`
+("sp.", slash, hybrid: their numbers follow identification). By order, so species that appeared
+(Crane, Great Egret, White Stork, Bee-eater) and species in small numbers keep their trend. Their
+seasons, totals and passage dates stay shown. The passage tables have no rule of their own: they
+leave out every value classed hide (a day, a trend, a set of dates, or the shifts alone) and keep
+`daily_passage` for every taxon. defile-website maps `season.phenology` to `shift` and words the
+two reasons (changed together).
+
+**Passage tables: daily passage plus one row per taxon for trend and phenology
+(`passage-tables@3`, 2026-11-09, requested by the user).** Three tables, each column kept only if
+it cannot be derived from another: `daily_passage` (count, coverage, passage and its 80% interval);
+`trend` (years, typical recent season, change over the whole period and the last 10 years in %
+with 95% intervals); `phenology` (10/50/90% dates in the last year as MM-DD, their shift in days
+per decade with 95% intervals). `seasonal_passage` is dropped: yearly totals are sums of the daily
+table, and the species-level answers (is it changing, is it earlier) are what users want. The
+change and its interval come from the smooth trend's draws (`trend.smooth_change`, new
+`trend.change` in the species files); the shifts are `season.phenology`'s slopes. A yearly rate,
+the window, the dates' 80% bands and the yearly dates were left out as redundant or derivable.
+
 **Passage tables are analysis-ready numbers (`passage-tables@2`, 2026-11-09, requested by the
-user).** Two tables: `daily_passage` (count, coverage, passage with its 80% interval) and
+user; superseded by `@3` above).** Two tables: `daily_passage` (count, coverage, passage with its 80% interval) and
 `seasonal_passage` (window dates, count, passage and smooth trend with 95% intervals, the 10/50/90%
 passage dates as calendar dates with the median's 80% interval). No `taxa` table: `taxon_id` joins
 to `taxonomy.csv` of the counts record (`release.DATASET_DOI`), and method versions are in

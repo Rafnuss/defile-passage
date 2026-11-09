@@ -231,6 +231,7 @@ def trend_block(job: dict, start: int, window: tuple[int, int]) -> dict:
             "theta": t["theta"],
             "kappa": t["kappa"],
             "annual": E.records(t["annual"]),
+            "change": t["change"],
             "passage": E.records(t["passage"]),
             "passage_q": E.records(t["passage_q"]),
             "season": t["season"],
@@ -426,7 +427,7 @@ def build_taxon(job: dict) -> tuple[str, dict]:
     bench = benchmark_block(job, start, model_w) if trend and job["benchmark"] else None
     fill = trend.pop("season_fill") if trend else None
     weather = trend.pop("weather") if trend else None
-    reliability = Q.reliability_block(trend, bench, window, job["profile_source"])
+    reliability = Q.reliability_block(trend, bench, window, job["profile_source"], job["taxon"])
     frame = season_frame[season_frame["doy"].between(*view_w)]
     season = S.season_block(frame, last, model_w, fill if Q.fills_season(reliability) else None)
     season["phenology"] = phenology_block(

@@ -1,7 +1,7 @@
 """How far each claim a taxon's trend makes can be trusted: the `reliability` block.
 
 Defined here, applied by defile-website: the page filters on the classes and can say why from the
-reasons. Three claims, each classed `show`, `caveat` (shown, with a sentence on why) or `hide`:
+reasons. Four claims, each classed `show`, `caveat` (shown, with a sentence on why) or `hide`:
 
 - `totals`: the gap-filled annual totals. Judged mainly by the benchmark (`benchmark.py`): how far
   the fill misses birds actually counted (`FILL_ERROR`, median |log(estimate / counted)|), and how
@@ -10,6 +10,13 @@ reasons. Three claims, each classed `show`, `caveat` (shown, with a sentence on 
   (`beyond_counting`, `edges.edges_block`: those birds are in no total).
 - `trend`: the smooth total over the years (the long-term change). Needs the totals, and a smooth
   whose 95% band is not too wide (`SMOOTH_BAND`, median over years of q97.5 / q2.5).
+- `trend` is also hidden where the counting effort changed over the years more than coverage
+  can say (`effort_varies`: the orders in `EFFORT_ORDERS`, passerines, counted systematically
+  only from 2008 and with ever more attention since; median change +1600% against +21% for
+  raptors on the 2026-11 build), and for groups of taxa (`group_taxon`: ranks not in
+  `TREND_RANKS`, whose numbers follow how many birds were identified to species).
+- `shift`: the linear change in the passage dates over the years (`season.phenology`): the
+  `season` claim's reasons and the same two of `trend`. The dates of a season stay shown.
 - `season`: the passage dates. Judged by the width of the 80% bands of the median passage date
   and of the 10% and 90% dates (the wider of the two), against `PASSAGE_BAND` (days); by the birds
   behind them (`SEASON_BIRDS`: the model's smooth timing keeps those bands narrow even for a few
@@ -41,7 +48,7 @@ Explore's.
 import numpy as np
 import pandas as pd
 
-METHOD = "reliability@4"
+METHOD = "reliability@5"
 CLASSES = ("show", "caveat", "hide")  # in order of severity
 FILL_ERROR = (0.15, 0.4)  # benchmark gap error: caveat above the first, hide above the second
 MIN_TRIALS = 6  # gap trials for the benchmark to count as a test
@@ -53,12 +60,14 @@ SMOOTH_BAND = (4.0, 20.0)  # median q97.5 / q2.5 of the smooth total: caveat, hi
 PASSAGE_BAND = (10.0, 30.0)  # median width of the passage date's 80% band, days: caveat, hide
 SEASON_BIRDS = 50  # median birds counted per season, below which the dates are a caveat
 ESTIMATED_SHARE = 0.5  # a year with less than this share counted is mostly an estimate
+EFFORT_ORDERS = ("Passeriformes",)  # orders whose change over the years follows effort
+TREND_RANKS = ("species", "subspecies", "domestic")  # ranks whose change over the years is shown
 WEATHER_MIN_EFFECT = 0.10  # x1.10 or x0.91 at least, for its contrast
 WEATHER_MIN_DAYS = 20  # counted days with wind from a side of the rose
 WEATHER_MAX_ANGLE = 60.0  # degrees between the halves' preferred wind directions
 ELEMENTS = {  # field of the species file: the claim it rests on
     "trend.annual.total": "totals",  # the gap-filled season totals, with q10/q90
-    "trend.days.total": "totals",  # each counted day's gap-filled total, with q10/q90
+    "trend.days.total": "totals",  # each counted day's gap-filled total, with q2.5/q97.5
     "key_numbers.typical_season": "totals",
     "trend.annual.smooth": "trend",  # the smooth total, with its 95% band
     "key_numbers.trend": "trend",
@@ -66,7 +75,7 @@ ELEMENTS = {  # field of the species file: the claim it rests on
     "trend.passage_q": "season",  # the smooth passage dates (lines on the phenology)
     "key_numbers.passage": "season",  # when its `source` is `smooth`
     "season.share": "totals",  # every day's share of the year, gap-filled (`season.source: gam`)
-    "season.phenology": "season",  # linear changes in annual passage dates
+    "season.phenology": "shift",  # linear changes in annual passage dates
     "season.passage": "totals",  # every year's passage dates, over the gap-filled days
     "season.chances": "totals",  # the chances of a full day, over the gap-filled days
 }
@@ -81,7 +90,7 @@ def _ratio(hi: pd.Series, lo: pd.Series) -> float:
     return float(np.median(hi / lo.clip(lower=1)))
 
 
-def inputs(trend: dict, bench: dict | None, window: dict, profile: str) -> dict:
+def inputs(trend: dict, bench: dict | None, window: dict, profile: str, taxon: dict) -> dict:
     """The numbers the rules read."""
     a = pd.DataFrame(trend["annual"])
     p = pd.DataFrame(trend["passage"])
@@ -102,6 +111,8 @@ def inputs(trend: dict, bench: dict | None, window: dict, profile: str) -> dict:
         ),
         "beyond_counting": list(window["beyond_counting"]),
         "profile": profile,
+        "order": taxon.get("order"),
+        "taxon_rank": taxon.get("taxon_rank"),
     }
 
 
@@ -119,7 +130,7 @@ def _claim(reasons: dict) -> dict:
 
 
 def classes(x: dict) -> dict:
-    """The three claims' classes from `inputs`."""
+    """The four claims' classes from `inputs`."""
     tested = x["gap_error"] is not None and x["gap_trials"] >= MIN_TRIALS
     cover = x["gap_cover80"]
     totals = _claim(
@@ -140,11 +151,16 @@ def classes(x: dict) -> dict:
             "borrowed_profile": "caveat" if x["profile"] != "own" and not tested else None,
         }
     )
+    over_years = {
+        "effort_varies": "hide" if x["order"] in EFFORT_ORDERS else None,
+        "group_taxon": "hide" if x["taxon_rank"] not in TREND_RANKS else None,
+    }
     trend = _claim(
         {
             "totals": None if totals["class"] == "show" else totals["class"],
             "smooth_band": _level(*SMOOTH_BAND, x["smooth_band"]),
         }
+        | over_years
     )
     season = _claim(
         {
@@ -154,7 +170,8 @@ def classes(x: dict) -> dict:
             "beyond_counting": "caveat" if x["beyond_counting"] else None,
         }
     )
-    return {"totals": totals, "trend": trend, "season": season}
+    shift = _claim({r["code"]: r["level"] for r in season["reasons"]} | over_years)
+    return {"totals": totals, "trend": trend, "season": season, "shift": shift}
 
 
 def element(field: str, cls: str) -> str:
@@ -173,11 +190,13 @@ def fills_season(block: dict | None) -> bool:
     return block is not None and block["totals"]["class"] != "hide"
 
 
-def reliability_block(trend: dict | None, bench, window: dict, profile: str) -> dict | None:
+def reliability_block(
+    trend: dict | None, bench, window: dict, profile: str, taxon: dict
+) -> dict | None:
     """The `reliability` block of a taxon with a trend; None without one."""
     if trend is None:
         return None
-    x = inputs(trend, bench, window, profile)
+    x = inputs(trend, bench, window, profile, taxon)
     a = pd.DataFrame(trend["annual"])
     return {
         "method": METHOD,

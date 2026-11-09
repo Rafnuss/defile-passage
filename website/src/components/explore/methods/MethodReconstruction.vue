@@ -179,7 +179,7 @@
         <Tex e="\lambda_d" /> adds further variability; adding the fixed observed count
         <Tex e="N_d" /> gives the uncertainty in the reconstructed total. The estimate published on
         the species pages averages 1 000 joint reconstruction draws, including coefficient
-        uncertainty; the 10th and 90th percentiles give its 80% interval.
+        uncertainty; the 2.5th and 97.5th percentiles give its 95% interval.
       </p>
       <ConditionalDay
         v-if="data.trend"
@@ -194,7 +194,7 @@
       <h5><span class="sec-n">3</span>Inspect reconstructed days</h5>
       <p v-if="data.trend">
         The figure shows every day of one season: the birds counted, and the reconstructed full-day
-        total with its 80% interval.<span class="screen-only">
+        total with its 95% interval.<span class="screen-only">
           Choose a day to see how its total is made.</span
         >
       </p>
@@ -272,20 +272,20 @@
                   left: `${(100 * row.interval[0]) / comparisonMax}%`,
                   width: `${(100 * (row.interval[1] - row.interval[0])) / comparisonMax}%`,
                 }"
-                :title="`80% interval: ${fmt(row.interval[0])}–${fmt(row.interval[1])}`"
+                :title="`95% interval: ${fmt(row.interval[0])}–${fmt(row.interval[1])}`"
               ></span>
             </div>
             <strong
               >{{ fmt(row.value)
               }}<small v-if="row.interval" class="d-block"
-                >80%: {{ fmt(row.interval[0]) }}–{{ fmt(row.interval[1]) }}</small
+                >95%: {{ fmt(row.interval[0]) }}–{{ fmt(row.interval[1]) }}</small
               ></strong
             >
           </div>
         </div>
         <figcaption class="figure-caption">
           <strong>Figure 3.2.</strong> {{ name }}, {{ year }}: counts (red bars), reconstructed
-          means (blue dots) and 80% intervals (black vertical lines), with one day broken down
+          means (blue dots) and 95% intervals (black vertical lines), with one day broken down
           below.<span class="screen-only">
             Click a day or use the selector to compare coverage, prediction and
             reconstruction.</span
@@ -365,8 +365,8 @@ const rows = computed(() => {
                 originalC: originalCoverage.value.get(date) ?? d.c[i],
                 count: d.count[i],
                 total: d.total[i],
-                q10: d.q10[i],
-                q90: d.q90[i],
+                lo: d["q2.5"][i],
+                hi: d["q97.5"][i],
               },
             ]
           : [],
@@ -407,7 +407,7 @@ const comparison = computed(() => {
       tex: "\\widehat F_d",
       value: r.total,
       color: COLORS.predicted,
-      interval: [r.q10, r.q90],
+      interval: [r.lo, r.hi],
     },
   ];
 });
@@ -427,7 +427,7 @@ async function plot() {
   if (!visible.value || !dailyDiv.value) return;
   const d = rows.value,
     x = d.map((r) => r.date),
-    custom = d.map((r) => [r.date, r.count, r.c, r.total, r.q10, r.q90]);
+    custom = d.map((r) => [r.date, r.count, r.c, r.total, r.lo, r.hi]);
   await plotReact(
     dailyDiv.value,
     [
@@ -444,10 +444,10 @@ async function plot() {
       },
       {
         x: d.flatMap((r) => [r.date, r.date, null]),
-        y: d.flatMap((r) => [r.q10, r.q90, null]),
+        y: d.flatMap((r) => [r.lo, r.hi, null]),
         mode: "lines",
         line: { color: COLORS.ink, width: 1.5 },
-        name: "80% interval",
+        name: "95% interval",
         customdata: custom.flatMap((r) => [r, r, null]),
         hoverinfo: "skip",
       },

@@ -576,9 +576,9 @@ def test_a_filled_day_leans_on_its_count_when_well_counted_and_on_its_neighbours
         draws = T.fill_draws(m, frame, 1.0, n=400, kappa=5.0)
         c = frame.set_index("date")["c"]
         d = T.filled_days(frame, draws, c).set_index("date").loc[frame.loc[peak, "date"]]
-        assert d["q10"] <= d["q90"]
+        assert d["q2.5"] <= d["q97.5"]
         if frame is full:
-            assert d["total"] == d["q10"] == d["q90"] == 2000  # all counted: nothing to fill
+            assert d["total"] == d["q2.5"] == d["q97.5"] == 2000  # all counted: nothing to fill
         else:  # count / c would be 10 000; the day's rate is pulled towards its neighbours
             assert 2000 < d["total"] < 10_000
     zero = f.assign(c=0.0, y=0.0)
@@ -586,7 +586,7 @@ def test_a_filled_day_leans_on_its_count_when_well_counted_and_on_its_neighbours
     d = T.filled_days(zero, T.fill_draws(m, zero, 1.0, n=50), zero.set_index("date")["c"])
     assert len(d) == len(zero)  # every day, counted or not
     day = d.set_index("date").loc[zero.loc[peak, "date"]]
-    assert day["count"] == 3 and day["q10"] >= 3 and (d["count"].drop(peak) == 0).all()
+    assert day["count"] == 3 and day["q2.5"] >= 3 and (d["count"].drop(peak) == 0).all()
 
 
 def test_days_never_seen_do_not_blow_up_the_bands():
