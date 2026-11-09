@@ -55,6 +55,7 @@ from defile_passage.release import (
     PRESENCE_ONLY,
     SITE,
     TIMEZONE,
+    from_release_words,
     parse_counts,
     parse_surveys,
 )
@@ -569,6 +570,7 @@ def read_release(data_dir: str):
     surveys = parse_surveys(pd.read_csv(os.path.join(folder, "survey.csv"), low_memory=False))
     taxonomy = pd.read_csv(os.path.join(folder, "taxonomy.csv"))
     count = pd.read_csv(os.path.join(folder, "count.csv"), low_memory=False)
+    count = from_release_words(count, surveys)
     c = release_counts(count, surveys, taxonomy)
     path = os.path.join(folder, METADATA_FILE)
     metadata = json.load(open(path)) if os.path.exists(path) else {}

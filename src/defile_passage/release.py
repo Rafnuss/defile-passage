@@ -44,7 +44,8 @@ DATASET_DIR = os.path.join("count", "dataset")  # under the data dir
 METADATA_FILE = "metadata.json"  # at the root of the release zip
 DATASET_METADATA_PATH = ("audit", METADATA_FILE)  # in a defile-dataset output folder
 
-# The main migration direction (`count.csv` `count_category`); `reverse` and `local` are other
+# The main migration direction (`count.csv` `count_category`, `direction` since v16, read back by
+# `from_release_words`); `reverse` and `local` are other
 # quantities.
 MAIN_CATEGORY = "normal"
 # Presence without a number (`count_estimation`); its `count` is empty.
@@ -64,6 +65,30 @@ NIGHT_SUN_ALTITUDE = -6.0
 def local_date(t: pd.Series) -> pd.Series:
     """Local calendar date (a naive midnight timestamp) of UTC times."""
     return t.dt.tz_convert(TIMEZONE).dt.tz_localize(None).dt.normalize()
+
+
+# Since schema v16 the release writes words where it wrote source codes; Explore keeps the codes
+# (the species files carry `count_estimation` codes in `qualifiers`). Released word -> code.
+RELEASE_WORDS = {
+    "count_category": {"main": "normal", "reverse": "reverse", "local": "local"},
+    "count_estimation": {"approximate": "~", "minimum": ">", "presence": "x"},
+}
+
+
+def from_release_words(count: pd.DataFrame, survey: pd.DataFrame) -> pd.DataFrame:
+    """`count.csv` of a v16 release in the form Explore reads: `count_category` with the codes, and
+    an empty `datetime` for an entry that only carries its survey's interval.
+
+    An older release is returned as it is.
+    """
+    if "direction" not in count:
+        return count
+    c = count.rename(columns={"direction": "count_category"})
+    for column, words in RELEASE_WORDS.items():
+        c[column] = c[column].map(words, na_action="ignore")
+    inherited = c["datetime"].eq(c["survey_id"].map(survey.set_index("survey_id")["datetime"]))
+    c.loc[inherited, "datetime"] = np.nan
+    return c
 
 
 def parse_surveys(survey: pd.DataFrame) -> pd.DataFrame:
