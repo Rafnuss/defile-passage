@@ -9,8 +9,19 @@
       <p class="eyebrow">From birds counted to migration understood</p>
       <h1>Methods guide</h1>
       <p class="lead">
-        Six decades of observations, changing counting effort, and the statistical methods that
-        connect them. Follow each step, try the illustrations, and inspect the evidence.
+        <strong>Context.</strong> Since 1966, migrating birds have been counted every autumn at the
+        Défilé de l’Écluse, with a focus on large soaring birds. These counts are valuable data on
+        long-term change in populations and in the timing of migration, but counts cover only part
+        of each day, and fewer days in the early years, which limits comparisons between years.
+        <strong>Method.</strong> We propose a method to make them comparable. First, for each
+        species, we model the full-day passage from the daily counts, accounting for the part of the
+        day counted, a long-term trend, a level for each year, a seasonal curve that can shift over
+        the years, the day’s weather and short multi-day episodes. Second, the fitted model
+        estimates the birds of every uncounted hour and day, with their uncertainty, from which come
+        season totals, passage dates and their trends. <strong>Results.</strong> Tested on counts
+        hidden from the fit, the reconstructed season totals are typically within 8% of the birds
+        counted. The reconstructed dataset can be used to study long-term change in the numbers and
+        timing of migrants.
       </p>
     </div>
 
@@ -52,10 +63,11 @@
             <header class="chapter-head">
               <h2>{{ chapter.title }}</h2>
               <p v-if="chapter.id === 'counts'">
-                We first select comparable species, years and dates using daily bird counts and
-                counting intervals from
+                The model is built for a subset of species, each with its own range of years and the
+                same range of dates within the year, so that its estimates rest on enough counts.
+                The raw dataset is available on
                 <a href="https://github.com/Rafnuss/defile-dataset">defile-dataset</a>, which
-                documents their preparation and recording conventions.
+                documents its preparation.
               </p>
               <p v-else>{{ chapter.intro }}</p>
             </header>
@@ -65,27 +77,28 @@
               :name="name"
               :data="data"
               :effort="effort"
-              v-bind="chapter.id === 'counts' ? { surveyDays, lastCompleteYear } : {}"
+              v-bind="chapter.id === 'counts' ? { lastCompleteYear } : {}"
             >
               <template #species>
                 <p>
-                  Taxa are selected for the full analysis if they have at least
+                  Taxa are selected if they have at least
                   <strong>{{ manifest.tiers.full_min_days }} recorded days</strong>, spread over at
-                  least <strong>{{ manifest.tiers.full_min_years }} years</strong>.
+                  least <strong>{{ manifest.tiers.full_min_years }} years</strong>. This results in
+                  <strong>{{ taxonCounts.species }} species</strong> and
+                  {{ taxonCounts.groups }} groups.
                 </p>
                 <p>
                   Subspecies are rolled up to species level. Higher-level taxa (“sp.” groups and
-                  slash taxa) are modelled separately when no single component contributes more than
-                  <strong>90%</strong> of the birds recorded; groups must contain 2–100 descendant
-                  taxa. See the
+                  slash taxa) are also modelled, but only if no single taxon contributes more than
+                  <strong>90%</strong> of the birds recorded. See the
                   <a href="https://raphaelnussbaumer.com/defile-dataset/"
                     >defile-dataset taxonomic hierarchy</a
                   >
                   for the detailed tree.
                 </p>
                 <p>
-                  Choose any of the taxa below to use its data throughout this report. The same
-                  selection is available in the left menu.
+                  This report illustrates the model’s results for one species, which can be selected
+                  here or in the left menu:
                 </p>
                 <div class="example-control main-species">
                   <label for="species">Example species</label>
@@ -99,6 +112,7 @@
               </template>
             </component>
           </section>
+          <MethodSymbols />
         </template>
       </article>
     </div>
@@ -124,6 +138,7 @@ import MethodModel from "./components/explore/methods/MethodModel.vue";
 import MethodReconstruction from "./components/explore/methods/MethodReconstruction.vue";
 import MethodPhenology from "./components/explore/methods/MethodPhenology.vue";
 import MethodReliability from "./components/explore/methods/MethodReliability.vue";
+import MethodSymbols from "./components/explore/methods/MethodSymbols.vue";
 
 const chapters = [
   {
@@ -143,7 +158,7 @@ const chapters = [
     title: "Daily count model",
     component: MethodModel,
     intro:
-      "We first link counting intervals to coverage, then describe count variability and fit expected full-day passage using the year, date and weather.",
+      "We model the number of birds counted on a day as a function of the year, the date and the weather. The model explicitly accounts for the part of the day counted, the flocking of birds and short runs of busy or quiet days.",
     technical:
       "The profile determines coverage c. The daily model is fitted to counts with log(c) as an offset. The trend block records the fitted summaries and dispersion parameters.",
     modules: ["profile", "timeofday", "trend", "weather"],
@@ -151,10 +166,10 @@ const chapters = [
   {
     id: "reconstruction",
     label: "Predict",
-    title: "Reconstructing full days",
+    title: "Reconstructing daily totals",
     component: MethodReconstruction,
     intro:
-      "Using the fitted daily model, we first distinguish uncounted, fully counted and partly counted days, then estimate missing birds and inspect the full-day totals.",
+      "Each day's total is the birds counted plus an estimate of the birds missed, with its uncertainty: from the fitted model, updated by the counted hours where there are some.",
     technical:
       "trend.fill_draws produces 1 000 joint draws. trend.days exports full-day means and 80% intervals; season.source identifies the reconstructed series or the count/coverage fallback.",
     modules: ["trend", "season", "reliability"],
@@ -165,7 +180,7 @@ const chapters = [
     title: "Phenology and its trend",
     component: MethodPhenology,
     intro:
-      "We first accumulate daily passage to find each season’s 10%, 50% and 90% passage dates, then quantify changes in those annual passage dates.",
+      "Passage dates are read from each reconstructed season, and their change over the years is a regression repeated across the 1 000 reconstructions.",
     technical:
       "season.phenology fits annual passage dates separately in each of the 1 000 joint reconstructions, preserving dependence across years. Its 95% trend bands combine reconstruction uncertainty and residual resampling across years.",
     modules: ["season", "trend"],
@@ -176,7 +191,7 @@ const chapters = [
     title: "Validation and QA",
     component: MethodReliability,
     intro:
-      "We assess reconstruction accuracy and interval calibration, then use the results to decide which estimates can be displayed.",
+      "Two questions: can the model recover counts it did not see, and when is a result shown, shown with a caveat or hidden?",
     technical:
       "benchmark records gap-transplant trials. reliability classes totals, abundance trend and timing separately, and reliability.elements supplies the display rules.",
     modules: ["benchmark", "reliability"],
@@ -189,13 +204,16 @@ const data = ref(null),
   manifest = ref(null),
   error = ref(null),
   loading = ref(false);
-const surveyDays = ref(null);
 const lastCompleteYear = computed(() =>
   manifest.value
     ? Number(manifest.value.last_date.slice(0, 4)) - manifest.value.partial_years.length
     : null,
 );
 const active = ref("counts");
+const taxonCounts = computed(() => {
+  const species = taxa.value.filter((tx) => tx.taxon_rank === "species").length;
+  return { species, groups: taxa.value.length - species };
+});
 const name = computed(
   () =>
     taxa.value.find((tx) => tx.taxon_id === data.value?.taxon_id)?.english_name ||
@@ -268,7 +286,6 @@ async function load() {
       .filter((tx) => tx.tier === "full")
       .sort((a, b) => a.english_name.localeCompare(b.english_name));
     effort.value = surveys.annual;
-    surveyDays.value = surveys.days;
     manifest.value = build;
     selected.value =
       taxa.value.find((tx) => tx.taxon_id === selected.value || tx.ebird_code === selected.value)

@@ -139,10 +139,10 @@
     <figcaption class="figure-caption">
       <strong>Figure 3.1.</strong> {{ name }}, {{ doyLabel(profile.doy, "en") }}. The observed count
       <Tex e="N_d" /> is your input and stays fixed. Each dot is one bird in a possible full day
-      conditional on that count: rust birds are allocated within the counting interval, blue birds
+      conditional on that count: red birds are allocated within the counting interval, blue birds
       are drawn for the missing hours. Counted birds’ times are illustrative. The dotted curve is
-      the daily-model prediction; the solid curve is the updated expectation. The button redraws a
-      possible day without changing your inputs or the mean estimate.
+      the expected full-day passage; the solid curve is the updated expectation. The button redraws
+      a possible day without changing your inputs or the mean estimate.
     </figcaption>
   </figure>
 </template>
@@ -332,9 +332,9 @@ function plotProfile() {
         x,
         y: p.map((v) => v * expected.value),
         mode: "lines",
-        name: "Daily-model prediction",
+        name: "Expected full-day passage",
         line: { color: COLORS.faint, dash: "dot", width: 2 },
-        hovertemplate: "%{y:.1f} birds/hour<extra>Daily model</extra>",
+        hovertemplate: "%{y:.1f} birds/hour<extra>Expected full-day passage</extra>",
       },
       ...[
         [bounds.value[0], start.value, COLORS.predicted, "Estimated outside counting"],

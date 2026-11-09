@@ -25,7 +25,7 @@
         <div ref="seasonDiv" class="plot-md"></div>
         <figcaption class="figure-caption">
           <strong>Figure 4.1.</strong> {{ name }}, {{ year }}: daily passage shares ({{
-            filled ? "blue" : "rust"
+            filled ? "blue" : "red"
           }}) and cumulative passage (black).
           <template v-if="filled"
             >Grey curves show 50 of 1 000 conditional reconstructions, with 80% date bands for the

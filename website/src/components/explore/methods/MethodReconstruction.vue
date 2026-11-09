@@ -3,8 +3,11 @@
     <section id="model-m-fill">
       <h5><span class="sec-n">1</span>Three cases for reconstructing a full day</h5>
       <p>
-        To estimate the total passage <Tex e="F_d" /> on every day of the season, we distinguish
-        three cases using the original daily coverage:
+        The model of chapter 2 gives the <em>expected</em> full-day passage <Tex e="R_d" />: the
+        average over days like this one, with the same date, year and weather. What we want here is
+        the number of birds that actually passed on that day, the full-day total <Tex e="F_d" />:
+        the birds counted plus those missed. To estimate <Tex e="F_d" />, we distinguish three cases
+        based on the original daily coverage <Tex e="c_d" />:
       </p>
       <p v-if="!data.trend" class="callout callout-info">
         {{ name }} has no fitted daily count model. Choose a species with a fitted model to inspect
@@ -14,6 +17,7 @@
         <table class="table table-sm small">
           <thead>
             <tr>
+              <th>Case</th>
               <th>Counting coverage</th>
               <th>How the full day is reconstructed</th>
               <th v-if="cases">Share of model days</th>
@@ -21,16 +25,22 @@
           </thead>
           <tbody>
             <tr>
+              <td>1</td>
               <td>Uncounted or too short, <Tex :e="`c_d&lt;${data.trend?.min_coverage}`" /></td>
-              <td>Predict from the daily model’s expected full-day passage <Tex e="R_d" />.</td>
+              <td>
+                Predict from the expected full-day passage <Tex e="R_d" />. Birds recorded in a
+                count this short are kept and added to the prediction; they do not update it.
+              </td>
               <td v-if="cases">{{ cases.none }}%</td>
             </tr>
             <tr>
+              <td>2</td>
               <td>Fully counted, <Tex e="c_d=1" /></td>
               <td>Keep the observed count: <Tex e="F_d=N_d" />.</td>
               <td v-if="cases">{{ cases.full }}%</td>
             </tr>
             <tr>
+              <td>3</td>
               <td>Partly counted, <Tex :e="`${data.trend?.min_coverage}\\le c_d&lt;1`" /></td>
               <td>See the <a href="#reconstruction-m-condition">within-day model below</a>.</td>
               <td v-if="cases">{{ cases.partial }}%</td>
@@ -39,36 +49,39 @@
         </table>
       </div>
       <p v-if="data.trend">
-        For an uncounted day, we predict <Tex e="R_d" /> from the daily model using its date, year,
-        weather and surrounding episode. We draw 1 000 possible totals around this expectation. For
-        a partly counted day, the observed birds provide extra information, as explained next.
-        Counts below the coverage threshold do not update the daily intensity; their recorded birds
-        are retained and added to the model prediction.
+        For an uncounted day (case 1), we predict the expected full-day passage <Tex e="R_d" /> from
+        the model of chapter 2, using its date, year, weather and surrounding episode. We draw 1 000
+        possible totals around this expectation. For a partly counted day (case 3), the observed
+        birds provide extra information, as explained next.
       </p>
     </section>
     <section v-if="data.trend" id="reconstruction-m-condition">
       <h5><span class="sec-n">2</span>A within-day model for missing passage</h5>
-      <h6>Start with the daily-model prediction</h6>
+      <h6>Start with the expected full-day passage</h6>
       <p>
-        For a partly counted day, the full-day total <Tex e="F_d" /> is the missing birds
-        <Tex e="M_d" /> plus the observed count <Tex e="N_d" />. A simple estimate of the missing
-        birds multiplies the daily-model prediction <Tex e="R_d" /> by the missing share
-        <Tex e="1-c_d" />:
+        For a partly counted day (case 3), the full-day total <Tex e="F_d" /> is the observed count
+        <Tex e="N_d" /> plus the missing birds <Tex e="M_d" />:
       </p>
-      <div class="eq">
-        <Tex display e="F_d=M_d+N_d,\qquad \widehat M_d^{\mathrm{simple}}=(1-c_d)R_d" />
-      </div>
+      <div class="eq"><Tex display e="F_d=N_d+M_d" /></div>
+      <p>
+        A simple estimate of the missing birds multiplies the expected full-day passage
+        <Tex e="R_d" /> by the missing share <Tex e="1-c_d" />:
+      </p>
+      <div class="eq"><Tex display e="\widehat M_d^{\mathrm{simple}}=(1-c_d)R_d" /></div>
       <p>
         However, this ignores what the observed hours tell us about this particular day. Passage is
-        often above or below its daily-model expectation across several hours: a busy morning can
+        often above or below its expected full-day passage across several hours: a busy morning can
         signal a busy afternoon. Using the same prediction for both busy and quiet observed days can
         therefore overestimate or underestimate the birds missed.
       </p>
-      <h6>Use the counted hours to update passage intensity</h6>
+      <h6>Use the counted hours to update the intensity</h6>
       <p>
-        Instead of this simple estimate, we use a <strong>Gamma–Poisson model</strong>, which is
-        equivalent to the daily negative-binomial distribution written in two parts. The daily
-        intensity <Tex e="\lambda_d" /> has a Gamma distribution with mean <Tex e="R_d" /> and shape
+        To use what the counted hours say about this particular day, we write the negative binomial
+        of section 2.2 in its two equivalent parts: the <strong>intensity</strong>
+        <Tex e="\lambda_d" />, how busy this day is, and the Poisson count given that intensity.
+        Written so, the observed count updates the intensity, and the updated intensity predicts the
+        uncounted hours. This is a <strong>Gamma–Poisson model</strong>. The intensity
+        <Tex e="\lambda_d" /> has a Gamma distribution with mean <Tex e="R_d" /> and shape
         <Tex e="\theta" />, the same dispersion parameter fitted above. We write Gamma distributions
         using shape and rate, so their mean is shape divided by rate. Given that intensity, the
         observed count <Tex e="N_d" /> is Poisson with mean <Tex e="c_d\lambda_d" />:
@@ -95,7 +108,7 @@
       </div>
       <p>
         The vertical bar means “given”: the same intensity is now informed by <Tex e="N_d" /> as
-        well as coverage and the daily-model parameters. Its updated mean is the first Gamma
+        well as coverage and the fitted model’s parameters. Its updated mean is the first Gamma
         parameter divided by the second, which can also be written as a weighted average:
       </p>
       <div class="eq">
@@ -116,14 +129,17 @@
       <p>
         This next step leaves the expected missing count unchanged; it adds variability to account
         for flocking. The Poisson step assumes independent bird passages once the day’s intensity is
-        known. Because the same daily intensity applies to counted and uncounted hours, a busy count
-        informs the rest of the day. But birds travelling in flocks also create bursts within that
-        daily pattern. This extra clustering must be accounted for when filling uncounted hours, so
-        the uncertainty reflects birds arriving together. We describe it with a
+        known. Because the same intensity <Tex e="\lambda_d" /> applies to counted and uncounted
+        hours, a busy count informs the rest of the day. But birds travelling in flocks also create
+        bursts within that daily pattern. This extra clustering must be accounted for when filling
+        uncounted hours, so the uncertainty reflects birds arriving together. We describe it with a
         <a
           href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.dirichlet_multinomial.html"
           >Dirichlet–multinomial distribution</a
-        >.
+        >, with its own dispersion <Tex e="\kappa" />. The two dispersions describe different
+        things: <Tex e="\theta" /> is the spread between days, how much a day’s passage departs from
+        its expectation; <Tex e="\kappa" /> is the clustering of birds within a day, how unevenly
+        that passage falls across its hours.
       </p>
       <p>
         To estimate it, we add the hourly counts into fixed four-hour blocks within each day. For
@@ -146,9 +162,9 @@
         <Tex e="\kappa" /> per taxon using days with at least two counted blocks.
       </p>
       <p>
-        For a given daily intensity <Tex e="\lambda_d" />, let <Tex e="m_d=(1-c_d)\lambda_d" /> be
-        the expected missing count. We use the fitted <Tex e="\kappa" /> to add extra variance to
-        the missing birds <Tex e="M_d" />:
+        For a given intensity <Tex e="\lambda_d" />, let <Tex e="m_d=(1-c_d)\lambda_d" /> be the
+        expected missing count. We use the fitted <Tex e="\kappa" /> to add extra variance to the
+        missing birds <Tex e="M_d" />:
       </p>
       <div class="eq">
         <Tex
@@ -161,9 +177,9 @@
         <Tex e="\kappa" /> makes this extra variance larger, while the mean remains <Tex e="m_d" />.
         This is a negative-binomial prediction for missing hours. Uncertainty in
         <Tex e="\lambda_d" /> adds further variability; adding the fixed observed count
-        <Tex e="N_d" /> gives the uncertainty in the reconstructed total. The production estimate
-        averages 1 000 joint reconstruction draws, including coefficient uncertainty; the 10th and
-        90th percentiles give its 80% interval.
+        <Tex e="N_d" /> gives the uncertainty in the reconstructed total. The estimate published on
+        the species pages averages 1 000 joint reconstruction draws, including coefficient
+        uncertainty; the 10th and 90th percentiles give its 80% interval.
       </p>
       <ConditionalDay
         v-if="data.trend"
@@ -176,6 +192,10 @@
     </section>
     <section id="reconstruction-m-draws">
       <h5><span class="sec-n">3</span>Inspect reconstructed days</h5>
+      <p v-if="data.trend">
+        The figure shows every day of one season: the birds counted, and the reconstructed full-day
+        total with its 80% interval. Choose a day to see how its total is made.
+      </p>
       <figure v-if="data.trend" class="figure w-100">
         <div class="reconstruction-controls">
           <YearSelector
@@ -262,7 +282,7 @@
           </div>
         </div>
         <figcaption class="figure-caption">
-          <strong>Figure 3.2.</strong> {{ name }}, {{ year }}: counts (rust bars), reconstructed
+          <strong>Figure 3.2.</strong> {{ name }}, {{ year }}: counts (red bars), reconstructed
           means (blue dots) and 80% intervals (black vertical lines). Click a day or use the
           selector to compare coverage, prediction and reconstruction.
         </figcaption>
@@ -372,7 +392,7 @@ const comparison = computed(() => {
   return [
     { label: "Observed count", tex: "N_d", value: r.count, color: COLORS.counted },
     {
-      label: "Daily-model prediction",
+      label: "Expected full-day passage",
       tex: "R_d",
       value: predicted.value,
       color: COLORS.faint,

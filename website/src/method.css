@@ -83,6 +83,14 @@
     letter-spacing: 0.04em;
     color: var(--bs-secondary-color);
   }
+  .terms-form {
+    font-size: 0.85em;
+    color: var(--bs-secondary-color);
+  }
+  .terms thead th {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+  }
   .terms-sym {
     width: 4.5rem;
     text-align: center;

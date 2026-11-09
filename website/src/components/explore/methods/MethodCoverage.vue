@@ -2,17 +2,17 @@
   <section id="coverage">
     <h5><span class="sec-n">1</span>Daily coverage</h5>
     <p id="counts-m-resolution">
-      We want to estimate a species’ total passage over each full day, but only some of its birds
-      were counted. The observed daily count <Tex e="N_d" /> is the sum recorded during counting
-      intervals, each with a start and end time. There is usually one interval per day, or several
-      when counting is interrupted.
+      We want to estimate the total passage over each full day, but the counts rarely cover a full
+      day, and a day’s count can be divided into several intervals. We define the
+      <strong>observed daily count</strong> <Tex e="N_d" /> as the sum of the birds recorded during
+      all of the day’s counting intervals, each with a start and end time.
     </p>
     <p id="coverage-m-profile">
-      Equal hours need not cover equal passage. A species has a daily rhythm: raptors often pass
-      later than pigeons or finches. Its <strong>time-of-day profile</strong>
-      <Tex e="p_d(h)" /> describes the expected share passing at hour <Tex e="h" /> on date
-      <Tex e="d" />. It is estimated from hourly counts for each calendar date, with one seasonal
-      pattern shared across years.
+      Because species have a daily rhythm, with raptors often passing later than pigeons or finches,
+      we model a <strong>time-of-day profile</strong>&nbsp;<Tex e="p_d(t)" />, the expected
+      proportion of the day’s passage at time&nbsp;<Tex e="t" /> on date&nbsp;<Tex e="d" />. We
+      assume this profile is the same every year, and fit it to the hourly counts with a generalised
+      additive model, smooth in the time of day and the date.
     </p>
     <p id="coverage-m-coverage">
       By definition, the profile’s area over the full day is one. The <strong>coverage</strong>
@@ -20,15 +20,9 @@
       between 0 and 1:
     </p>
     <div class="eq">
-      <Tex display e="c_d = \int_{\text{counting intervals}} p_d(h)\,\mathrm{d}h \tag{1}" />
+      <Tex display e="c_d = \int_{\text{counting intervals}} p_d(t)\,\mathrm{d}t \tag{1}" />
     </div>
     <figure v-if="row" class="figure w-100">
-      <div class="readout small mb-1">
-        Counting from <strong>{{ clock(hFrom) }}</strong> to <strong>{{ clock(hTo) }}</strong>
-        gives a coverage of
-        <strong class="coverage-value"><Tex :e="`c_d = ${cov.toFixed(2)}`" /></strong>
-        for {{ name }} on {{ rowDate }}.
-      </div>
       <div ref="covDiv" class="plot-sm"></div>
       <!-- Two-handle slider on the plot's x axis: same range, inset by the plot's margins -->
       <div
@@ -62,7 +56,9 @@
       </div>
       <figcaption class="figure-caption">
         <strong>Figure 2.1.</strong> {{ name }}, {{ rowDate }}: the shaded share of the daily
-        profile is the coverage of the selected counting interval.
+        profile is the coverage <Tex e="c_d" /> of the counting interval, here {{ clock(hFrom) }}–{{
+          clock(hTo)
+        }}.
       </figcaption>
     </figure>
     <p id="coverage-m-rate">
@@ -182,6 +178,9 @@ function plotCoverage() {
   const inside = x.map((t) => t > hFrom.value && t < hTo.value);
   const [a, b] = covAxis.value;
   const ticks = Array.from({ length: b - a + 1 }, (_, i) => a + i).filter((h) => h % 2 === 0);
+  // the label sits at half the curve's height, in the middle of the time counted
+  const mid = (hFrom.value + hTo.value) / 2;
+  const k = x.reduce((best, t, i) => (Math.abs(t - mid) < Math.abs(x[best] - mid) ? i : best), 0);
   plotReact(
     covDiv.value,
     [
@@ -206,6 +205,17 @@ function plotCoverage() {
       },
     ],
     {
+      // the coverage, written in the middle of the counted area
+      annotations: [
+        {
+          x: mid,
+          y: r.p[k] / 2,
+          text: `<i>c</i><sub>d</sub> = ${cov.value.toFixed(2)}`,
+          showarrow: false,
+          font: { size: 14, color: COLORS.ink },
+          bgcolor: alpha(COLORS.surface, 0.8),
+        },
+      ],
       margin: COV_MARGIN,
       dragmode: false,
       autosize: true,
@@ -233,9 +243,3 @@ watch(hFrom, (h) => h >= hTo.value && (hFrom.value = hTo.value - SLIDER_STEP));
 watch(hTo, (h) => h <= hFrom.value && (hTo.value = hFrom.value + SLIDER_STEP));
 watch(() => [covVisible.value, row.value, hFrom.value, hTo.value], plotCoverage);
 </script>
-
-<style scoped>
-.coverage-value {
-  color: var(--dv-counted);
-}
-</style>

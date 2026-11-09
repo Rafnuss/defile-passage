@@ -1,56 +1,93 @@
 <template>
-  <p>
-    We hide observations from well-counted seasons using gaps from older counting schedules, refit
-    the daily model, and reconstruct the hidden passage. We compare the reconstructed season total
-    with the birds originally counted. This tests recovery within observed counting periods; it
-    cannot check birds that were never observed.
-  </p>
-  <figure v-if="trials.length" class="figure w-100">
-    <div ref="plotDiv" class="validation-plot"></div>
-    <div class="validation-metrics">
-      <span
-        ><strong>{{ trials.length }}</strong> trials</span
-      >
-      <span
-        >Typical error <strong>{{ error }}%</strong></span
-      >
-      <span
-        >Truth inside 80% interval <strong>{{ Math.round(100 * gap.cover80) }}%</strong></span
-      >
-    </div>
-    <figcaption class="figure-caption">
-      <strong>Figure 5.1.</strong> {{ name }}: reconstructed totals (blue dots; predictive medians)
-      against originally counted totals. Black lines show 80% intervals, with thinner 95%
-      extensions. The diagonal marks perfect agreement. Typical error is the median absolute log
-      error, expressed as a percentage difference.
-    </figcaption>
-  </figure>
-  <p v-else>No gap-transplant validation is available for {{ name }}.</p>
-  <details v-if="trials.length" class="method-detail">
-    <summary>What is held out, and what remains fixed?</summary>
+  <section id="reliability-m-test">
+    <h5><span class="sec-n">1</span>Can the model recover counts it did not see?</h5>
     <p>
-      Recent, well-counted seasons receive the partial-day and full-day gaps of historical
-      schedules. The coefficients are refitted after masking; smoothing parameters and dispersion
-      retain their full-fit values. The reference is passage within the original counting coverage.
-      The test therefore assesses reconstruction under those settings, rather than a completely
-      independent refit of every model parameter.
+      We take recent, well-counted seasons and hide the hours and days that an older season did not
+      count, so that the recent season has the older one’s gaps. We refit the model without the
+      hidden counts, reconstruct the season, and compare its total with the birds that were actually
+      counted. Each recent season is tested with the gaps of several older ones.
     </p>
+    <figure v-if="trials.length" class="figure w-100">
+      <div ref="plotDiv" class="validation-plot"></div>
+      <div class="validation-metrics">
+        <span
+          ><strong>{{ trials.length }}</strong> trials</span
+        >
+        <span
+          >Typical error <strong>{{ error }}%</strong></span
+        >
+        <span
+          >Truth inside 80% interval <strong>{{ Math.round(100 * gap.cover80) }}%</strong></span
+        >
+      </div>
+      <figcaption class="figure-caption">
+        <strong>Figure 5.1.</strong> {{ name }}: reconstructed season totals (blue dots; predictive
+        medians) against the birds counted. Each season has one dot per older season whose gaps it
+        was given, on the same vertical line. Black lines show 80% intervals, with thinner 95%
+        extensions; the diagonal marks perfect agreement. Typical error is the median absolute log
+        error, expressed as a percentage difference.
+      </figcaption>
+    </figure>
+    <p v-else>No gap test is available for {{ name }}.</p>
+    <p v-if="trials.length">
+      The test refits the coefficients only; the smoothing parameters and <Tex e="\theta" /> keep
+      their values from the full fit. It checks the reconstruction within the days counted; it
+      cannot check birds that passed when no season was counted. It scores predictive medians, while
+      the totals published on the species pages are predictive means.
+    </p>
+  </section>
+  <section id="reliability-m-classes">
+    <h5><span class="sec-n">2</span>When is a result shown?</h5>
     <p>
-      Production totals use predictive means; this benchmark scores predictive medians. These
-      seasonal-total tests do not directly validate the phenology slopes. Display decisions also
-      consider coverage, interval widths and the boundaries of the counting season.
+      Each result resting on the model is shown, shown with a caveat, or hidden. The season totals
+      are judged mainly by the test above: a caveat when the typical error exceeds 16%, hidden above
+      49%. A caveat is also added when the 80% intervals hold the truth in fewer than 60% of trials,
+      when less than 60% of a typical season’s total was counted, when the intervals are wide, or
+      when the passage continues beyond regular counting. The long-term trend needs the totals and a
+      95% band that is not too wide; the passage dates need narrow bands and at least 50 birds in a
+      typical season.
     </p>
-  </details>
-  <p>
-    <a :href="`./qa/index.html#${data.taxon_id}`"
-      >Inspect {{ name }}’s show / caveat / hide decisions in the QA table →</a
-    >
-  </p>
+    <table v-if="data.reliability" class="table table-sm small">
+      <thead>
+        <tr>
+          <th>{{ name }}</th>
+          <th>Shown</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="claim in CLAIMS" :key="claim.key">
+          <td>{{ claim.label }}</td>
+          <td>{{ CLASS_WORDS[data.reliability[claim.key].class] }}</td>
+          <td>
+            {{
+              data.reliability[claim.key].reasons
+                .map((r) => r.code.replaceAll("_", " "))
+                .join(", ") || "all checks passed"
+            }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      <a :href="`./qa/index.html#${data.taxon_id}`"
+        >See every species’ decisions in the QA table →</a
+      >
+    </p>
+  </section>
 </template>
 <script setup>
 import { computed, ref, watch } from "vue";
 import { usePlot, plotReact } from "../../../utils/usePlot";
 import { COLORS } from "../../../theme";
+import Tex from "../Tex.vue";
+
+const CLAIMS = [
+  { key: "totals", label: "Season totals" },
+  { key: "trend", label: "Long-term trend" },
+  { key: "season", label: "Passage dates" },
+];
+const CLASS_WORDS = { show: "yes", caveat: "with a caveat", hide: "no" };
 const props = defineProps({
   name: { type: String, required: true },
   data: { type: Object, required: true },
