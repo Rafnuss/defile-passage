@@ -191,6 +191,12 @@ def tables(export_dir: str) -> dict[str, pd.DataFrame]:
     }
 
 
+def dataset_name(manifest: dict) -> str:
+    """The dataset the tables come from: its release, or the build of a preview."""
+    tag = manifest.get("dataset_release")
+    return tag or f"build {(manifest.get('dataset_git_sha') or '')[:7]} (preview, not a release)"
+
+
 def datapackage(manifest: dict) -> dict:
     """The Frictionless descriptor: the tables, their columns, and what they were made from."""
     tag = manifest.get("dataset_release")
@@ -203,7 +209,7 @@ def datapackage(manifest: dict) -> dict:
         "git_sha": manifest["git_sha"],
         "sources": [
             {
-                "title": f"Défilé de l'Écluse migration counts, release {tag}",
+                "title": f"Défilé de l'Écluse migration counts, {dataset_name(manifest)}",
                 "path": DATASET_URL.format(tag=tag) if tag else None,
             }
         ],
@@ -232,7 +238,7 @@ def readme(manifest: dict, t: dict[str, pd.DataFrame]) -> str:
         f"# {TITLE}",
         "",
         "Model estimates derived from the counts at Défilé de l'Écluse, built by defile-passage"
-        f" (`{manifest['git_sha']}`) from dataset release `{manifest.get('dataset_release')}`.",
+        f" (`{manifest['git_sha']}`) from the dataset {dataset_name(manifest)}.",
         f"{len(t['taxa'])} taxa with a trend model; the counts themselves are in the dataset"
         " release, not here.",
         "",

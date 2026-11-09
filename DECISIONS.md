@@ -22,8 +22,10 @@ by the user).** One flow, in this order: defile-dataset builds and tags a releas
 those files, by hand; this repo builds with `--dataset vYYYY.N`, which downloads the zip and checks
 the hashes; `publish_explore.py` uploads `explore.zip` (defileViz), `viewer.zip` (the methods site)
 and `passage.zip` (the passage tables, uploaded to a second Zenodo record by hand). An export
-from a local dataset folder (`--dataset ../defile-dataset/output`) is for trying only: its manifest
-has no `dataset_release` and publishing refuses it. This replaces copying whatever was in the
+from a local dataset folder (`--dataset ../defile-dataset/output`) has no `dataset_release`: it can
+go to the rolling `dev` pre-release (the preview defileViz deploys) if that dataset build is from
+committed code, never to a versioned release. The preview is how the site and the passage tables
+are checked before the season's last count (the 2026 season ends late November). This replaces copying whatever was in the
 sibling `output/` (which recorded the dataset's commit but not which files) and the check on the
 dataset's commit. The text extracts (`report_text`, `paper_text`) are not in the release (not CC
 BY): `scripts/accounts/` reads them from `../defile-dataset/output/text/`. Rejected: merging

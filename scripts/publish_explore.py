@@ -8,7 +8,9 @@ goes online. defileViz downloads `explore.zip` from the same release when it dep
 `scripts/fetch-explore.mjs`); `passage.zip` is the Zenodo upload of the passage tables. Refused: an
 export built from a local defile-dataset folder rather than a dataset release, from uncommitted
 code, from another commit than HEAD or from a commit not pushed; a `--taxa` build since the last
-full one; passage tables or a viewer from another build.
+full one; passage tables or a viewer from another build. The rolling `dev` pre-release is the
+preview: it also takes an export from a local defile-dataset build, if that was built from
+committed code. A versioned `--tag` needs a dataset release.
 
 Usage:
     python scripts/publish_explore.py             # to the rolling `dev` pre-release
@@ -27,7 +29,7 @@ EXPORT_DIR = os.path.join(ROOT, "data", "explore")
 PASSAGE_DIR = os.path.join(ROOT, "data", "passage")
 VIEWER_DIR = os.path.join(ROOT, "logs", "site")
 ZIP_DIR = os.path.join(ROOT, "logs", "publish")
-DEV_TAG = "dev"  # rolling pre-release, until the first versioned release
+DEV_TAG = "dev"  # rolling pre-release: the preview, which defileViz deploys by default
 EXPORT_ASSET = "explore.zip"  # the name defileViz downloads
 PASSAGE_ASSET = "passage.zip"  # the passage tables, the Zenodo upload
 VIEWER_ASSET = "viewer.zip"  # documentation + QA; the name the Pages workflow downloads
@@ -41,7 +43,7 @@ def run(*args: str) -> str:
     ).stdout.strip()
 
 
-def check(export_dir: str, passage_dir: str, viewer_dir: str) -> dict:
+def check(export_dir: str, passage_dir: str, viewer_dir: str, tag: str = DEV_TAG) -> dict:
     """The export's manifest, after the checks that make what goes online traceable to commits."""
     with open(os.path.join(export_dir, "manifest.json"), encoding="utf-8") as f:
         manifest = json.load(f)
@@ -53,10 +55,18 @@ def check(export_dir: str, passage_dir: str, viewer_dir: str) -> dict:
         problems.append(f"built at {sha}, HEAD is elsewhere: rebuild")
     elif not run("git", "branch", "-r", "--contains", "HEAD"):
         problems.append(f"{sha} is not pushed")
-    if not manifest.get("dataset_release"):
+    dataset_sha = manifest.get("dataset_git_sha") or ""
+    if manifest.get("dataset_release"):
+        pass
+    elif tag != DEV_TAG:
         problems.append(
-            "built from a local defile-dataset folder: release it there"
+            f"{tag} needs a dataset release: release it in defile-dataset"
             " (scripts/release_dataset.py), then build here with --dataset vYYYY.N"
+        )
+    elif not dataset_sha or UNCOMMITTED in dataset_sha:
+        problems.append(
+            f"local defile-dataset build from uncommitted code ({dataset_sha or 'unknown'}):"
+            " commit there, build it, then build here with --dataset ../defile-dataset/output"
         )
     package = os.path.join(passage_dir, "datapackage.json")
     if not os.path.exists(package):
@@ -114,8 +124,9 @@ def main(argv=None) -> int:
     ap.add_argument("--dry-run", action="store_true", help="check and zip, upload nothing")
     args = ap.parse_args(argv)
 
-    manifest = check(EXPORT_DIR, PASSAGE_DIR, VIEWER_DIR)
-    print(f"Export {manifest['git_sha']} of dataset {manifest['dataset_release']}")
+    manifest = check(EXPORT_DIR, PASSAGE_DIR, VIEWER_DIR, args.tag)
+    dataset = manifest["dataset_release"] or f"build {manifest['dataset_git_sha'][:7]} (preview)"
+    print(f"Export {manifest['git_sha']} of dataset {dataset}")
     os.makedirs(ZIP_DIR, exist_ok=True)
     assets = [
         zip_folder(EXPORT_DIR, os.path.join(ZIP_DIR, EXPORT_ASSET)),
@@ -143,7 +154,7 @@ def main(argv=None) -> int:
             "--notes",
             "Local builds, replaced at each publish: manifest.json names the commits."
             if dev
-            else f"Explore export {manifest['git_sha']}, dataset {manifest['dataset_release']}.",
+            else f"Explore export {manifest['git_sha']}, dataset {dataset}.",
             *(["--prerelease"] if dev else []),
         )
     run("gh", "release", "upload", args.tag, *assets, "--clobber")

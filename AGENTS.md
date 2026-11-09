@@ -83,11 +83,12 @@ done for all taxa; otherwise add an exception to `src/defile_passage/overrides.y
   isort at line length 99, docformatter, mdformat, codespell).
 - `data/` and `logs/` are generated: never commit them. The counts are a defile-dataset release:
   `scripts/build_explore.py --dataset vYYYY.N` downloads its `dataset.zip` into
-  `data/count/dataset/` (`release.fetch_dataset`); a local dataset folder is for trying only.
+  `data/count/dataset/` (`release.fetch_dataset`); a local dataset folder (committed code) can
+  go to the rolling `dev` preview only.
 - The build runs locally, never in CI (30-40 min on a runner): `scripts/publish_explore.py`
   uploads the export, the passage tables and the viewer to a release, from which Pages and
   defileViz deploy and the passage tables go to Zenodo. It refuses a build from uncommitted code
-  or from a dataset that is not a release; never loosen those checks to publish.
+  and a versioned release from a dataset that is not a release; never loosen those checks.
 - Builds are verbose (pygam warnings, per-taxon progress): redirect to `logs/` and grep.
 - `data/cache/` holds the shared stage and each taxon's trend fit, keyed by the release and by
   the source code of the modules that made them, so a code change invalidates them by itself.

@@ -33,8 +33,8 @@ The counts come from a defile-dataset release: `dataset.zip` on its GitHub relea
 (made there by `scripts/release_dataset.py`). `--dataset vYYYY.N` downloads it into
 `data/count/dataset/`, checks each table against the sha256 the dataset build gave it, and records
 the tag in `release.json` and in the export's manifest. To try a dataset build before it is
-released, `--dataset ../defile-dataset/output` copies it instead; such an export cannot be
-published. A release without `parent_taxon_id` in `taxonomy.csv` is refused.
+released, `--dataset ../defile-dataset/output` copies it instead; such an export can only go to
+the `dev` preview (below), and only if that dataset build is from committed code. A release without `parent_taxon_id` in `taxonomy.csv` is refused.
 
 A full build writes the Explore export (`data/explore/`) and the passage tables (`data/passage/`,
 `defile_passage.passage`): daily passage, season totals and passage dates of the 96 taxa with a
@@ -79,9 +79,11 @@ uv run python scripts/publish_explore.py
 It uploads `explore.zip` (the export), `passage.zip` (the passage tables, the Zenodo upload) and `viewer.zip` (the documentation homepage, QA viewer, comparison and their data) to
 the rolling `dev` pre-release of this repo, replacing the previous ones, and starts
 `.github/workflows/pages.yml`, which deploys the complete documentation site to GitHub Pages. defileViz downloads
-`explore.zip` from that release when it deploys. It refuses an export built from a local
-defile-dataset folder instead of a dataset release, from uncommitted code, from another commit than
-HEAD or from a `--taxa` build, and passage tables or a site from another build. The site must also be built from committed code at HEAD and from the same export. A versioned release later is `--tag`.
+`explore.zip` from that release when it deploys. `dev` is the preview: it takes an export of a
+local defile-dataset build made from committed code, and the passage tables then name that build,
+not a release. A versioned release (`--tag`) needs a dataset release. Both refuse an export from
+uncommitted code, from another commit than HEAD or from a `--taxa` build, and passage tables or a
+site from another build. The site must also be built from committed code at HEAD and from the same export. A versioned release later is `--tag`.
 
 Time, on a 12-core Mac (all cores, `--workers` to change): a build after a new release or a
 code change in the model takes about 5.5 minutes (the shared stage of time-of-day profiles,

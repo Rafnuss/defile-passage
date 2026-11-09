@@ -119,3 +119,10 @@ def test_passage_tables(tmp_path):
         assert table.columns.tolist() == [c for c, _, _ in columns]
     package = json.loads((tmp_path / "passage" / "datapackage.json").read_text())
     assert package["built_at"] == "now" and "v2026.1" in package["sources"][0]["path"]
+
+
+def test_preview_names_the_dataset_build():
+    preview = {"built_at": "now", "git_sha": "abc", "dataset_release": None}
+    preview["dataset_git_sha"] = "fbbba31bf104"
+    assert P.dataset_name(preview) == "build fbbba31 (preview, not a release)"
+    assert P.datapackage(preview)["sources"][0]["path"] is None
