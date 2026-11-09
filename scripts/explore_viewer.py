@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Build the QA decision table and comparison from the production export.
+"""Build the QA decision table (`qa/`) from the production export.
 
-Species-specific figures live in the methods guide. Historical species pages redirect there.
+Species-specific figures live in the methods guide; historical species pages redirect there. The
+species comparison is its own page (`compare/`, `species_compare.py`).
 """
 
 import argparse
@@ -12,6 +13,7 @@ import re
 
 import plotly
 
+from defile_passage.export import EXPORT_DIR
 from defile_passage.pipeline import KEY_YEARS
 from defile_passage.reliability import CLASSES, FILL_ERROR, INTERVAL_RATIO, MIN_TRIALS
 
@@ -281,8 +283,8 @@ whose text contains every word typed (e.g. <code>raptors caveat</code>).</p>
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--export", default=os.path.join(ROOT, "data/explore"))
-    ap.add_argument("--out", default=os.path.join(ROOT, "logs/site/qa"))
+    ap.add_argument("--export", default=os.path.join(ROOT, "data", EXPORT_DIR))
+    ap.add_argument("--out", default=os.path.join(ROOT, "data/output/site/qa"))
     args = ap.parse_args(argv)
     manifest = json.load(open(os.path.join(args.export, "manifest.json")))
     taxa = json.load(open(os.path.join(args.export, "taxa.json")))
@@ -302,10 +304,7 @@ def main(argv=None):
             )
     with open(os.path.join(args.out, "index.html"), "w") as f:
         f.write(index(taxa, species, manifest))
-    from species_compare import write
-
-    write(args.export, args.out, set(species))
-    print(f"QA table, comparison and {len(species)} historical redirects -> {args.out}")
+    print(f"QA table and {len(species)} historical redirects -> {args.out}")
     return 0
 
 

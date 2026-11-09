@@ -79,7 +79,7 @@ def split_score(df: pd.DataFrame) -> pd.DataFrame:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--data-dir", default=os.path.join(ROOT, "data"))
-    ap.add_argument("--export", default=os.path.join(ROOT, "data", "explore"))
+    ap.add_argument("--export", default=os.path.join(ROOT, "data", E.EXPORT_DIR))
     ap.add_argument("--out", default=os.path.join(ROOT, "logs", "qa", "explore"))
     ap.add_argument("--taxa", nargs="+", default=list(TAXA))
     ap.add_argument("--workers", type=int, default=4)

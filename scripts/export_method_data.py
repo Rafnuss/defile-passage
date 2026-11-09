@@ -6,7 +6,8 @@ from pathlib import Path
 
 import numpy as np
 
-from defile_passage.export import STEPS_PER_HOUR
+from defile_passage.export import EXPORT_DIR, STEPS_PER_HOUR
+from defile_passage.pipeline import CACHE_DIR
 from defile_passage.profile import PROFILE_DOY
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,9 +18,11 @@ def main():
     target.mkdir(parents=True, exist_ok=True)
     for path in target.glob("*.json"):
         path.unlink()
-    manifest = json.loads((ROOT / "data/explore/manifest.json").read_text())
+    manifest = json.loads((ROOT / "data" / EXPORT_DIR / "manifest.json").read_text())
     for path in sorted(
-        (ROOT / "data/cache").glob("shared-*.pkl"), key=lambda p: p.stat().st_mtime, reverse=True
+        (ROOT / "data" / CACHE_DIR).glob("shared-*.pkl"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
     ):
         with path.open("rb") as f:
             shared = pickle.load(f)
@@ -34,7 +37,7 @@ def main():
         on = np.flatnonzero(slots > 0)
         effort[str(row.date.date())] = [[int(i), round(float(slots[i]), 8)] for i in on]
     (target / "effort.json").write_text(json.dumps(effort, separators=(",", ":")))
-    for path in (ROOT / "data/explore/species").glob("*.json"):
+    for path in (ROOT / "data" / EXPORT_DIR / "species").glob("*.json"):
         data = json.loads(path.read_text())
         source = shared.source[data["taxon_id"]]
         profile = shared.profiles[data["taxon_id"] if source == "own" else source]

@@ -33,6 +33,29 @@ the two repos (the dataset would wait on the model, and each model change would 
 counts), and one combined Zenodo deposit (it needs an assembly step, the hand-made combination
 this avoids).
 
+**`data/` laid out with defile-dataset's names (2026-11-09, requested by the user).** `raw/`
+(the dataset release, ERA5 weather, eBird French names), `interim/` (the cache), `output/explore/`
+(the export) and `output/zenodo/` (the passage tables, as defile-dataset's own Zenodo upload is
+`output/zenodo/`), `output/site/` (the methods site, formerly `logs/site/`, as defile-dataset publishes its audit from
+`output/audit/`), `archive/` (the October research inputs, read only by `scripts/research/`). The
+Zenodo folder has `DATA_GUIDE.md` and `DATA_DICTIONARY.md` as defile-dataset's does, and the
+record's own DOI (`passage.PASSAGE_DOI`, 10.5281/zenodo.24084746).
+Replaces `count/`, `weather/`, `cache/`, `explore/`, `passage/` and five research folders at the
+top. The release asset names (`explore.zip`, `passage.zip`) and the site's `data/explore/` copy
+are unchanged. Kept under `data/` rather than at the top as in defile-dataset, so `.gitignore`
+and `--data-dir` still cover everything generated.
+
+**Passage tables are analysis-ready numbers (`passage-tables@2`, 2026-11-09, requested by the
+user).** Two tables: `daily_passage` (count, coverage, passage with its 80% interval) and
+`seasonal_passage` (window dates, count, passage and smooth trend with 95% intervals, the 10/50/90%
+passage dates as calendar dates with the median's 80% interval). No `taxa` table: `taxon_id` joins
+to `taxonomy.csv` of the counts record (`release.DATASET_DOI`), and method versions are in
+`datapackage.json`, not in the rows. Dropped as derivable or as analyses of their own: the 10/90%
+quantiles of the season totals, the share counted, the share of days counted, the linear trends in
+the passage dates and the dates' source. Reliability classes are worded for a reader of the tables
+(`reliable`, `caveat`, `unreliable` for show, caveat, hide), one column per estimate. Supersedes
+the four-table `passage-tables@1` below.
+
 **Passage tables (`passage-tables@1`).** Only taxa with a trend; four tables (`taxa`,
 `daily_passage`, `season_totals`, `passage_dates`) read from the species files, so they hold what
 the page draws. Values classed `hide` are kept with their class, not removed: a user filters
@@ -40,6 +63,8 @@ them as the page does. Time-of-day profiles, weather effects and age and sex sha
 they serve the page but would each need their own description in the paper.
 
 **Methods move to the Explore documentation site (2026-10-26, requested by the user).** The illustrated methods formerly in defileViz's six modals now belong to `website/` in this repository, as a continuous homepage with a species selector and stable chapter/section anchors. The site uses defileViz's palette and typography, with equations and implementation references for a technical audience. QA remains a full diagnostic viewer under `qa/`, with species comparison alongside it. defileViz's information links preserve the taxon and open the relevant documentation section. This supersedes the 2026-10-09 decision to keep method modals in defileViz. `scripts/build_site.py` assembles the frontend, existing export and Python QA pages into `logs/site/`; publication keeps the `viewer.zip` release asset name and existing export checks. Site-only changes need no model fitting for local preview; publication continues to require a full export matching HEAD and a site built from committed code. Legacy root-level taxon and comparison pages redirect to `qa/`.
+
+**QA and species comparison are separate pages (2026-11-09, requested by the user).** The QA table stays at `qa/`; the species comparison moves from `qa/compare.html` to its own page and URL, `compare/` (`scripts/species_compare.py --out logs/site/compare`). `qa/compare.html` and the root `compare.html` redirect there, keeping the query and anchor. The comparison keeps its view (filters, views, sorts, highlighted taxon) in the URL query. Its filters are checkbox lists in one panel, applied together with a button (a live count of what Apply draws), not on every click; a taxa filter separates species (`taxon_rank` species, subspecies, domestic) from groupings (sp., slash, hybrid), species only by default. One encoding across its figures: colour is the group, the symbol the class defile-website gives the figure's own element (filled shown, hollow caveated, small grey hidden, diamond from counts); the trend value is `key_numbers.trend`, the number defile-website states.
 
 **Methods narrative and seasonal windows (2026-10-26, requested by the user).** Keep only a basic description of the standardised input dataset; recording and cleaning conventions belong to defile-dataset. Open with a branching diagram that distinguishes observed totals, reconstructed seasons, smooth long-term passage and the separate classified-bird summaries. Species selection belongs in the first chapter alongside eligibility, comparable years and windows. Illustrate windows with one selectable complete season: standard and analysis periods, actual daily survey hours and raw species counts on one date axis. Windows are chosen across comparable years and stay fixed when the example year changes. Explain the derived results before their reliability checks.
 

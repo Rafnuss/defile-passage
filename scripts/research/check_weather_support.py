@@ -21,7 +21,7 @@ RAIN_LABELS = ["<0.1 mm/h", "0.1–1 mm/h", "1–3 mm/h", ">=3 mm/h"]
 
 # Read the prepared snapshot -------------------------------------------------
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--input", type=Path, default=ROOT / "data/hourly-weather")
+parser.add_argument("--input", type=Path, default=ROOT / "data/archive/hourly-weather")
 parser.add_argument("--out", type=Path, default=ROOT / "logs/hourly-weather-v2")
 args = parser.parse_args()
 args.out.mkdir(parents=True, exist_ok=True)

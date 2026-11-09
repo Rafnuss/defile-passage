@@ -14,9 +14,9 @@ CORE = tuple(
 )
 # The defile-dataset release (copied by `build_explore.py --dataset`) and the observations built
 # from it (`build_inputs.py`).
-RELEASE = ROOT / "data/count/dataset"
+RELEASE = ROOT / "data/raw/dataset"
 INPUTS = LOGS / "inputs"
-WEATHER_DIR = ROOT / "data/weather"  # hourly ERA5 at Defile (`fetch_weather.py`)
+WEATHER_DIR = ROOT / "data/raw/weather"  # hourly ERA5 at Defile (`fetch_weather.py`)
 # The research line's inputs (old release, weather stops left out), replayed by the reference runs.
 RESEARCH_DESIGN = ROOT / "logs/history-episode/design"
 LOCKBOX_YEARS = (1993, 2021)  # the historical calendar masks' years

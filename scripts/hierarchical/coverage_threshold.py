@@ -313,7 +313,7 @@ def main():
             for s in args.species
             for kind in ("observations", "components")
         ]
-        sources += list((ROOT / "data/weather").glob("*.csv"))
+        sources += list((ROOT / "data/raw/weather").glob("*.csv"))
         metadata = dict(
             mask_mode=args.mask_mode,
             species=args.species,

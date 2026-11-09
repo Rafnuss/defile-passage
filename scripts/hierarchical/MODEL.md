@@ -34,7 +34,7 @@ Eurasian Sparrowhawk, European Honey Buzzard, Red Kite, Western Marsh Harrier, W
 Cormorant, Grey Heron. One model per species; nothing is shared between species.
 
 **Counts and effort, 1993–2025.** Built from the defile-dataset release (`build_inputs.py`, from
-`data/count/dataset/`): for each species, every observation, an interval of counted time with its
+`data/raw/dataset/`): for each species, every observation, an interval of counted time with its
 count of birds in the main direction, and the observation's split into UTC hours. A Trektellen
 survey is split into its hours when all of the species' birds in it are timed to one hour.
 

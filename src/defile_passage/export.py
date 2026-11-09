@@ -119,7 +119,8 @@ EXCLUDED_TIER = "excluded"
 # French names: the eBird taxonomy in French (France), joined on `ebird_code`; no API key needed.
 # Downloaded once into the data dir by `scripts/build_explore.py` (`--refresh-names` to update).
 EBIRD_TAXONOMY_URL = "https://api.ebird.org/v2/ref/taxonomy/ebird?fmt=csv&locale=fr_FR"
-EBIRD_TAXONOMY_FILE = os.path.join("count", "ebird_taxonomy_fr_FR.csv")
+EBIRD_TAXONOMY_FILE = os.path.join("raw", "ebird_taxonomy_fr_FR.csv")
+EXPORT_DIR = os.path.join("output", "explore")  # under the data dir, the passage tables beside
 # Taxa whose `ebird_code` is no longer in the eBird taxonomy.
 FRENCH_NAME_OVERRIDES = {"avibase-81B32602": "Corneille mantelée"}  # hoocro4, Corvus c. cornix
 
@@ -561,7 +562,7 @@ def release_counts(count: pd.DataFrame, surveys: pd.DataFrame, taxonomy: pd.Data
 
 
 def read_release(data_dir: str):
-    """`(surveys, counts, taxonomy, metadata)` from `<data_dir>/count/dataset/`.
+    """`(surveys, counts, taxonomy, metadata)` from `<data_dir>/raw/dataset/`.
 
     The release tables only: `entry_times.csv`, the model's extra, is not read. `counts` is
     `release_counts`.

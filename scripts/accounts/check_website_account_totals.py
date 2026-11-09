@@ -16,11 +16,11 @@ destination = root / "content/accounts/review"
 destination.mkdir(parents=True, exist_ok=True)
 surveys = {
     r["survey_id"]: r["datetime"]
-    for r in csv.DictReader((root / "data/count/dataset/survey.csv").open(encoding="utf-8-sig"))
+    for r in csv.DictReader((root / "data/raw/dataset/survey.csv").open(encoding="utf-8-sig"))
 }
 totals = defaultdict(int)
 presence = set()
-for row in csv.DictReader((root / "data/count/dataset/count.csv").open(encoding="utf-8-sig")):
+for row in csv.DictReader((root / "data/raw/dataset/count.csv").open(encoding="utf-8-sig")):
     if row["count_category"] != "normal":
         continue
     timing = (row["datetime"] or surveys[row["survey_id"]]).split("/")[0]

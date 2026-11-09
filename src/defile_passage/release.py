@@ -8,8 +8,8 @@ change to one copy is carried to the other by hand, as a decision (DECISIONS.md 
 The release is defile-dataset's `dataset.zip` on its GitHub release `vYYYY.N`: the Zenodo upload
 (`count.csv`, `survey.csv`, `taxonomy.csv`, `datapackage.json` and its guides) and the build's
 `metadata.json` (the sha256 of each file). `scripts/build_explore.py --dataset vYYYY.N` downloads
-it into `data/count/dataset/` (`fetch_dataset`); `--dataset <defile-dataset output folder>` copies
-a local build instead, to try one before it is released, and such an export cannot be published.
+it into `data/raw/dataset/` (`fetch_dataset`); `--dataset <defile-dataset output folder>` copies a
+local build instead, to try one before it is released, and such an export cannot be published.
 `release.json` beside the tables says which it was.
 """
 
@@ -34,13 +34,15 @@ DATASET_URL = "https://github.com/{repo}/releases/download/{tag}/{asset}"
 DATASET_TAG = re.compile(r"^v\d{4}\.\d+$")
 DATASET_UPLOAD_DIR = "zenodo"  # in a defile-dataset output folder, and in metadata.json's hashes
 RELEASE_FILE = "release.json"  # beside the tables: the tag they came from, or the local folder
+# The counts record on Zenodo (defile-dataset `config/gbif.json`): its taxonomy.csv names the taxa.
+DATASET_DOI = "10.5281/zenodo.23598005"
 
 # The site's local time: the dataset's dates are local calendar dates.
 TIMEZONE = "Europe/Paris"
 # Défilé de l'Écluse (lat, lon), as `LOCATIONS["Defile"]` in the forecast's weather layer.
 SITE = (46.117215, 5.914877)
 
-DATASET_DIR = os.path.join("count", "dataset")  # under the data dir
+DATASET_DIR = os.path.join("raw", "dataset")  # under the data dir
 METADATA_FILE = "metadata.json"  # at the root of the release zip
 DATASET_METADATA_PATH = ("audit", METADATA_FILE)  # in a defile-dataset output folder
 
@@ -187,7 +189,7 @@ def _verified(files: dict[str, bytes]) -> dict[str, bytes]:
 
 
 def fetch_dataset(source: str, data_dir: str) -> dict:
-    """Put a defile-dataset release in `<data_dir>/count/dataset/`, replacing what was there.
+    """Put a defile-dataset release in `<data_dir>/raw/dataset/`, replacing what was there.
 
     `source` is a tag (`vYYYY.N`, downloaded from defile-dataset's GitHub release) or a defile-
     dataset output folder (its `zenodo/` and `audit/metadata.json`). Returns what `release.json`
@@ -226,7 +228,7 @@ def fetch_dataset(source: str, data_dir: str) -> dict:
 
 
 def dataset_release(data_dir: str) -> dict:
-    """What `fetch_dataset` put in `<data_dir>/count/dataset/` (`tag` None when unknown)."""
+    """What `fetch_dataset` put in `<data_dir>/raw/dataset/` (`tag` None when unknown)."""
     path = os.path.join(data_dir, DATASET_DIR, RELEASE_FILE)
     if not os.path.exists(path):
         return {"tag": None, "source": None, "git_sha": None}

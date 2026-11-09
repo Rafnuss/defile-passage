@@ -88,7 +88,7 @@ short.groupby(["year", "retained_coverage"]).agg(
 ).to_csv(OUT / "short_gap_year_coverage.csv")
 print("\nShort-gap core species-cases:")
 print(short.retained_coverage.value_counts().to_string())
-weather = pd.read_csv(ROOT / "data/hourly-weather-priority/weather_hourly.csv")
+weather = pd.read_csv(ROOT / "data/archive/hourly-weather-priority/weather_hourly.csv")
 print(
     "\nCurrent research weather input:", weather.slot_start.min(), "to", weather.slot_start.max()
 )

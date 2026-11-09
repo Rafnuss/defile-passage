@@ -46,7 +46,7 @@ for name in ["start", "end"]:
 # An observed interval is indivisible; retain it only if wholly covered by the template.
 manifest, audits = [], []
 for panel in ["priority", "passerines"]:
-    rows = pd.read_csv(ROOT / f"data/hourly-weather-{panel}/validation_masks.csv")
+    rows = pd.read_csv(ROOT / f"data/archive/hourly-weather-{panel}/validation_masks.csv")
     rows = rows[in_window(pd.to_datetime(rows.date))].copy()
     for name in ["start", "end"]:
         local = pd.to_datetime(rows[name], utc=True).dt.tz_convert(TIMEZONE)

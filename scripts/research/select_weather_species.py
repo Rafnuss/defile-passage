@@ -32,7 +32,7 @@ hours = H.survey_hours(surveys)
 frame = H.species_hours(hours, timing, taxa)
 dawn, dusk = civil_twilight(pd.to_datetime(frame.date))
 frame = frame[frame.start.ge(dawn) & frame.end.le(dusk)].copy()
-weather = pd.read_csv(ROOT / "data/hourly-weather/weather_hourly.csv")
+weather = pd.read_csv(ROOT / "data/archive/hourly-weather/weather_hourly.csv")
 weather["slot_start"] = pd.to_datetime(weather.slot_start, utc=True)
 frame = frame.merge(weather[["slot_start", "rain_mm"]], on="slot_start", validate="many_to_one")
 frame["year"] = pd.to_datetime(frame.date).dt.year

@@ -9,7 +9,7 @@ set.seed(20261010)
 
 # Prepare matched masks and population rate bases ---------------------------
 args <- commandArgs(trailingOnly = TRUE)
-input_dir <- if (length(args) >= 1) args[1] else here("data", "hourly-weather")
+input_dir <- if (length(args) >= 1) args[1] else here("data", "archive", "hourly-weather")
 output_dir <- if (length(args) >= 2) args[2] else here("logs", "hourly-weather-v3")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 file.copy(file.path(input_dir, "metadata.json"), file.path(output_dir, "data_snapshot.json"), overwrite = TRUE)

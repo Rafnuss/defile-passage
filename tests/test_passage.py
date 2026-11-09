@@ -114,18 +114,24 @@ def test_passage_tables(tmp_path):
     (export / "manifest.json").write_text(json.dumps(manifest))
 
     rows = P.write(str(export), str(tmp_path / "passage"))
-    assert rows == {"taxa": 1, "daily_passage": 2, "season_totals": 2, "passage_dates": 2}
+    assert rows == {"daily_passage": 2, "seasonal_passage": 2}
     days = pd.read_csv(tmp_path / "passage" / "daily_passage.csv")
     assert days["count"].isna().tolist() == [False, True]  # not counted: no count
+    assert days["reliability"].tolist() == ["reliable"] * 2
+    seasons = pd.read_csv(tmp_path / "passage" / "seasonal_passage.csv")
+    first = seasons.iloc[0]
+    assert (first["window_start"], first["window_end"]) == ("2020-07-14", "2020-12-01")
+    assert (first["date_50"], first["date_50_lower_80"]) == ("2020-09-06", "2020-09-04")  # leap
+    assert first["trend_reliability"] == "caveat" and pd.isna(first["passage_reliability"])
     for name, columns in P.TABLES.items():
         table = pd.read_csv(tmp_path / "passage" / f"{name}.csv")
         assert table.columns.tolist() == [c for c, _, _ in columns]
     package = json.loads((tmp_path / "passage" / "datapackage.json").read_text())
-    assert package["built_at"] == "now" and "v2026.1" in package["sources"][0]["path"]
+    assert package["built_at"] == "now" and "v2026.1" in package["sources"][0]["release"]
 
 
 def test_preview_names_the_dataset_build():
     preview = {"built_at": "now", "git_sha": "abc", "dataset_release": None}
     preview["dataset_git_sha"] = "fbbba31bf104"
     assert P.dataset_name(preview) == "build fbbba31 (preview, not a release)"
-    assert P.datapackage(preview)["sources"][0]["path"] is None
+    assert P.datapackage(preview)["sources"][0]["release"] is None

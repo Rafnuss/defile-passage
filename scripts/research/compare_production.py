@@ -67,7 +67,7 @@ def interval_slots(frame: pd.DataFrame) -> np.ndarray:
 def main():
     # Read the shared validation masks ------------------------------------------
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=ROOT / "data/hourly-weather")
+    parser.add_argument("--input", type=Path, default=ROOT / "data/archive/hourly-weather")
     parser.add_argument("--out", type=Path, default=ROOT / "logs/hourly-weather-v2")
     parser.add_argument("--taxa", nargs="+")
     parser.add_argument("--folds", nargs="+", type=int, default=[0, 1, 2, 3])

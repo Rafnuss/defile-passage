@@ -21,7 +21,7 @@ from defile_passage.release import MAIN_CATEGORY, parse_surveys
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "logs/hierarchical/rescore"
 OUT.mkdir(parents=True, exist_ok=True)
-DATASET = ROOT / "data/count/dataset"
+DATASET = ROOT / "data/raw/dataset"
 SOURCES = {  # saved predictions: file -> methods taken from it
     "logs/original-rain/predictions.csv": ["original_episode", "original_rain", "weather_soaring"],
     "logs/history-episode/predictions.csv": ["weather_mean", "weather_episode"],

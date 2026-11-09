@@ -9,8 +9,8 @@ args <- commandArgs(trailingOnly = TRUE)
 input_dir <- args[1]
 output_dir <- args[2]
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-observations <- read_csv("data/mixed-weather-intervals/observations.csv", show_col_types = FALSE)
-components <- read_csv("data/mixed-weather-intervals/hour_components.csv", show_col_types = FALSE) |>
+observations <- read_csv("data/archive/mixed-weather-intervals/observations.csv", show_col_types = FALSE)
+components <- read_csv("data/archive/mixed-weather-intervals/hour_components.csv", show_col_types = FALSE) |>
   mutate(log_rain = log1p(rain_mm), log_previous_rain = log1p(rain_previous_24h_mm), radiation_100 = radiation_w_m2 / 100, exposure_hours = 1) |>
   left_join(observations |> select(observation_id, english_name), by = "observation_id")
 manifest <- read_csv(file.path(input_dir, "manifest.csv"), show_col_types = FALSE) |> filter(fold == 4 | fold >= 5)

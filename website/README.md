@@ -4,15 +4,15 @@ A continuous illustrated methods guide for the production Explore pipeline, usin
 
 ## Build and preview
 
-From the repository root, with `data/explore/` already built:
+From the repository root, with `data/output/explore/` already built:
 
 ```bash
 npm ci --prefix website
 uv run python scripts/build_site.py
-uv run python -m http.server 4174 --bind 127.0.0.1 --directory logs/site
+uv run python -m http.server 4174 --bind 127.0.0.1 --directory data/output/site
 ```
 
-Open `http://127.0.0.1:4174/`. The homepage, all QA pages, comparison, copied export and legacy redirects are in `logs/site/`. The normal publication script uploads this directory as `viewer.zip`; its existing full-export provenance checks still apply. Build the site again after committing before publishing. Deploy the Explore documentation before deploying the defile-website changes so its new links have a destination.
+Open `http://127.0.0.1:4174/`. The homepage, all QA pages, comparison, copied export and legacy redirects are in `data/output/site/`. The normal publication script uploads this directory as `viewer.zip`; its existing full-export provenance checks still apply. Build the site again after committing before publishing. Deploy the Explore documentation before deploying the defile-website changes so its new links have a destination.
 
 For interactive frontend editing:
 
@@ -20,7 +20,7 @@ For interactive frontend editing:
 npm run dev --prefix website
 ```
 
-This copies `data/explore/` to ignored `website/public/data/explore/` before serving. QA pages are available through the assembled preview above. To refresh just the diagnostic pages, run `uv run python scripts/explore_viewer.py`.
+This copies `data/output/explore/` to ignored `website/public/data/explore/` before serving. QA pages are available through the assembled preview above. To refresh just the diagnostic pages, run `uv run python scripts/explore_viewer.py`.
 
 To edit the guide's prose in the rendered page, open it on the dev server with `?edit` added to the
 URL (`http://127.0.0.1:5173/?edit`). Text blocks become editable (formulas, links and live readouts
@@ -67,12 +67,12 @@ pre-commit run --all-files
 Use `scripts/build_site.py` as the single entry point. It runs these steps in order:
 
 1. `export_method_data.py` extracts date-specific profiles and counting slots from the cache matching the export’s dataset timestamp into `website/public/data/methods/`. Without a matching cache, these optional illustrations are unavailable; the build prints that explicitly.
-2. `npm run build` copies the existing export, then Vite replaces `logs/site/` with the compiled methods guide and static assets. Running this step alone removes the old QA pages too.
-3. `explore_viewer.py` writes `qa/index.html`, historical taxon redirects and `qa/compare.html`. Both Python generators use `explore_viewer.wrap` for the shared header, page title, theme. Provenance is retained in downloadable manifests rather than a page banner.
+2. `npm run build` copies the existing export, then Vite replaces `data/output/site/` with the compiled methods guide and static assets. Running this step alone removes the old QA pages too.
+3. `explore_viewer.py` writes `qa/index.html` and historical taxon redirects; `species_compare.py` writes `compare/index.html`; `build_site.py` adds redirects from the comparison's earlier URLs. Both Python generators use `explore_viewer.wrap` for the shared header, page title, theme. Provenance is retained in downloadable manifests rather than a page banner.
 4. The assembler adds redirects for historical root-level species/comparison links, preserving query strings and fragments, then writes `site-manifest.json` with the export provenance and site revision.
 
 All pages use the brand “Défilé de l’Écluse”, the subtitle “Explore”, and page names “Methods guide”, “Quality assurance”, “Species comparison”, or the species name. Browser titles follow `<page> · Explore · Défilé de l’Écluse`. The report header returns to the public website at `/defile/#explore`.
 
-Edit explanations in Vue, QA decisions in Python and common navigation in the shared template. Never edit `logs/site/` by hand. A complete site rebuild is needed after changing a shared header or stylesheet; the quick QA command refreshes only the Python pages. Neither command fits models or updates `data/explore/`. The Python plots load Plotly from a version-pinned CDN, so their interactive figures require an internet connection.
+Edit explanations in Vue, QA decisions in Python and common navigation in the shared template. Never edit `data/output/site/` by hand. A complete site rebuild is needed after changing a shared header or stylesheet; the quick QA command refreshes only the Python pages. Neither command fits models or updates `data/output/explore/`. The Python plots load Plotly from a version-pinned CDN, so their interactive figures require an internet connection.
 
 The searchable SpeciesPicker.vue is copied verbatim from defile-website, with instance IDs for the sidebar and main selector. Keep component behaviour identical in both repositories and synchronise the English picker messages.

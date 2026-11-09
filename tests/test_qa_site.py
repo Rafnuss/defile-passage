@@ -1,6 +1,7 @@
 """Navigation and statistical contracts of the compact QA site."""
 
 import importlib.util
+import math
 import sys
 from pathlib import Path
 
@@ -39,3 +40,31 @@ def test_comparison_uses_annual_date_regression_and_joint_interval():
     }
     row = shift_row(sp)
     assert row["q50"] == {"d": 4, "lo": 2, "hi": 6, "from": 250, "to": 254}
+
+
+def test_comparison_trend_is_the_stated_change_and_skips_excluded_taxa(tmp_path):
+    import json
+
+    from species_compare import rows, trend_row
+
+    annual = [
+        {"year": 2000, "smooth": 100, "smooth_q2.5": 50, "smooth_q97.5": 200},
+        {"year": 2020, "smooth": 50, "smooth_q2.5": 25, "smooth_q97.5": 100},
+    ]
+    sp = {
+        "trend": {"annual": annual},
+        "key_numbers": {"trend": {"change": -0.5, "from": 2000, "to": 2020}},
+        "reliability": None,
+    }
+    row = trend_row(sp)
+    assert (row["first"], row["last"], row["cls"]) == (2000, 2020, "counts")
+    assert abs(row["log"] - math.log(0.5)) < 1e-4 and row["lo"] < row["log"] < row["hi"]
+
+    (tmp_path / "species").mkdir()
+    for taxon in ("a", "b"):
+        (tmp_path / "species" / f"{taxon}.json").write_text(json.dumps(sp | {"season": {}}))
+    taxa = [
+        {"taxon_id": t, "english_name": t, "french_name": t, "scientific_name": t, "tier": tier}
+        for t, tier in (("a", "full"), ("b", "excluded"))
+    ]
+    assert [r["id"] for r in rows(taxa, str(tmp_path))] == ["a"]

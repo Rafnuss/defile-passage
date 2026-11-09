@@ -9,13 +9,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from defile_passage import reliability as Q
+from defile_passage.export import EXPORT_DIR
 from defile_passage.phenology import METHOD, phenology_block
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    export = ROOT / "data/explore"
+    export = ROOT / "data" / EXPORT_DIR
     for path in (export / "species").glob("*.json"):
         data = json.loads(path.read_text())
         data["season"]["phenology"] = phenology_block(data["season"])

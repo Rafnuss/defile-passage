@@ -45,7 +45,7 @@ from defile_passage import reliability as Q
 from defile_passage.profile import PROFILE_DOY
 
 METHOD = "weather@1"
-WEATHER_DIR = "weather"  # under the data dir
+WEATHER_DIR = os.path.join("raw", "weather")  # under the data dir
 LOCATION = (46.117215, 5.914877)  # the count site
 FIRST_YEAR = 1992  # one year before the first counts: the first days' 24-hour changes
 URL = "https://archive-api.open-meteo.com/v1/archive"
@@ -109,7 +109,7 @@ COEF_DRAWS = 2000
 
 
 def fetch(data_dir: str, last_year: int) -> list[int]:
-    """Download the years `FIRST_YEAR`..`last_year` not yet in `<data_dir>/weather/`, and the
+    """Download the years `FIRST_YEAR`..`last_year` not yet in `<data_dir>/raw/weather/`, and the
     current calendar year every time, up to yesterday (ERA5 runs a few days behind); the years
     fetched.
 
@@ -286,8 +286,10 @@ def _bins(values: np.ndarray, edges, names, y, expected) -> list[dict]:
 
 def weather_block(fits: dict, frame: pd.DataFrame, raw: pd.DataFrame, sd: pd.Series, seed=0):
     """The `weather` block from the fits on all years and on odd and even years alone (`fits`:
+
     `{"all", "odd", "even"}` of `trend.fit`), the model frame and the raw terms of its days (own
-    units) with their scale."""
+    units) with their scale.
+    """
     from defile_passage import trend as T  # trend imports this module
 
     draws = {

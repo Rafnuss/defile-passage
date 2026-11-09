@@ -25,7 +25,7 @@ from defile_passage import hourly as H
 from defile_passage.release import TIMEZONE, TREKTELLEN_ERA, civil_twilight, parse_surveys
 
 ROOT = Path(__file__).resolve().parents[2]
-DATASET = ROOT / "data/count/dataset"
+DATASET = ROOT / "data/raw/dataset"
 HISTORICAL = ROOT / "logs/historical-counts/observations.csv"
 CACHE = ROOT.parent / "defile-migration-forecast/data/weather/era5_hourly/location=Defile"
 OUT = ROOT / "logs/hierarchical/audit"

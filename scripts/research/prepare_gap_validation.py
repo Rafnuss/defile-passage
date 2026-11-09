@@ -15,7 +15,7 @@ GAPS = {0: (0, 1), 1: (5, 3), 2: (12, 7)}
 PREFIX = "gap-validation"
 
 for panel in ["priority", "passerines"]:
-    source = Path(f"data/hourly-weather-{panel}")
+    source = Path(f"data/archive/hourly-weather-{panel}")
     out = Path(f"logs/{PREFIX}-input-{panel}")
     out.mkdir(parents=True, exist_ok=True)
     rows = pd.read_csv(source / "validation_masks.csv")

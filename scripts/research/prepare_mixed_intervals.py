@@ -21,7 +21,7 @@ from defile_passage.release import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "data/mixed-weather-intervals"
+OUT = ROOT / "data/archive/mixed-weather-intervals"
 OUT.mkdir(parents=True, exist_ok=True)
 release = ROOT.parent / "defile-dataset/output/dataset"
 surveys = parse_surveys(pd.read_csv(release / "survey.csv", low_memory=False))
@@ -82,7 +82,7 @@ components = pd.DataFrame(
 np_hours = components.groupby("observation_id").fraction.sum().reindex(observations.observation_id)
 assert abs(np_hours.to_numpy() - observations.exposure_hours.to_numpy()).max() < 1e-8
 observations.to_csv(OUT / "observations.csv", index=False)
-weather = pd.read_csv(ROOT / "data/hourly-weather-priority/weather_hourly.csv")
+weather = pd.read_csv(ROOT / "data/archive/hourly-weather-priority/weather_hourly.csv")
 weather["slot_start"] = pd.to_datetime(weather.slot_start, utc=True)
 components = components.merge(weather, on="slot_start", how="left", validate="many_to_one")
 components["date"] = (

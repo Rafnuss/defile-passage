@@ -10,10 +10,10 @@ from defile_passage.export import in_window
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "logs/history-diagnosis"
 manifest = pd.read_csv(OUT / "input/manifest.csv").query("arm == 'recent'")
-recent = pd.read_csv(ROOT / "data/mixed-weather-intervals/observations.csv")
+recent = pd.read_csv(ROOT / "data/archive/mixed-weather-intervals/observations.csv")
 recent["date"] = pd.to_datetime(recent.date, format="ISO8601").dt.strftime("%Y-%m-%d")
 recent = recent[in_window(pd.to_datetime(recent.date))].copy()
-parts = pd.read_csv(ROOT / "data/mixed-weather-intervals/hour_components.csv")
+parts = pd.read_csv(ROOT / "data/archive/mixed-weather-intervals/hour_components.csv")
 parts["date"] = pd.to_datetime(parts.date, format="ISO8601").dt.strftime("%Y-%m-%d")
 current = OUT / "current-recent/input"
 current.mkdir(parents=True, exist_ok=True)

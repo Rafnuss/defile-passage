@@ -49,7 +49,7 @@ Each block names its `method` (`name@version`): bump the version when what the b
 changes. Hours of the day are solar time (`export.solar_shift`); defile-website converts them to the
 clock with the same formula (`solarShift`). The files are strict JSON (`export.dumps`: no NaN).
 
-The passage tables (`data/passage/`, `passage.py`) are a second contract, with the Zenodo record
+The passage tables (`data/output/zenodo/`, `passage.py`) are a second contract, with the Zenodo record
 and the data paper. They are read from the species files, never from a model of their own: a column
 renamed or changed in meaning bumps `passage.METHOD`.
 
@@ -81,16 +81,21 @@ done for all taxa; otherwise add an exception to `src/defile_passage/overrides.y
   what is open.
 - Before treating a change as done: `uv run pytest` and `pre-commit run --all-files` (black and
   isort at line length 99, docformatter, mdformat, codespell).
-- `data/` and `logs/` are generated: never commit them. The counts are a defile-dataset release:
+- `data/` and `logs/` are generated: never commit them. `data/` follows defile-dataset's names
+  (`raw/` inputs, `interim/` cache, `output/explore/`, `output/zenodo/` and `output/site/`,
+  `archive/`; README),
+  each set by one constant (`release.DATASET_DIR`, `weather.WEATHER_DIR`,
+  `export.EBIRD_TAXONOMY_FILE`, `pipeline.CACHE_DIR`, `export.EXPORT_DIR`, `passage.PASSAGE_DIR`).
+  The counts are a defile-dataset release:
   `scripts/build_explore.py --dataset vYYYY.N` downloads its `dataset.zip` into
-  `data/count/dataset/` (`release.fetch_dataset`); a local dataset folder (committed code) can
+  `data/raw/dataset/` (`release.fetch_dataset`); a local dataset folder (committed code) can
   go to the rolling `dev` preview only.
 - The build runs locally, never in CI (30-40 min on a runner): `scripts/publish_explore.py`
   uploads the export, the passage tables and the viewer to a release, from which Pages and
   defile-website deploy and the passage tables go to Zenodo. It refuses a build from uncommitted code
   and a versioned release from a dataset that is not a release; never loosen those checks.
 - Builds are verbose (pygam warnings, per-taxon progress): redirect to `logs/` and grep.
-- `data/cache/` holds the shared stage and each taxon's trend fit, keyed by the release and by
+- `data/interim/` holds the shared stage and each taxon's trend fit, keyed by the release and by
   the source code of the modules that made them, so a code change invalidates them by itself.
   `--no-cache` ignores them; deleting the folder is always safe.
 

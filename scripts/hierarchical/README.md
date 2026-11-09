@@ -119,7 +119,7 @@ gaps that matter, and real gaps have no truth. Hence:
   `extra`). Until 2026-10-13 the research's frozen inputs were used (`logs/history-episode/design/`,
   weather stops left out); the reference arms still replay those.
 - Weather: hourly ERA5 at the site from the Open-Meteo archive, downloaded by `fetch_weather.py` into
-  `data/weather/` (since 2026-10-13; before, the forecast repo's cache, same values). The
+  `data/raw/weather/` (since 2026-10-13; before, the forecast repo's cache, same values). The
   weather plan (`WEATHER_PLAN.md`): arm `W` of `run_steps.py`, its era split `We`, and the
   page's effects from fits on all counted days (`weather_effects.py`); the broad panel of every
   species with a trend (`weather_panel.py`, `weather_patterns.py`, groups in `flight_groups.tsv`) and the page mock-up (`weather_mockup.py`). No
