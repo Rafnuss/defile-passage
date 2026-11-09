@@ -54,6 +54,21 @@
       <div class="text-center text-muted hours-hint">
         <i class="bi bi-arrows me-1"></i>drag the two handles to choose the time counted
       </div>
+      <!-- Date slider: the profile changes over the season (daylight, the species' rhythm) -->
+      <div v-if="profiles" class="d-flex align-items-center gap-2 mt-2 date-pick">
+        <label for="cov-date" class="text-muted text-nowrap small">Date</label>
+        <input
+          id="cov-date"
+          v-model.number="doy"
+          type="range"
+          class="form-range"
+          :min="doyRange[0]"
+          :max="doyRange[1]"
+          step="1"
+          aria-label="Date of the profile"
+        />
+        <span class="small text-nowrap date-label">{{ rowDate }}</span>
+      </div>
       <figcaption class="figure-caption">
         <strong>Figure 2.1.</strong> {{ name }}, {{ rowDate }}: the shaded share of the daily
         profile is the coverage <Tex e="c_d" /> of the counting interval, here {{ clock(hFrom) }}–{{
@@ -120,17 +135,69 @@ const SLIDER_STEP = 0.25; // hours: the count's start and end move by a quarter 
 
 const lastYear = computed(() => props.data.trend?.last_year ?? new Date().getFullYear() - 1);
 
-// The profile on the main passage's median date (profile.day): a continuous curve, the share of
-// the day per hour at each slot of 1 / per_hour hours from solar hour `start`
-const row = computed(() => props.data.profile?.day ?? null);
-const shift = computed(() => (row.value ? solarShift(doyDate(row.value.doy, lastYear.value)) : 1));
-// Clock hours from civil dawn to dusk on that day, rounded out to whole hours
-const covAxis = computed(() => {
-  const r = row.value;
-  if (!r) return [4, 22];
-  const t0 = r.start + shift.value;
-  return [Math.floor(t0), Math.ceil(t0 + r.p.length / r.per_hour)];
+// The date-specific profile (data/methods/<taxon>.json, scripts/export_method_data.py): one row
+// per day from `doy_start`, each the share of the day per hour at every slot from solar midnight.
+// Without it the figure shows only profile.day, the main passage's median date.
+const profiles = ref(null);
+watch(
+  () => props.data.taxon_id,
+  async (id) => {
+    profiles.value = null;
+    const res = await fetch(`./data/methods/${id}.json`).catch(() => null);
+    if (res?.ok) profiles.value = await res.json();
+  },
+  { immediate: true },
+);
+const doyRange = computed(() => {
+  const P = profiles.value;
+  return P ? [P.doy_start, P.doy_start + P.p.length - 1] : [0, 0];
 });
+const doy = ref(props.data.profile?.day?.doy ?? null);
+watch(
+  () => props.data.profile?.day?.doy,
+  (d) => (doy.value = d ?? doy.value),
+);
+watch(doyRange, ([a, b]) => {
+  if (profiles.value) doy.value = Math.min(Math.max(doy.value ?? a, a), b);
+});
+
+// One day's profile as a continuous curve: the share of the day per hour at each slot of
+// 1 / per_hour hours from solar hour `start` (the shape of profile.day)
+function dayRow(d) {
+  const P = profiles.value;
+  const p = P.p[d - P.doy_start];
+  const on = p.flatMap((v, i) => (v > 0 ? [i] : []));
+  return {
+    doy: d,
+    start: on[0] / P.per_hour,
+    per_hour: P.per_hour,
+    p: p.slice(on[0], on.at(-1) + 1),
+  };
+}
+const row = computed(() =>
+  profiles.value && doy.value != null ? dayRow(doy.value) : (props.data.profile?.day ?? null),
+);
+const shiftOf = (d) => solarShift(doyDate(d, lastYear.value));
+const shift = computed(() => (row.value ? shiftOf(row.value.doy) : 1));
+// Clock hours from civil dawn to dusk, rounded out to whole hours: over every date of the slider,
+// so the axes stay put while the curve moves
+const span = computed(() => {
+  const rows = profiles.value
+    ? Array.from({ length: doyRange.value[1] - doyRange.value[0] + 1 }, (_, i) =>
+        dayRow(doyRange.value[0] + i),
+      )
+    : row.value
+      ? [row.value]
+      : [];
+  if (!rows.length) return { axis: [4, 22], ymax: null };
+  const t0 = Math.min(...rows.map((r) => r.start + shiftOf(r.doy)));
+  const t1 = Math.max(...rows.map((r) => r.start + shiftOf(r.doy) + r.p.length / r.per_hour));
+  return {
+    axis: [Math.floor(t0), Math.ceil(t1)],
+    ymax: profiles.value ? 1.05 * Math.max(...rows.map((r) => Math.max(...r.p))) : null,
+  };
+});
+const covAxis = computed(() => span.value.axis);
 const rowDate = computed(() => (row.value ? doyLabel(row.value.doy, locale.value) : ""));
 const sourceLabel = computed(
   () =>
@@ -232,6 +299,7 @@ function plotCoverage() {
         tickformat: ".0%",
         fixedrange: true,
         rangemode: "tozero",
+        ...(span.value.ymax ? { range: [0, span.value.ymax] } : {}),
       },
     },
     CONFIG,
@@ -243,3 +311,14 @@ watch(hFrom, (h) => h >= hTo.value && (hFrom.value = hTo.value - SLIDER_STEP));
 watch(hTo, (h) => h <= hFrom.value && (hTo.value = hFrom.value + SLIDER_STEP));
 watch(() => [covVisible.value, row.value, hFrom.value, hTo.value], plotCoverage);
 </script>
+
+<style scoped>
+.date-pick {
+  margin-left: 48px;
+  margin-right: 12px;
+}
+.date-label {
+  min-width: 4.5em;
+  text-align: right;
+}
+</style>

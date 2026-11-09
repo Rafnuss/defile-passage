@@ -276,14 +276,18 @@ def test_json_values():
 def test_real_release_reconciles():
     surveys, counts, *_ = E.read_release(DATA_DIR)
     d = E.daily_counts(counts)
-    raw = pd.read_csv(os.path.join(DATA_DIR, C.DATASET_DIR, "count.csv"), low_memory=False)
+    folder = os.path.join(DATA_DIR, C.DATASET_DIR)
+    raw = C.from_release_words(  # v16 writes `direction` in words: Explore's codes
+        pd.read_csv(os.path.join(folder, "count.csv"), low_memory=False),
+        pd.read_csv(os.path.join(folder, "survey.csv")),
+    )
     expected = raw.groupby("count_category")["count"].sum()
     assert d["count"].sum() == expected["normal"]
     assert d["reverse"].sum() == expected.get("reverse", 0)
     assert d["local"].sum() == expected.get("local", 0)
     normal = counts["count_category"] == C.MAIN_CATEGORY
     assert E.hourly_counts(counts)["count"].sum() == counts.loc[normal, "timed_count"].sum()
-    sibling_metadata = Path(DATASET_DAILY).parents[2] / "output" / "metadata.json"
+    sibling_metadata = Path(DATASET_DAILY).parents[2] / "output" / Path(*C.DATASET_METADATA_PATH)
     copied_metadata = Path(DATA_DIR) / C.DATASET_DIR / "metadata.json"
     same_release = (
         sibling_metadata.exists()
@@ -299,7 +303,9 @@ def test_real_release_reconciles():
             ("count_reverse", "reverse"),
             ("count_local", "local"),
         ]:
-            assert np.allclose(m[a].fillna(-1), m[b].fillna(-1)), a
+            # no reverse or local birds: empty in one, 0 in the other
+            fill = -1 if a == "count_x" else 0
+            assert np.allclose(m[a].fillna(fill), m[b].fillna(fill)), a
 
 
 def _effort(rows: list[tuple]) -> pd.DataFrame:

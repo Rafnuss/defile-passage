@@ -2,11 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "defileviz",
+      "name": "defile-website",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "--prefix",
-        "../defileViz",
+        "../defile-website",
         "run",
         "dev",
         "--",
@@ -23,7 +23,7 @@
         "http.server",
         "8765",
         "--directory",
-        "logs/viewer"
+        "output/site"
       ],
       "port": 8765
     },
@@ -40,6 +40,20 @@
         "5174"
       ],
       "port": 5174
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "python",
+        "-m",
+        "http.server",
+        "8766",
+        "--directory",
+        "logs/preview"
+      ],
+      "port": 8766
     }
   ]
 }
