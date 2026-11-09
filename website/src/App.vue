@@ -7,7 +7,14 @@
   <main id="main" class="site-main">
     <div class="hero">
       <p class="eyebrow">From birds counted to migration understood</p>
-      <h1>Methods guide</h1>
+      <h1 class="screen-only">Methods guide</h1>
+      <h1 class="print-only">Reconstructing daily passage at the Défilé de l’Écluse: methods</h1>
+      <p class="print-only print-note">
+        A printed version of the interactive methods guide,
+        https://raphaelnussbaumer.com/defile-passage/, with {{ name || "Red Kite" }} as the example
+        species throughout.
+        <template v-if="provenance"><br />{{ provenance }}</template>
+      </p>
       <p class="lead">
         <strong>Context.</strong> Since 1966, migrating birds have been counted every autumn at the
         Défilé de l’Écluse, with a focus on large soaring birds. These counts are valuable data on
@@ -96,9 +103,12 @@
                   >
                   for the detailed tree.
                 </p>
-                <p>
+                <p class="screen-only">
                   This report illustrates the model’s results for one species, which can be selected
                   here or in the left menu:
+                </p>
+                <p class="print-only">
+                  The figures illustrate the method with one species, {{ name }}.
                 </p>
                 <div class="example-control main-species">
                   <label for="species">Example species</label>
@@ -210,6 +220,15 @@ const lastCompleteYear = computed(() =>
     : null,
 );
 const active = ref("counts");
+// What the printed guide was built from, so the PDF is traceable to the passage tables
+const provenance = computed(() => {
+  const m = manifest.value;
+  if (!m) return "";
+  const dataset = m.dataset_release
+    ? `dataset release ${m.dataset_release}`
+    : `dataset build ${m.dataset_git_sha?.slice(0, 7)} (${m.dataset_built_at?.slice(0, 10)}, not a tagged release)`;
+  return `Built from defile-passage ${m.git_sha} (export of ${m.built_at?.slice(0, 10)}) and ${dataset}.`;
+});
 const taxonCounts = computed(() => {
   const species = taxa.value.filter((tx) => tx.taxon_rank === "species").length;
   return { species, groups: taxa.value.length - species };

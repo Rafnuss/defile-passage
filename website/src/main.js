@@ -8,6 +8,7 @@ import "./theme.css";
 import "./method.css";
 import "./site.css";
 import "./site-header.css";
+import "./print.css";
 
 createApp(App)
   .use(createI18n({ legacy: false, locale: "en", messages }))

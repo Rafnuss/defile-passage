@@ -194,7 +194,9 @@
       <h5><span class="sec-n">3</span>Inspect reconstructed days</h5>
       <p v-if="data.trend">
         The figure shows every day of one season: the birds counted, and the reconstructed full-day
-        total with its 80% interval. Choose a day to see how its total is made.
+        total with its 80% interval.<span class="screen-only">
+          Choose a day to see how its total is made.</span
+        >
       </p>
       <figure v-if="data.trend" class="figure w-100">
         <div class="reconstruction-controls">
@@ -283,8 +285,11 @@
         </div>
         <figcaption class="figure-caption">
           <strong>Figure 3.2.</strong> {{ name }}, {{ year }}: counts (red bars), reconstructed
-          means (blue dots) and 80% intervals (black vertical lines). Click a day or use the
-          selector to compare coverage, prediction and reconstruction.
+          means (blue dots) and 80% intervals (black vertical lines), with one day broken down
+          below.<span class="screen-only">
+            Click a day or use the selector to compare coverage, prediction and
+            reconstruction.</span
+          >
         </figcaption>
       </figure>
       <p v-else class="callout callout-info">

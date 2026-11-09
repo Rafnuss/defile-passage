@@ -36,8 +36,8 @@
                 ? "Less"
                 : "As expected"
           }}</strong
-          ><template v-if="observed !== coverage * expected"> than expected</template> by the daily
-          model.</span
+          ><template v-if="observed !== coverage * expected"> than expected</template> from the
+          expected full-day passage.</span
         >
       </label>
       <label
@@ -94,7 +94,10 @@
       />
     </div>
     <div class="text-center text-muted hours-hint">
-      <i class="bi bi-arrows me-1"></i>drag the two handles to choose the time counted · Coverage
+      <span class="screen-only"
+        ><i class="bi bi-arrows me-1"></i>drag the two handles to choose the time counted ·</span
+      >
+      Coverage
       <Tex :e="`c_d=${coverage.toFixed(2)}`" />
     </div>
     <div class="conditioning-visual" aria-live="polite">
@@ -138,11 +141,12 @@
     </div>
     <figcaption class="figure-caption">
       <strong>Figure 3.1.</strong> {{ name }}, {{ doyLabel(profile.doy, "en") }}. The observed count
-      <Tex e="N_d" /> is your input and stays fixed. Each dot is one bird in a possible full day
-      conditional on that count: red birds are allocated within the counting interval, blue birds
-      are drawn for the missing hours. Counted birds’ times are illustrative. The dotted curve is
-      the expected full-day passage; the solid curve is the updated expectation. The button redraws
-      a possible day without changing your inputs or the mean estimate.
+      <Tex e="N_d" /> is fixed. Each dot is one bird in a possible full day conditional on that
+      count: red birds are allocated within the counting interval, blue birds are drawn for the
+      missing hours. Counted birds’ times are illustrative. The dotted curve is the expected
+      full-day passage; the solid curve is the updated expectation.<span class="screen-only">
+        The button redraws a possible day without changing your inputs or the mean estimate.</span
+      >
     </figcaption>
   </figure>
 </template>

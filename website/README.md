@@ -31,6 +31,13 @@ ignored `logs/guide-notes.json` (`id`, `section`: an element id, `find`: words o
 follows, `topic`, `note`, `reply`) show under their passage in edit mode, each with a reply box saved
 to the same file.
 
+For the paper's appendix, the guide prints to A4 through its print stylesheet (`src/print.css`:
+no controls, a chapter per page, Arial so every font embeds as TrueType). After building the site:
+
+```bash
+uv run --with playwright python scripts/guide_pdf.py   # logs/methods-guide.pdf, Red Kite
+```
+
 ## Sources
 
 - `src/App.vue`: chapter introductions, contents, species selection and provenance.

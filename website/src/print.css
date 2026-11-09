@@ -1,0 +1,146 @@
+/* The paper version of the guide: what printing (or scripts/guide_pdf.py) gives. The page as on
+   screen, without its controls, on white A4 pages, a chapter per page. `.screen-only` and
+   `.print-only` mark the few sentences that differ. */
+
+.print-only {
+  display: none;
+}
+
+@page {
+  size: A4;
+  margin: 18mm 18mm 20mm;
+  @bottom-center {
+    content: counter(page);
+    font:
+      9pt Arial,
+      sans-serif;
+    color: #625c53;
+  }
+}
+
+@media print {
+  .screen-only,
+  .eyebrow,
+  .edit-bar,
+  .review-note {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+  }
+  span.print-only {
+    display: inline;
+  }
+
+  /* A font that embeds as TrueType: the system font (SF) embeds as Type 3, which journals'
+     PDF checks refuse */
+  body,
+  .js-plotly-plot text {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+  }
+
+  /* The text and the figures use the full width between the page margins */
+  .site-main,
+  .method {
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Grids set by window-width media queries: the same columns while the figures are drawn and
+     when Chrome prints (it judges those queries on the page size) */
+  .weather-effects-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  /* White paper, no card backgrounds */
+  :root {
+    --dv-paper: #fff;
+  }
+  html,
+  body,
+  .site-main,
+  .reading-layout,
+  article.method {
+    background: #fff !important;
+  }
+  .figure,
+  .widget,
+  .callout,
+  .eq,
+  .day-breakdown {
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  /* Controls: nothing to drag, click or pick on paper */
+  input[type="range"],
+  .form-range,
+  .range-ends,
+  .slider-endpoints,
+  .hours,
+  .hours-hint > i,
+  button,
+  .btn,
+  .btn-group,
+  select,
+  .year-control,
+  .navigation-control,
+  .reconstruction-controls,
+  .example-control,
+  p:has(> a[href*="qa/"]) {
+    display: none !important;
+  }
+
+  /* The abstract reads as body text; the method boxes print as plain boxes */
+  .hero .lead,
+  .chapter-head p {
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    max-width: none;
+  }
+  .method-detail {
+    background: #fff !important;
+    border: 1px solid #e0dacd;
+  }
+
+  /* Title */
+  .hero h1.print-only {
+    font-size: 20pt;
+    margin-bottom: 0.3rem;
+  }
+  .print-note {
+    font-size: 9pt;
+    color: #625c53;
+    margin-bottom: 1rem;
+  }
+
+  /* Pages: a chapter starts a page; headings stay with what follows; figures, equations and
+     tables are not split */
+  .chapter + .chapter {
+    break-before: page;
+  }
+  h1,
+  h2,
+  h5,
+  h6,
+  .chapter-head {
+    break-after: avoid;
+  }
+  p,
+  li {
+    orphans: 3;
+    widows: 3;
+  }
+  .method figure,
+  .eq,
+  table,
+  .callout {
+    break-inside: avoid;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
