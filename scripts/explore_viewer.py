@@ -23,7 +23,7 @@ CSS = "\n".join(
     for path in ("website/src/theme.css", "website/src/site-header.css", "website/public/qa.css")
 )
 HEADER = open(os.path.join(ROOT, "website/src/site-header.html"), encoding="utf-8").read()
-CLAIMS = ("totals", "trend", "season")
+CLAIMS = ("totals", "trend", "season", "shift")
 
 
 def badge(level, text=None):
@@ -137,12 +137,18 @@ INDEX_COLUMNS = (  # header, definition: the index's tooltips and its legend
     (
         "trend",
         "Reliability class of the long-term trend (the smooth total): needs the totals, "
-        "and a 95% band that is not too wide.",
+        "and a 95% band that is not too wide; hidden for passerines (effort_varies) and groups "
+        "of taxa (group_taxon).",
     ),
     (
         "season",
         "Reliability class of the passage dates: width of their 80% bands, birds behind "
         "them, passage beyond regular counting.",
+    ),
+    (
+        "shift",
+        "Reliability class of the shift in passage dates over the years: the dates' reasons, "
+        "and hidden for passerines (effort_varies) and groups of taxa (group_taxon) as the trend.",
     ),
     (
         "gap error",
@@ -194,7 +200,7 @@ function filter() {
       || (group.value && r.dataset.group !== group.value)
       || (model.value && r.dataset.model !== model.value)
       || (status.value && reliability !== status.value)
-      || (flagged.value && (+(r.cells[15].dataset.v) > 0) !== (flagged.value === 'yes'));
+      || (flagged.value && (+(r.cells[16].dataset.v) > 0) !== (flagged.value === 'yes'));
   }
   count();
 }
@@ -270,7 +276,7 @@ whose text contains every word typed (e.g. <code>raptors caveat</code>).</p>
 <label>Search taxa or flags<input id='qf' type='search' placeholder='e.g. kite or borrowed_profile'></label>
 <label>Group<select id='group'><option value=''>All groups</option></select></label>
 <label>Model<select id='model'><option value=''>All taxa</option><option value='true'>Fitted model</option><option value='false'>No fitted model</option></select></label>
-<label>Claim<select id='claim'><option value='11'>Totals</option><option value='12'>Trend</option><option value='13'>Season</option></select></label>
+<label>Claim<select id='claim'><option value='11'>Totals</option><option value='12'>Trend</option><option value='13'>Season</option><option value='14'>Shift</option></select></label>
 <label>Reliability<select id='status'><option value=''>All classes</option><option>show</option><option>caveat</option><option>hide</option></select></label>
 <label>Diagnostic flags<select id='flagged'><option value=''>All taxa</option><option value='yes'>With flags</option><option value='no'>Without flags</option></select></label>
 <button id='reset' type='button'>Reset filters</button>

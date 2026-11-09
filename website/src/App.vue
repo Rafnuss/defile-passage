@@ -201,7 +201,7 @@ const chapters = [
     title: "Validation and QA",
     component: MethodReliability,
     intro:
-      "Two questions: can the model recover counts it did not see, and when is a result shown, shown with a caveat or hidden?",
+      "Two questions: can the model recover counts it did not see, and is a result reliable, to be read with care, or not shown?",
     technical:
       "benchmark records gap-transplant trials. reliability classes totals, abundance trend and timing separately, and reliability.elements supplies the display rules.",
     modules: ["benchmark", "reliability"],

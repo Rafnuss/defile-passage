@@ -149,7 +149,7 @@ def test_passage_tables(tmp_path):
     assert (trend["change"], trend["change_lower_95"], trend["reliability"]) == (
         -22.1,
         -50,
-        "caveat",
+        "read_with_care",
     )
     assert pd.isna(trend["change_recent"])  # no span from 2011
     phen = pd.read_csv(tmp_path / "passage" / "phenology.csv").iloc[0]
@@ -160,7 +160,7 @@ def test_passage_tables(tmp_path):
     )
     assert pd.isna(phen["shift_50"]) and pd.isna(
         phen["shifts_reliability"]
-    )  # unreliable: left out
+    )  # not shown: not published
     for name, columns in P.TABLES.items():
         table = pd.read_csv(tmp_path / "passage" / f"{name}.csv")
         assert table.columns.tolist() == [c for c, _, _ in columns]

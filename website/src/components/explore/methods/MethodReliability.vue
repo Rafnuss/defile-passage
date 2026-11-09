@@ -39,23 +39,24 @@
   <section id="reliability-m-classes">
     <h5><span class="sec-n">2</span>When is a result shown?</h5>
     <p>
-      Each result resting on the model is shown, shown with a caveat, or hidden. The season totals
-      are judged mainly by the test above: a caveat when the typical error exceeds 16%, hidden above
-      49%. A caveat is also added when the 80% intervals hold the truth in fewer than 60% of trials,
-      when less than 60% of a typical season’s total was counted, when the intervals are wide, or
-      when the passage continues beyond regular counting. The long-term trend needs the totals and a
-      95% band that is not too wide; the passage dates need narrow bands and at least 50 birds in a
-      typical season. Change over the years (the long-term trend and the shift in passage dates) is
-      hidden for passerines, counted systematically only from 2008 and with growing attention since,
-      so that their change follows the counting effort more than the birds; and for groups of
-      species (“sp.”), whose numbers follow how many birds were identified. Their seasons and
-      passage dates are still shown.
+      Each result resting on the model is reliable, read with care, or not shown, the three words of
+      the Explore page; the passage tables on Zenodo publish only the first two. The season totals
+      are judged mainly by the test above: read with care when the typical error exceeds 16%, not
+      shown above 49%. Read with care also applies when the 80% intervals hold the truth in fewer
+      than 60% of trials, when less than 60% of a typical season’s total was counted, when the
+      intervals are wide, or when the passage continues beyond regular counting. The long-term trend
+      needs the totals and a 95% band that is not too wide; the passage dates need narrow bands and
+      at least 50 birds in a typical season. Change over the years (the long-term trend and the
+      shift in passage dates) is hidden for passerines, counted systematically only from 2008 and
+      with growing attention since, so that their change follows the counting effort more than the
+      birds; and for groups of species (“sp.”), whose numbers follow how many birds were identified.
+      Their seasons and passage dates are still shown.
     </p>
     <table v-if="data.reliability" class="table table-sm small">
       <thead>
         <tr>
           <th>{{ name }}</th>
-          <th>Shown</th>
+          <th>Shown as</th>
           <th>Why</th>
         </tr>
       </thead>
@@ -66,7 +67,7 @@
           <td>
             {{
               data.reliability[claim.key].reasons
-                .map((r) => r.code.replaceAll("_", " "))
+                .map((r) => REASONS[r.code] ?? r.code.replaceAll("_", " "))
                 .join(", ") || "all checks passed"
             }}
           </td>
@@ -90,8 +91,27 @@ const CLAIMS = [
   { key: "totals", label: "Season totals" },
   { key: "trend", label: "Long-term trend" },
   { key: "season", label: "Passage dates" },
+  { key: "shift", label: "Shift in passage dates" },
 ];
-const CLASS_WORDS = { show: "yes", caveat: "with a caveat", hide: "no" };
+// The words of the Explore page (defile-website explore.reliability), for the same classes and reasons
+const CLASS_WORDS = { show: "Reliable", caveat: "Read with care", hide: "Not shown" };
+const REASONS = {
+  untested: "the model could not be tested on well-counted years",
+  fill_error: "filling the gaps misses known totals by a wide margin",
+  intervals_too_narrow: "its intervals miss known totals too often",
+  mostly_filled: "most of a typical season is estimated, not counted",
+  wide_intervals: "the yearly estimates are very uncertain",
+  borrowed_profile: "its time of day is borrowed from similar species",
+  totals: "the yearly totals are uncertain",
+  smooth_band: "the trend's interval is very wide",
+  passage_band: "the passage date is uncertain",
+  beyond_counting: "much of its passage falls outside the counting season",
+  tails_band: "the start and end of its passage are uncertain",
+  few_birds: "too few birds a season to follow its timing",
+  effort_varies:
+    "counting effort for this group grew over the years, so its change is not comparable",
+  group_taxon: "a group of species: its numbers follow how many birds were identified",
+};
 const props = defineProps({
   name: { type: String, required: true },
   data: { type: Object, required: true },

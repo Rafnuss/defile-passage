@@ -51,6 +51,18 @@ are unchanged. `--data-dir` (default: the repo root) is the folder holding `raw/
 as the season totals: in the export, the passage tables, the methods site and defile-website's
 year panel (changed together).
 
+**One vocabulary for reliability, for readers (`passage-tables@5`, 2026-11-09, requested by the
+user).** Everything a reader sees uses the Explore page's three words: reliable, read with care,
+not shown. The passage tables' values are `reliable` and `read_with_care` (`not_shown` values are
+not published); the methods guide's class table and text use the same words and the page's reason
+sentences, and list the `shift` claim (so does the QA table). `show`, `caveat` and `hide` stay the
+code's names. The species picker's "counts and reliable model" becomes "counts and model": it
+follows the season totals only, and a passerine's trend is not shown. `passage_recent` leaves
+`trend.csv`: it took the trend's class, so a passerine's season size was missing although the
+page shows it; a season's size is the sum of `daily_passage`. The paper folder
+(`0-Paper/defile-paper`) reads `output/`, its captions follow the tables and the 95% daily band,
+and `import/passage-reliability.md` holds the manuscript's paragraph on what is published.
+
 **Change over the years hidden for passerines and groups, on the website and in the tables
 (`reliability@5`, 2026-11-09, requested by the user).** Two `hide` reasons on the `trend` claim
 and on a new `shift` claim (`season.phenology`, which also takes the `season` claim's reasons):

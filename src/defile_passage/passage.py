@@ -11,8 +11,8 @@ Tables (`TABLES`, with each column's description):
 
 - `daily_passage.csv`: every day of the taxon's window, counted or not: the count, its coverage and
   the full-day passage with its 95% interval.
-- `trend.csv`: per taxon, the typical season's passage and the change in passage over the whole
-  period and the last `trend.CHANGE_RECENT` years.
+- `trend.csv`: per taxon, the change in passage over the whole period and the last
+  `trend.CHANGE_RECENT` years.
 - `phenology.csv`: per taxon, the 10, 50 and 90% passage dates and their shift per decade.
 """
 
@@ -25,7 +25,7 @@ from .export import dumps
 from .release import DATASET_DOI
 from .trend import CHANGE_RECENT
 
-METHOD = "passage-tables@4"
+METHOD = "passage-tables@5"
 PASSAGE_DIR = "zenodo"  # beside the export (output/), like defile-dataset's Zenodo upload
 NAME = "defile-passage-estimates"
 TITLE = (
@@ -38,10 +38,11 @@ DATASET_GITHUB_URL = "https://github.com/Rafnuss/defile-dataset/releases/tag/{ta
 QUANTILES = (10, 50, 90)  # the passage dates: 10, 50 and 90% of the season passed
 DECADE = 10  # the phenology slopes (days per year) given per decade
 
-# The website's classes (`reliability`) in words for a reader of the tables
-RELIABILITY = {"show": "reliable", "caveat": "caveat", "hide": "unreliable"}
-RELIABLE = "reliable or caveat (usable with care); unreliable values are not published"
-UNRELIABLE = "unreliable"
+# The website's classes (`reliability`) in the words a reader sees there: reliable, read with care,
+# not shown (here: not published)
+RELIABILITY = {"show": "reliable", "caveat": "read_with_care", "hide": "not_shown"}
+RELIABLE = "reliable or read_with_care (borderline in a test); values not shown are not published"
+UNRELIABLE = RELIABILITY["hide"]
 GAM = "gam"  # `season.source` when the season is the trend model's gap-filled days
 
 # What is published: what the website shows. A value classed hide by `reliability` (an unreliable
@@ -56,8 +57,8 @@ DESCRIPTIONS = {
     "daily_passage": "One row per taxon and day of its seasonal window, counted or not: the birds"
     " counted, the share of the day's passage the counting covered, and the estimated full-day"
     " passage with its 95% interval.",
-    "trend": "One row per taxon: the passage of a typical recent season and the change in"
-    f" passage over the whole period and the last {R} years, from the smooth long-term trend.",
+    "trend": "One row per taxon: the change in passage over the whole period and the last"
+    f" {R} years, from the smooth long-term trend.",
     "phenology": "One row per taxon: the dates by which 10, 50 and 90% of the season's birds have"
     " passed, and how each has shifted per decade.",
 }
@@ -83,14 +84,13 @@ TABLES = {
         TAXON,
         ("first_year", "integer", "first season modelled"),
         ("last_year", "integer", "last season modelled"),
-        ("passage_recent", "number", f"birds in a typical season: median over the last {R}"),
         ("change", "number", "change in passage from first_year to last_year (%)"),
         ("change_lower_95", "number", "lower end of the 95% interval of change"),
         ("change_upper_95", "number", "upper end of the 95% interval of change"),
         ("change_recent", "number", f"change in passage over the last {R} years (%)"),
         ("change_recent_lower_95", "number", "lower end of the 95% interval of change_recent"),
         ("change_recent_upper_95", "number", "upper end of the 95% interval of change_recent"),
-        ("reliability", "string", f"of passage_recent and the changes: {RELIABLE}"),
+        ("reliability", "string", f"of the changes: {RELIABLE}"),
     ],
     "phenology": [
         TAXON,
@@ -158,7 +158,6 @@ def _trend(d: dict, cls: dict) -> dict:
         "taxon_id": d["taxon_id"],
         "first_year": t["first_year"],
         "last_year": last,
-        "passage_recent": d["key_numbers"].get("typical_season", {}).get("median"),
         "change": _percent(whole.get("change")),
         "change_lower_95": _percent(whole.get("lo")),
         "change_upper_95": _percent(whole.get("hi")),
@@ -277,7 +276,7 @@ def guide(manifest: dict, t: dict[str, pd.DataFrame]) -> str:
     n = t["daily_passage"]["taxon_id"].nunique()
     files = {
         "daily_passage": "a taxon on one day of its seasonal window, counted or not",
-        "trend": "a taxon: its typical passage and how it changed",
+        "trend": "a taxon: how its passage changed",
         "phenology": "a taxon: its passage dates and how they shifted",
     }
     lines = [
@@ -314,14 +313,15 @@ def guide(manifest: dict, t: dict[str, pd.DataFrame]) -> str:
         " and `passage` is entirely modelled. Sum `passage` over days for any period you need.",
         "- **Trend.** `change` is the change in passage from `first_year` to `last_year`, and"
         f" `change_recent` over the last {R} years, both in percent, from the smooth long-term"
-        " trend (year-to-year noise removed). `passage_recent` gives the size of a typical season.",
+        " trend (year-to-year noise removed). For the size of a season, sum `passage` of"
+        " `daily_passage` over the days of a year.",
         "- **Phenology.** `date_10`, `date_50` and `date_90` are the dates by which 10, 50 and"
         " 90% of the season's birds have passed, in `last_year`; `shift_*` is how much each date"
         " moved per decade, in days (negative: earlier).",
         "- **Intervals.** Columns ending `_lower_95` and `_upper_95` give the 95% interval of the"
         " column they follow.",
         "- **Reliability.** Only estimates that pass the reliability tests are published: each is"
-        " `reliable` or `caveat` (usable with care; shown with a warning on the website). A day,"
+        " `reliable` or `read_with_care` (borderline in a test, as on the website). A day,"
         " trend or set of dates that failed a test is left out, and so are its shifts when only"
         " they failed.",
         "- **Which taxa.** `daily_passage` covers every taxon with a trend model whose daily"
@@ -388,7 +388,7 @@ def dictionary(t: dict[str, pd.DataFrame]) -> str:
         "| Value | Meaning |",
         "| --- | --- |",
         "| `reliable` | passed the reliability tests |",
-        "| `caveat` | usable with care: a test was borderline; shown with a warning on the website |",
+        '| `read_with_care` | a test was borderline; shown with "Read with care" on the website |',
         "",
     ]
     return "\n".join(lines)
