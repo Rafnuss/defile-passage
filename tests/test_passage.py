@@ -12,13 +12,16 @@ from defile_passage import release as R
 
 
 def _dataset_build(folder, edit=False):
-    """A defile-dataset output folder: `zenodo/` and the build's `metadata.json`."""
+    """A defile-dataset output folder: `zenodo/` and the build's `audit/metadata.json`."""
     upload = folder / R.DATASET_UPLOAD_DIR
     upload.mkdir(parents=True)
     (upload / "count.csv").write_text("taxon_id,count\nx,1\n")
     digest = hashlib.sha256((upload / "count.csv").read_bytes()).hexdigest()
     hashes = {f"{R.DATASET_UPLOAD_DIR}/count.csv": digest, "README.md": "not in the release"}
-    (folder / R.METADATA_FILE).write_text(json.dumps({"git_sha": "abc", "table_sha256": hashes}))
+    (folder / "audit").mkdir()
+    (folder.joinpath(*R.DATASET_METADATA_PATH)).write_text(
+        json.dumps({"git_sha": "abc", "table_sha256": hashes})
+    )
     if edit:
         (upload / "count.csv").write_text("taxon_id,count\nx,2\n")
     return folder

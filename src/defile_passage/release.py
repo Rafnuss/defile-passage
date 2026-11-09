@@ -41,7 +41,8 @@ TIMEZONE = "Europe/Paris"
 SITE = (46.117215, 5.914877)
 
 DATASET_DIR = os.path.join("count", "dataset")  # under the data dir
-METADATA_FILE = "metadata.json"
+METADATA_FILE = "metadata.json"  # at the root of the release zip
+DATASET_METADATA_PATH = ("audit", METADATA_FILE)  # in a defile-dataset output folder
 
 # The main migration direction (`count.csv` `count_category`); `reverse` and `local` are other
 # quantities.
@@ -164,8 +165,8 @@ def fetch_dataset(source: str, data_dir: str) -> dict:
     """Put a defile-dataset release in `<data_dir>/count/dataset/`, replacing what was there.
 
     `source` is a tag (`vYYYY.N`, downloaded from defile-dataset's GitHub release) or a defile-
-    dataset output folder (its `zenodo/` and `metadata.json`). Returns what `release.json` records:
-    `tag` (None for a folder), `source` and `git_sha`.
+    dataset output folder (its `zenodo/` and `audit/metadata.json`). Returns what `release.json`
+    records: `tag` (None for a folder), `source` and `git_sha`.
     """
     if DATASET_TAG.match(source):
         url = DATASET_URL.format(repo=DATASET_REPO, tag=source, asset=DATASET_ASSET)
@@ -178,7 +179,7 @@ def fetch_dataset(source: str, data_dir: str) -> dict:
     elif os.path.isdir(source):
         folder = os.path.join(source, DATASET_UPLOAD_DIR)
         files = {n: open(os.path.join(folder, n), "rb").read() for n in os.listdir(folder)}
-        files[METADATA_FILE] = open(os.path.join(source, METADATA_FILE), "rb").read()
+        files[METADATA_FILE] = open(os.path.join(source, *DATASET_METADATA_PATH), "rb").read()
         tag, source = None, os.path.abspath(source)
     else:
         raise SystemExit(f"--dataset {source}: neither a tag vYYYY.N nor a folder")
