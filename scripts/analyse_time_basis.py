@@ -37,11 +37,11 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import pandas as pd
 
-from defile_explore import export as E
-from defile_explore import pipeline as L
-from defile_explore import profile as P
-from defile_explore import trend as T
-from defile_explore.timeofday import RATIO_WEIGHT_POWER, fit_ratio_surface
+from defile_passage import export as E
+from defile_passage import pipeline as L
+from defile_passage import profile as P
+from defile_passage import trend as T
+from defile_passage.timeofday import RATIO_WEIGHT_POWER, fit_ratio_surface
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASES = ("solar", "tau", "solar_day", "tau_day", "tau_day16")

@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from defile_explore import hourly as H
+from defile_passage import hourly as H
 
 
 def test_gap_mask_never_crosses_an_effort_break_and_ignores_bird_counts():

@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from defile_explore.release import MAIN_CATEGORY, TIMEZONE, TREKTELLEN_ERA
+from defile_passage.release import MAIN_CATEGORY, TIMEZONE, TREKTELLEN_ERA
 
 BLOCK_DAYS = 7
 BLOCK_FOLDS = 3

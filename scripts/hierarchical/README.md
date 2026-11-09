@@ -28,7 +28,7 @@ observation     y_obs ~ NegBin( mean = Λ_yd · c_obs , θ ),   c_obs = Σ_h π_
 gap fill        draws of (β, η) from the posterior, then production's gamma / flock draws
 ```
 
-Everything above the weather line is `defile_explore.trend` unchanged. `c_obs` is production's
+Everything above the weather line is `defile_passage.trend` unchanged. `c_obs` is production's
 coverage when π is production's profile.
 
 **What production already has.** Its `episode` block (25 B-spline knots per year, first-difference

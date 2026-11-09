@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from defile_explore import hourly as H
-from defile_explore.release import (
+from defile_passage import hourly as H
+from defile_passage.release import (
     MAIN_CATEGORY,
     OUTSIDE_SURVEY_REMARK,
     TIMEZONE,

@@ -69,7 +69,7 @@ editors' sources, not the build's.
 ## Per-taxon settings
 
 Every setting has a rule (`settings.py`). Fix a wrong value by improving the rule when it can be
-done for all taxa; otherwise add an exception to `src/defile_explore/overrides.yaml`, with a
+done for all taxa; otherwise add an exception to `src/defile_passage/overrides.yaml`, with a
 `reason`. Never special-case a taxon in code.
 
 ## Conventions

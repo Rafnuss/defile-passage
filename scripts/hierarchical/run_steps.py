@@ -32,9 +32,9 @@ from common import CORE, LOGS, MASKS, ROOT, WEATHER_DIR, apply_mask, load_specie
 from scipy.optimize import minimize
 from weather_design import fit as fit_arm
 
-from defile_explore import export as E
-from defile_explore import profile as P
-from defile_explore import trend as T
+from defile_passage import export as E
+from defile_passage import profile as P
+from defile_passage import trend as T
 
 sys.path.insert(0, str(ROOT / "scripts/research"))
 from compare_production import interval_slots, training_profile  # noqa: E402

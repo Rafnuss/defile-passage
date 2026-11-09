@@ -7,8 +7,8 @@ import os
 import pandas as pd
 import pytest
 
-from defile_explore import passage as P
-from defile_explore import release as R
+from defile_passage import passage as P
+from defile_passage import release as R
 
 
 def _dataset_build(folder, edit=False):

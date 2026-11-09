@@ -12,8 +12,8 @@ from scipy.sparse import csr_matrix
 from simple_rate_model import fit_rate
 from simple_rate_prediction import count_interval, retained_prediction, select_retained_strength
 
-from defile_explore import profile as P
-from defile_explore import trend as T
+from defile_passage import profile as P
+from defile_passage import trend as T
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "logs/historical-transfer"

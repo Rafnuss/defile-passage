@@ -11,7 +11,7 @@ from scipy.linalg import solve
 from scipy.sparse import csr_matrix
 from simple_rate_model import check_rate_gradient, fit_rate
 
-from defile_explore.export import WINDOW
+from defile_passage.export import WINDOW
 
 OUT = Path("logs/daily-passage")
 SOURCE = Path("logs/history-episode")

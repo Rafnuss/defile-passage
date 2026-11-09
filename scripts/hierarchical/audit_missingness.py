@@ -21,8 +21,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from defile_explore import hourly as H
-from defile_explore.release import TIMEZONE, TREKTELLEN_ERA, civil_twilight, parse_surveys
+from defile_passage import hourly as H
+from defile_passage.release import TIMEZONE, TREKTELLEN_ERA, civil_twilight, parse_surveys
 
 ROOT = Path(__file__).resolve().parents[2]
 DATASET = ROOT / "data/count/dataset"

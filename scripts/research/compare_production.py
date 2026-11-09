@@ -10,10 +10,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from defile_explore import export as E
-from defile_explore import profile as P
-from defile_explore import trend as T
-from defile_explore.timeofday import RATIO_WEIGHT_POWER, fit_ratio_surface
+from defile_passage import export as E
+from defile_passage import profile as P
+from defile_passage import trend as T
+from defile_passage.timeofday import RATIO_WEIGHT_POWER, fit_ratio_surface
 
 ROOT = Path(__file__).resolve().parents[2]
 DRAWS = 500

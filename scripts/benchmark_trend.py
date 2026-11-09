@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compares trend models on the benchmark (`defile_explore.benchmark`): the season-only model
+"""Compares trend models on the benchmark (`defile_passage.benchmark`): the season-only model
 beside the GAM, and the ratio estimator, on chosen taxa (defile-migration-forecast issue #55).
 
 The build already benchmarks the GAM on every taxon with a trend (the `benchmark` block, drawn by
@@ -20,14 +20,14 @@ import os
 import numpy as np
 import pandas as pd
 
-from defile_explore import accounts as A
-from defile_explore import benchmark as B
-from defile_explore import export as E
-from defile_explore import pipeline as L
-from defile_explore import profile as P
-from defile_explore import settings as X
-from defile_explore import trend as T
-from defile_explore import window as W
+from defile_passage import accounts as A
+from defile_passage import benchmark as B
+from defile_passage import export as E
+from defile_passage import pipeline as L
+from defile_passage import profile as P
+from defile_passage import settings as X
+from defile_passage import trend as T
+from defile_passage import window as W
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAXA = (

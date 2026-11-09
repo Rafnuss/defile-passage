@@ -1,5 +1,5 @@
 """Trend model for the Explore page: one taxon's smooth trend, season and phenology shift, and
-gap-filled annual totals. Part of `defile_explore`.
+gap-filled annual totals. Part of `defile_passage`.
 
 A GAM, benchmarked by `scripts/benchmark_trend.py` (`DECISIONS.md` -> Explore has why a GAM):
 
@@ -7,11 +7,11 @@ A GAM, benchmarked by `scripts/benchmark_trend.py` (`DECISIONS.md` -> Explore ha
     eta = a + trend(year) + year_effect(year) + season(doy) + shift(year, doy)
           + sum_j beta_j weather_j(day) + episode_year(doy)
 
-`c_day` is the day's coverage (`defile_explore.profile.coverage`: the share of the day's expected
+`c_day` is the day's coverage (`defile_passage.profile.coverage`: the share of the day's expected
 passage in the hours counted), `year_effect` an independent level per year (good and bad years),
 `shift` a smooth change of the season's timing or width over the years, and `episode` a short-range
 curve of its own each year: runs of good or bad migration days that the day's weather does not
-explain. The weather terms (`defile_explore.weather`: rain, rain the day before, sunshine, thermal
+explain. The weather terms (`defile_passage.weather`: rain, rain the day before, sunshine, thermal
 mixing, wind and its speed, the pressure change and the temperature anomaly, each the profile's
 weighted mean over the day, standardised) are linear with a unit prior (a ridge); without them a
 rained-out day was filled as an average day (`DECISIONS.md`, 2026-10-13). Without the episodes, the
@@ -61,11 +61,11 @@ from scipy.interpolate import BSpline
 from scipy.linalg import cho_factor, cho_solve, solve_triangular
 from scipy.special import gammaln
 
-from defile_explore import weather as W
-from defile_explore.export import HOURS, by_hour, in_window
-from defile_explore.phenology import passage_draws
-from defile_explore.profile import PROFILE_DOY, PROFILE_MIN_TIMED, coverage
-from defile_explore.season import chance_from_draws, passage_from_draws
+from defile_passage import weather as W
+from defile_passage.export import HOURS, by_hour, in_window
+from defile_passage.phenology import passage_draws
+from defile_passage.profile import PROFILE_DOY, PROFILE_MIN_TIMED, coverage
+from defile_passage.season import chance_from_draws, passage_from_draws
 
 VARIANTS = ("season", "gam")
 WEATHER_COLUMNS = [f"w_{t}" for t in W.TERMS]  # a model frame's standardised weather terms
@@ -150,7 +150,7 @@ def model_frame(
     window: tuple[int, int] | None = None,
 ) -> pd.DataFrame:
     """One row per window day of `first_year`..`last_year`: `date`, `year`, `doy` (`season_day`),
-    `c`, `y` and `extra`. `window`: first and last season day (`defile_explore.window`); the
+    `c`, `y` and `extra`. `window`: first and last season day (`defile_passage.window`); the
     default window `WINDOW` if None.
 
     Counted days (`state == "counted"`) carry their coverage `c` and count `y` (0 without a record);

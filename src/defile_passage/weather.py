@@ -1,5 +1,5 @@
 """The day's weather at the count site, for the trend model's weather terms and the `weather`
-block. Part of `defile_explore`.
+block. Part of `defile_passage`.
 
 Hourly ERA5 reanalysis at Défilé (`LOCATION`; plain ERA5, 0.25°) from the Open-Meteo archive,
 downloaded by `fetch` into `<data dir>/weather/` (one file a year), and read by `hourly` as the UTC
@@ -40,9 +40,9 @@ import urllib.request
 import numpy as np
 import pandas as pd
 
-from defile_explore import export as E
-from defile_explore import reliability as Q
-from defile_explore.profile import PROFILE_DOY
+from defile_passage import export as E
+from defile_passage import reliability as Q
+from defile_passage.profile import PROFILE_DOY
 
 METHOD = "weather@1"
 WEATHER_DIR = "weather"  # under the data dir
@@ -288,7 +288,7 @@ def weather_block(fits: dict, frame: pd.DataFrame, raw: pd.DataFrame, sd: pd.Ser
     """The `weather` block from the fits on all years and on odd and even years alone (`fits`:
     `{"all", "odd", "even"}` of `trend.fit`), the model frame and the raw terms of its days (own
     units) with their scale."""
-    from defile_explore import trend as T  # trend imports this module
+    from defile_passage import trend as T  # trend imports this module
 
     draws = {
         half: _per_unit(f, sd, COEF_DRAWS, seed + i) for i, (half, f) in enumerate(fits.items())

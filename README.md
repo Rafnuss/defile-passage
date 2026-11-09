@@ -37,7 +37,7 @@ released, `--dataset ../defile-dataset/output` copies it instead; such an export
 published. A release without `parent_taxon_id` in `taxonomy.csv` is refused.
 
 A full build writes the Explore export (`data/explore/`) and the passage tables (`data/passage/`,
-`defile_explore.passage`): daily passage, season totals and passage dates of the 96 taxa with a
+`defile_passage.passage`): daily passage, season totals and passage dates of the 96 taxa with a
 trend, as a Frictionless data package for Zenodo. Both come from the same species files.
 
 ```bash
@@ -174,7 +174,7 @@ uv run python scripts/accounts/build_website_accounts.py
 ## Layout
 
 ```
-src/defile_explore/
+src/defile_passage/
   release.py     reading the release tables
   export.py      raw aggregation: daily totals, effort, taxa -> JSON
   timeofday.py   the time-of-day GAM

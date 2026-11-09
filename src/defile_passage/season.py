@@ -12,12 +12,12 @@ the more so the gappier the year (`DECISIONS.md`). Where the trend's totals are 
 (`reliability.fills_season`), or without a trend, the season is from the counts.
 
 From the counts (`source: counts`): a day's rate is its birds per full counted day, `y / c`
-(`defile_explore.profile.coverage`), on days counted for at least `COVERAGE_MIN` of the expected
+(`defile_passage.profile.coverage`), on days counted for at least `COVERAGE_MIN` of the expected
 passage; other days are blank. A year's total fills blank days by linear interpolation between
 counted days, and its passage dates come from that filled series.
 
 Either way, days are shown over the taxon's view window but totals, shares and passage dates are of
-its model window (`defile_explore.window`); a view day beyond the model window has its rate from
+its model window (`defile_passage.window`); a view day beyond the model window has its rate from
 the counts (`y / c`, blank below `COVERAGE_MIN`). `count` holds the birds counted on every day
 counted at all, `c` its coverage (0 on a day not counted, or counted below `trend.MIN_COVERAGE`:
 its birds are in `count`), and `counted` per year the share of the window's days counted.
@@ -26,7 +26,7 @@ its birds are in `count`), and `counted` per year the share of the window's days
 import numpy as np
 import pandas as pd
 
-from defile_explore.profile import COVERAGE_MIN
+from defile_passage.profile import COVERAGE_MIN
 
 METHOD = "season@4"
 PASSAGE_QUANTILES = (0.1, 0.5, 0.9)  # as the smooth season's (`trend.PASSAGE_QUANTILES`)
@@ -42,7 +42,7 @@ def daily_rates(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     where not counted (`c < COVERAGE_MIN`), and the same with gaps filled by linear interpolation
     (edges held at the nearest counted day).
 
-    `frame`: `defile_explore.trend.model_frame` (one row per window day: `year`, `doy`, `y`, `c`).
+    `frame`: `defile_passage.trend.model_frame` (one row per window day: `year`, `doy`, `y`, `c`).
     """
     f = frame.assign(rate=(frame["y"] / frame["c"]).where(frame["c"] >= COVERAGE_MIN))
     rate = f.pivot(index="year", columns="doy", values="rate")

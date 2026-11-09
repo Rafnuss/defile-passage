@@ -27,13 +27,13 @@ from common import LOGS, ROOT
 from run_steps import ARMS, COEF_DRAWS, SEED, daily_terms, hourly_weather
 from weather_design import fit as fit_arm
 
-from defile_explore import accounts as A
-from defile_explore import export as E
-from defile_explore import pipeline as L
-from defile_explore import profile as P
-from defile_explore import settings as X
-from defile_explore import trend as T
-from defile_explore import window as W
+from defile_passage import accounts as A
+from defile_passage import export as E
+from defile_passage import pipeline as L
+from defile_passage import profile as P
+from defile_passage import settings as X
+from defile_passage import trend as T
+from defile_passage import window as W
 
 OUT = LOGS / "panel"
 HALVES = {"all": None, "odd": 1, "even": 0}

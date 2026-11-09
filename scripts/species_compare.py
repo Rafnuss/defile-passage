@@ -29,7 +29,7 @@ import os
 import numpy as np
 from explore_viewer import ROOT, wrap
 
-from defile_explore.pipeline import KEY_YEARS
+from defile_passage.pipeline import KEY_YEARS
 
 Z95, Z80 = 1.959964, 1.281552  # normal quantiles of the 95% and 80% two-sided bands
 GROUPS = {  # catalogue group: colour (validated all-pairs, light)

@@ -26,10 +26,10 @@ from dataclasses import dataclass
 import pandas as pd
 import yaml
 
-from defile_explore import demography as G
-from defile_explore import window as W
-from defile_explore.export import has_members
-from defile_explore.trend import TREND_RANKS
+from defile_passage import demography as G
+from defile_passage import window as W
+from defile_passage.export import has_members
+from defile_passage.trend import TREND_RANKS
 
 OVERRIDES_FILE = os.path.join(os.path.dirname(__file__), "overrides.yaml")
 SETTINGS = ("start_year", "trend", "age_years", "sex_years", "model_window", "view_window")

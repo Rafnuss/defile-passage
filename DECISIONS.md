@@ -12,8 +12,8 @@ will be deposited on Zenodo as a derived dataset next to the counts and describe
 paper's method appendix. "Explore" stays the name of the defileViz page and of the export it
 reads (`data/explore/`, `explore.zip`, `build_explore.py`). The GitHub repo and its Pages site
 moved (`raphaelnussbaumer.com/defile-passage/`; the old path is a 404, release downloads
-redirect). Still to rename: the Python package `defile_explore` and the distribution names in
-`pyproject.toml` and `website/package.json`, in one change once the working tree is committed.
+redirect). The Python package is `defile_passage` and the distributions `defile-passage` and
+`defile-passage-docs`; entries below written before the rename keep the old names.
 
 **Built from a dataset release; passage tables published with the export (2026-11-09, requested
 by the user).** One flow, in this order: defile-dataset builds and tags a release (`vYYYY.N`,

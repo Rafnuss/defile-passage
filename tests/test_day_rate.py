@@ -7,7 +7,7 @@ from scipy.optimize import check_grad
 from scipy.special import gammaln
 from scipy.stats import nbinom
 
-from defile_explore.day_rate import day_precision, gamma_nb_posterior, nb_day, poisson_day
+from defile_passage.day_rate import day_precision, gamma_nb_posterior, nb_day, poisson_day
 
 
 @pytest.mark.parametrize("likelihood,extra", [(poisson_day, [0.2]), (nb_day, [0.2, -0.7])])
@@ -179,7 +179,7 @@ def test_nb_exposure_shape_preserves_constant_rate_aggregation(total):
 def test_smoothing_update_matches_gaussian_posterior_moments():
     from scipy.optimize import minimize
 
-    from defile_explore.day_rate import smoothing_moments
+    from defile_passage.day_rate import smoothing_moments
 
     components = np.array([np.diag([0.0, 2.0, 3.0])])
     beta = np.array([1.0, 0.3, -0.4])
@@ -202,7 +202,7 @@ def test_smoothing_update_matches_gaussian_posterior_moments():
 def test_laplace_evidence_equals_exact_gaussian_integral():
     from scipy.linalg import null_space
 
-    from defile_explore.day_rate import laplace_score
+    from defile_passage.day_rate import laplace_score
 
     X = np.array([[1.0, -1.0, 0.0], [1.0, 0.0, 1.0], [1.0, 1.0, 0.5], [1.0, 0.5, -1.0]])
     y = np.array([0.0, 1.0, 3.0, 2.0])

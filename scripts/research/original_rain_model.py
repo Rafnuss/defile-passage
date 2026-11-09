@@ -5,7 +5,7 @@ from dataclasses import replace
 import numpy as np
 from scipy import sparse
 
-from defile_explore import trend as T
+from defile_passage import trend as T
 
 ORIGINAL_DESIGN = T.design
 RAIN_TERMS = ["log_rain", "rain_hinge"]

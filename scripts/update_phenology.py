@@ -8,8 +8,8 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-from defile_explore import reliability as Q
-from defile_explore.phenology import METHOD, phenology_block
+from defile_passage import reliability as Q
+from defile_passage.phenology import METHOD, phenology_block
 
 ROOT = Path(__file__).resolve().parents[1]
 

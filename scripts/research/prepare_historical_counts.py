@@ -11,8 +11,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from defile_explore.export import in_window
-from defile_explore.release import (
+from defile_passage.export import in_window
+from defile_passage.release import (
     MAIN_CATEGORY,
     OUTSIDE_SURVEY_REMARK,
     TIMEZONE,

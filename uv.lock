@@ -48,7 +48,7 @@ wheels = [
 ]
 
 [[package]]
-name = "defile-explore"
+name = "defile-passage"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

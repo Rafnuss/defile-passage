@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from defile_explore.release import MAIN_CATEGORY, parse_surveys
+from defile_passage.release import MAIN_CATEGORY, parse_surveys
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "logs/hierarchical/rescore"

@@ -12,8 +12,8 @@ import re
 
 import plotly
 
-from defile_explore.pipeline import KEY_YEARS
-from defile_explore.reliability import CLASSES, FILL_ERROR, INTERVAL_RATIO, MIN_TRIALS
+from defile_passage.pipeline import KEY_YEARS
+from defile_passage.reliability import CLASSES, FILL_ERROR, INTERVAL_RATIO, MIN_TRIALS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSS = "\n".join(

@@ -1,4 +1,4 @@
-"""Tests for the Explore export (src/defile_explore/), on small synthetic release tables, and on
+"""Tests for the Explore export (src/defile_passage/), on small synthetic release tables, and on
 the real release when it is present in `data/count/dataset/`: the export must reconcile with
 `count.csv`, and with the dataset's own daily totals when its interim build sits next to this
 repo."""
@@ -11,10 +11,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from defile_explore import export as E
-from defile_explore import profile as P
-from defile_explore import release as C
-from defile_explore import trend as T
+from defile_passage import export as E
+from defile_passage import profile as P
+from defile_passage import release as C
+from defile_passage import trend as T
 
 DAY = "2023-08-01"
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")

@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from defile_explore import trend as T
+from defile_passage import trend as T
 
 spec = importlib.util.spec_from_file_location(
     "original_rain_model", Path(__file__).parents[1] / "scripts/research/original_rain_model.py"

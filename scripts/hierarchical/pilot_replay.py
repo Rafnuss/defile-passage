@@ -16,9 +16,9 @@ from common import LOGS, RESEARCH_DESIGN, ROOT
 from run_steps import ARMS, daily_terms, hourly_weather, kappa_of
 from weather_design import fit as fit_arm
 
-from defile_explore import export as E
-from defile_explore import profile as P
-from defile_explore import trend as T
+from defile_passage import export as E
+from defile_passage import profile as P
+from defile_passage import trend as T
 
 import sys  # isort: skip
 

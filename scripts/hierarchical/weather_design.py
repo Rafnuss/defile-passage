@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 from scipy import sparse
 
-from defile_explore import trend as T
+from defile_passage import trend as T
 
 PRODUCTION_DESIGN = T.design
 WEATHER_BLOCK = "weather"

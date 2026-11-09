@@ -23,9 +23,9 @@ calendar date is one day every year), inclusive. `settings` can override both.
 import numpy as np
 import pandas as pd
 
-from defile_explore.export import SYSTEMATIC_FROM, WINDOW
-from defile_explore.profile import PROFILE_DOY
-from defile_explore.trend import season_day
+from defile_passage.export import SYSTEMATIC_FROM, WINDOW
+from defile_passage.profile import PROFILE_DOY
+from defile_passage.trend import season_day
 
 METHOD = "window@3"
 MODEL_MIN_YEARS = 1 / 3  # share of years a date must be counted in to be modelled

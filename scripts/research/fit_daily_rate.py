@@ -14,7 +14,7 @@ from scipy.optimize import minimize
 from scipy.special import logsumexp
 from scipy.stats import nbinom, poisson
 
-from defile_explore.day_rate import (
+from defile_passage.day_rate import (
     MIN_DAILY_RATE,
     N_DRAWS,
     SHAPE_BOUNDS,

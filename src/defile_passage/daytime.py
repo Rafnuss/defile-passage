@@ -1,5 +1,5 @@
 """Passage through the day, as counted: birds per counted hour by solar hour, on the days timed to
-the hour, with the smooth time-of-day profile (`defile_explore.profile`) beside it.
+the hour, with the smooth time-of-day profile (`defile_passage.profile`) beside it.
 
 The rate of an hour is the birds timed to it over the hours counted in it, pooled over the days of
 a period, so hours counted less often weigh less, not zero. Only days with birds and at least
@@ -14,7 +14,7 @@ the same way), so bars and line answer the same question; and the date x hour ma
 passage hour changes through the season (`change`): the late part's mean passage hour minus the
 early part's (`PART_QUANTILES` of the passage), with a 95% interval from resampling days, so a
 single flock cannot make a change look certain. `change.show` when the interval excludes zero and
-the shift is at least `SHIFT_MIN_HOURS`. In solar time (`defile_explore.export.solar_shift`), like
+the shift is at least `SHIFT_MIN_HOURS`. In solar time (`defile_passage.export.solar_shift`), like
 every hour of the export: the end of summer time and the equation of time no longer make late taxa
 look earlier, so a change shown is the birds' own.
 """
@@ -22,8 +22,8 @@ look earlier, so a change shown is the birds' own.
 import numpy as np
 import pandas as pd
 
-from defile_explore.export import HOURS, by_hour
-from defile_explore.profile import PROFILE_DOY, PROFILE_MIN_HOUR_EFFORT, PROFILE_MIN_TIMED
+from defile_passage.export import HOURS, by_hour
+from defile_passage.profile import PROFILE_DOY, PROFILE_MIN_HOUR_EFFORT, PROFILE_MIN_TIMED
 
 METHOD = "daytime@4"  # 4: main passage, hours counted at least half, profile on the same days
 PENTAD = 5  # days per period of the date x hour grid

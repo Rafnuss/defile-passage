@@ -6,8 +6,8 @@ from pathlib import Path
 
 import numpy as np
 
-from defile_explore.export import STEPS_PER_HOUR
-from defile_explore.profile import PROFILE_DOY
+from defile_passage.export import STEPS_PER_HOUR
+from defile_passage.profile import PROFILE_DOY
 
 ROOT = Path(__file__).resolve().parents[1]
 

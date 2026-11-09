@@ -20,9 +20,9 @@ import numpy as np
 import pandas as pd
 from common import CORE, INPUTS, RELEASE, season_doy
 
-from defile_explore import hourly as H
-from defile_explore.export import in_window
-from defile_explore.release import (
+from defile_passage import hourly as H
+from defile_passage.export import in_window
+from defile_passage.release import (
     MAIN_CATEGORY,
     TREKTELLEN_ERA,
     civil_twilight,

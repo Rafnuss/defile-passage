@@ -23,10 +23,10 @@ from common import CORE, LOGS, MASKS, ROOT, apply_mask, load_species
 from numpy.polynomial.hermite import hermgauss
 from run_steps import TIMED_FROM, interval_slots, training_profile
 
-from defile_explore import export as E
-from defile_explore import profile as P
-from defile_explore import trend as T
-from defile_explore import weather as W
+from defile_passage import export as E
+from defile_passage import profile as P
+from defile_passage import trend as T
+from defile_passage import weather as W
 
 THRESHOLDS = (0, 0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.5)
 QUADRATURE = 64
@@ -305,7 +305,7 @@ def main():
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     if not args.summarise_only:
-        sources = list((ROOT / "src/defile_explore").glob("*.py"))
+        sources = list((ROOT / "src/defile_passage").glob("*.py"))
         sources += list(Path(__file__).parent.glob("*.py"))
         sources += [MASKS / f"draw{k}.csv" for k in args.folds]
         sources += [

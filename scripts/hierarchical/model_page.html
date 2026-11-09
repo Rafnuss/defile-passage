@@ -448,7 +448,7 @@ uv run python scripts/hierarchical/score_steps.py --references H De &gt; logs/hi
 uv run python scripts/hierarchical/rescore_calendar.py &gt; logs/hierarchical/rescore.log
 uv run --with 'pyarrow&lt;20' python scripts/hierarchical/model_figures.py &gt; logs/hierarchical/figures.log</pre>
 <p class="note">The last command refits Black Kite (P, and D at every τ), reads the saved scores, and writes this page with its numbers to <code>logs/hierarchical/model_page.html</code>. The written account is <code>scripts/hierarchical/MODEL.md</code>.</p>
-<footer>Research line <code>scripts/hierarchical</code>, defile-passage. Production (<code>defile_explore.trend</code>) is unchanged: D is production's model plus daily weather, with a daily AR(1) process in place of the episode block. Every part it shares with production is imported, not copied.</footer>
+<footer>Research line <code>scripts/hierarchical</code>, defile-passage. Production (<code>defile_passage.trend</code>) is unchanged: D is production's model plus daily weather, with a daily AR(1) process in place of the episode block. Every part it shares with production is imported, not copied.</footer>
 </main>
 </div>
 

@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from defile_explore.season import quantiles_of_draws
+from defile_passage.season import quantiles_of_draws
 
 METHOD = "annual-date-linear@2"
 SEED = 19647

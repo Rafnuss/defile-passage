@@ -28,8 +28,8 @@ import os
 
 import pandas as pd
 
-from defile_explore import export as E
-from defile_explore.release import civil_twilight
+from defile_passage import export as E
+from defile_passage.release import civil_twilight
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLOCK_HOURS = 2.0

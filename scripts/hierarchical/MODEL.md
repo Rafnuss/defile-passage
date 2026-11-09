@@ -5,7 +5,7 @@ days not counted, how it was assessed and what was tried on the way. The numbers
 [RESULTS.md](RESULTS.md), the missingness evidence in [MISSINGNESS_AUDIT.md](MISSINGNESS_AUDIT.md)
 and the plan in [README.md](README.md). The same account with typeset equations and figures from
 the fits is built by `model_figures.py` (template `model_page.html`, written to
-`logs/hierarchical/model_page.html`). Production (`defile_explore.trend`) is unchanged: `D` is
+`logs/hierarchical/model_page.html`). Production (`defile_passage.trend`) is unchanged: `D` is
 production's model with two changes, and every part it shares with production is imported, not
 copied.
 

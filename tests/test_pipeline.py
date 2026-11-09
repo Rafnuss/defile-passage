@@ -5,21 +5,21 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from defile_explore import accounts as A
-from defile_explore import benchmark as B
-from defile_explore import catalogue as C
-from defile_explore import daytime as Y
-from defile_explore import demography as G
-from defile_explore import edges as D
-from defile_explore import export as E
-from defile_explore import pipeline as L
-from defile_explore import profile as P
-from defile_explore import reliability as Q
-from defile_explore import remarks as M
-from defile_explore import season as S
-from defile_explore import settings as X
-from defile_explore import window as W
-from defile_explore.profile import PROFILE_DOY
+from defile_passage import accounts as A
+from defile_passage import benchmark as B
+from defile_passage import catalogue as C
+from defile_passage import daytime as Y
+from defile_passage import demography as G
+from defile_passage import edges as D
+from defile_passage import export as E
+from defile_passage import pipeline as L
+from defile_passage import profile as P
+from defile_passage import reliability as Q
+from defile_passage import remarks as M
+from defile_passage import season as S
+from defile_passage import settings as X
+from defile_passage import window as W
+from defile_passage.profile import PROFILE_DOY
 
 
 def frame(rates: dict, c: float = 1.0) -> pd.DataFrame:
@@ -264,8 +264,8 @@ def test_birds_in_an_hour_barely_counted_are_left_out():
 
 
 def test_the_profile_predicts_each_day_on_its_counted_hours_only():
-    from defile_explore.export import SLOTS, STEPS_PER_HOUR
-    from defile_explore.profile import PROFILE_DOY
+    from defile_passage.export import SLOTS, STEPS_PER_HOUR
+    from defile_passage.profile import PROFILE_DOY
 
     slots = np.zeros(SLOTS)
     slots[10 * STEPS_PER_HOUR : 12 * STEPS_PER_HOUR] = 1

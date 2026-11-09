@@ -8,10 +8,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from defile_explore import hourly as H
-from defile_explore.catalogue import group_of
-from defile_explore.export import start_year
-from defile_explore.release import MAIN_CATEGORY, TREKTELLEN_ERA, civil_twilight, parse_surveys
+from defile_passage import hourly as H
+from defile_passage.catalogue import group_of
+from defile_passage.export import start_year
+from defile_passage.release import MAIN_CATEGORY, TREKTELLEN_ERA, civil_twilight, parse_surveys
 
 ROOT = Path(__file__).resolve().parents[2]
 DATASET = ROOT.parent / "defile-dataset/output/dataset"

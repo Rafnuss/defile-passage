@@ -2,12 +2,12 @@
 """Builds the Explore export for defileViz from the defile-dataset release tables.
 
 Reads the defile-dataset release in `data/count/dataset/` (put there with `--dataset`) and writes
-`data/explore/`: `manifest.json`, `taxa.json` (with the picker's fields, `defile_explore.catalogue`),
-`effort.json` and `species/<taxon_id>.json` (`defile_explore.pipeline.build_taxon`), with French names from the eBird taxonomy (downloaded
+`data/explore/`: `manifest.json`, `taxa.json` (with the picker's fields, `defile_passage.catalogue`),
+`effort.json` and `species/<taxon_id>.json` (`defile_passage.pipeline.build_taxon`), with French names from the eBird taxonomy (downloaded
 once, no key) and the written accounts from `content/accounts/`. The shared stage (~2.5 min of time-of-day profiles) and
 each taxon's trend fit and benchmark are cached in `data/cache/`, so a rebuild after a change to one block
 refits nothing: ~5.5 min in full on 12 cores, ~15 s with nothing changed. A full build also writes
-the passage tables (`data/passage/`, `defile_explore.passage`). `--dataset vYYYY.N` downloads a
+the passage tables (`data/passage/`, `defile_passage.passage`). `--dataset vYYYY.N` downloads a
 dataset release; `--dataset <defile-dataset output folder>` copies a local build to try it, and an
 export from one cannot be published. Publish with `scripts/publish_explore.py`.
 
@@ -30,15 +30,15 @@ import urllib.request
 
 import pandas as pd
 
-from defile_explore import accounts as A
-from defile_explore import catalogue as C
-from defile_explore import export as E
-from defile_explore import passage as P
-from defile_explore import pipeline as L
-from defile_explore import release as R
-from defile_explore import settings as X
-from defile_explore import trend as T
-from defile_explore import weather as H
+from defile_passage import accounts as A
+from defile_passage import catalogue as C
+from defile_passage import export as E
+from defile_passage import passage as P
+from defile_passage import pipeline as L
+from defile_passage import release as R
+from defile_passage import settings as X
+from defile_passage import trend as T
+from defile_passage import weather as H
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # What the export is made from: a change here marks it built from uncommitted code (the viewer and

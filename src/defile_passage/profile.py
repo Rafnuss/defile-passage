@@ -1,9 +1,9 @@
 """Effort adjustment for the Explore page: a time-of-day profile per taxon, and coverage.
 
-Part of `defile_explore`. Variant A of the baseline, provisional until compared with a Gaussian-
+Part of `defile_passage`. Variant A of the baseline, provisional until compared with a Gaussian-
 process variant (DECISIONS.md -> Explore): a taxon's profile p(t | doy) (its own, else its group's,
 else uniform over daylight), fitted with the time-of-day GAM
-(`defile_explore.timeofday.fit_ratio_surface`, a copy of the forecast's) on hourly counts placed on
+(`defile_passage.timeofday.fit_ratio_surface`, a copy of the forecast's) on hourly counts placed on
 the day's light, tau = (t - civil dawn) / (civil dusk - civil dawn), and read as a continuous
 curve on 5-minute solar slots (`export.STEPS_PER_HOUR`), gives each counted day a
 coverage `c`, the share of that day's expected passage in the minutes counted. The adjusted day is
@@ -14,7 +14,7 @@ day equivalent. Neither is given below `COVERAGE_MIN`, nor before the taxon's `s
 import numpy as np
 import pandas as pd
 
-from defile_explore.export import (
+from defile_passage.export import (
     SLOTS,
     STEPS_PER_HOUR,
     by_hour,
@@ -23,8 +23,8 @@ from defile_explore.export import (
     solar_shift,
     to_local,
 )
-from defile_explore.release import civil_twilight
-from defile_explore.timeofday import RATIO_WEIGHT_POWER, fit_ratio_surface
+from defile_passage.release import civil_twilight
+from defile_passage.timeofday import RATIO_WEIGHT_POWER, fit_ratio_surface
 
 # A species' profile p(t | doy) is the share of its full-day passage in each solar slot, fitted on
 # days timed to the hour (`profile_samples`) and used to say how much of that day's passage the

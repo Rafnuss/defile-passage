@@ -20,7 +20,7 @@ likely continues beyond regular counting, and its totals and dates miss those bi
 import numpy as np
 import pandas as pd
 
-from defile_explore.profile import COVERAGE_MIN
+from defile_passage.profile import COVERAGE_MIN
 
 METHOD = "edges@1"
 REGULAR_SPAN = 7  # days around a counted day...

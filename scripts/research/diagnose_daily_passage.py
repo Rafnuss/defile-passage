@@ -14,7 +14,7 @@ from daily_passage_model import (
 )
 from scipy.sparse import csr_matrix
 
-from defile_explore.export import WINDOW
+from defile_passage.export import WINDOW
 
 OUT = Path("logs/daily-passage-diagnosis")
 SOURCE = Path("logs/history-episode")

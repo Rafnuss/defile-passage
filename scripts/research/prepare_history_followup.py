@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from defile_explore.export import in_window
+from defile_passage.export import in_window
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "logs/history-diagnosis"

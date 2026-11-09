@@ -8,12 +8,12 @@ file:
 the raw tables as before (`days`,
 `hourly`, `annual`, `profile`), `trend` (the GAM, cached per taxon), and the blocks
 derived from the same data and fit: `season`, `daytime`, `age`, `sex`, `records`,
-`key_numbers`, the written `accounts`, `weather` (the trend's weather terms, `defile_explore.weather`),
+`key_numbers`, the written `accounts`, `weather` (the trend's weather terms, `defile_passage.weather`),
 the trend's `benchmark` (cached like the trend) and
 `reliability`, with the taxon's `settings`, `window`, `links` and
 `diagnostics`. The trend is fitted
 on the model window, the season panels show the view window, the same two for every taxon
-(`defile_explore.window`).
+(`defile_passage.window`).
 
 Each block names its `method` (`<name>@<version>`), matched by a section of defileViz's method
 page; bump the version when what a block means changes.
@@ -28,23 +28,23 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from defile_explore import accounts as A
-from defile_explore import benchmark as B
-from defile_explore import daytime as Y
-from defile_explore import demography as G
-from defile_explore import edges as D
-from defile_explore import export as E
-from defile_explore import profile as P
-from defile_explore import release as R
-from defile_explore import reliability as Q
-from defile_explore import remarks as M
-from defile_explore import season as S
-from defile_explore import settings as X
-from defile_explore import timeofday
-from defile_explore import trend as T
-from defile_explore import weather as H
-from defile_explore import window as W
-from defile_explore.phenology import phenology_block
+from defile_passage import accounts as A
+from defile_passage import benchmark as B
+from defile_passage import daytime as Y
+from defile_passage import demography as G
+from defile_passage import edges as D
+from defile_passage import export as E
+from defile_passage import profile as P
+from defile_passage import release as R
+from defile_passage import reliability as Q
+from defile_passage import remarks as M
+from defile_passage import season as S
+from defile_passage import settings as X
+from defile_passage import timeofday
+from defile_passage import trend as T
+from defile_passage import weather as H
+from defile_passage import window as W
+from defile_passage.phenology import phenology_block
 
 CACHE_DIR = os.path.join("cache")  # under the data dir
 RECORD_DAYS = 15  # top days listed

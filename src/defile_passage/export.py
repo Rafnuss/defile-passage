@@ -25,11 +25,11 @@ Files, written by `scripts/build_explore.py` (one `build_*` function each):
   and local counts, the share of birds timed to the hour, the day's coverage `c` and the
   effort-adjusted count; per solar hour, the birds timed to it; per year, totals and the
   effort-adjusted index; the time-of-day profile used; and for
-  full-tier taxa with a trend, `trend` (`defile_explore.trend.taxon_trend`): gap-filled
+  full-tier taxa with a trend, `trend` (`defile_passage.trend.taxon_trend`): gap-filled
   annual totals with intervals, the smooth trend, the median passage date per year, the smooth
   season in the first and last year, and each year's season without its day-to-day terms, with its weather
   and its episodes (`episode_curves`).
-  `defile_explore.pipeline.build_taxon` adds the blocks derived from the same data and fit
+  `defile_passage.pipeline.build_taxon` adds the blocks derived from the same data and fit
   (`settings`, `window`, `links`, `key_numbers`, `season`, `daytime`, `age`, `sex`, `records`,
   `accounts`, `benchmark`, `reliability`, `diagnostics`); each of those modules documents its block.
 
@@ -48,7 +48,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from defile_explore.release import (
+from defile_passage.release import (
     DATASET_DIR,
     MAIN_CATEGORY,
     METADATA_FILE,

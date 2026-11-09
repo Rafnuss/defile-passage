@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Day by day gap filling: the trend GAM against the season panel's linear interpolation.
 
-The gap transplant of `defile_explore.benchmark` (well-counted recent years given older years'
+The gap transplant of `defile_passage.benchmark` (well-counted recent years given older years'
 gaps, hour by hour and day by day, `ROTATIONS` refits with the donors rotating), scored on each
 day instead of the season: does a complete series from the GAM beat the interpolation the season
 panel fills its gaps with (`season.daily_rates`)? Each target day is filled over the coverage the
@@ -40,14 +40,14 @@ import time
 import numpy as np
 import pandas as pd
 
-from defile_explore import accounts as A
-from defile_explore import benchmark as B
-from defile_explore import export as E
-from defile_explore import pipeline as L
-from defile_explore import profile as P
-from defile_explore import settings as X
-from defile_explore import trend as T
-from defile_explore import window as W
+from defile_passage import accounts as A
+from defile_passage import benchmark as B
+from defile_passage import export as E
+from defile_passage import pipeline as L
+from defile_passage import profile as P
+from defile_passage import settings as X
+from defile_passage import trend as T
+from defile_passage import window as W
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 METHODS = ("gam", "interp", "interp_kept")

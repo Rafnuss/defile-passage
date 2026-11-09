@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from defile_explore import hourly as H
-from defile_explore.release import TREKTELLEN_ERA, civil_twilight, parse_surveys
+from defile_passage import hourly as H
+from defile_passage.release import TREKTELLEN_ERA, civil_twilight, parse_surveys
 
 ROOT = Path(__file__).resolve().parents[2]
 PILOT_TAXA = ("Red Kite", "Common Buzzard", "European Honey Buzzard", "Common Wood Pigeon")

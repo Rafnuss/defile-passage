@@ -10,7 +10,7 @@ set.seed(20261010)
 source(here("scripts", "research", "hourly_uncertainty.R"))
 
 # Read data -----------------------------------------------------------------
-# Run from defile-explore; arguments optionally override input and output folders.
+# Run from defile-passage; arguments optionally override input and output folders.
 args <- commandArgs(trailingOnly = TRUE)
 input_dir <- if (length(args) >= 1) args[1] else here("data", "hourly-weather")
 output_dir <- if (length(args) >= 2) args[2] else here("logs", "hourly-weather-v2")

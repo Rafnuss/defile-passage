@@ -1,13 +1,13 @@
-"""The trend model's weather terms (`defile_explore.weather`) and their classes."""
+"""The trend model's weather terms (`defile_passage.weather`) and their classes."""
 
 import numpy as np
 import pandas as pd
 
-from defile_explore import export as E
-from defile_explore import reliability as Q
-from defile_explore import trend as T
-from defile_explore import weather as W
-from defile_explore.profile import PROFILE_DOY
+from defile_passage import export as E
+from defile_passage import reliability as Q
+from defile_passage import trend as T
+from defile_passage import weather as W
+from defile_passage.profile import PROFILE_DOY
 
 
 def hourly_table(days: pd.DatetimeIndex, rng) -> pd.DataFrame:

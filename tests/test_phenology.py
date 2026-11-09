@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from defile_explore.phenology import passage_draws, phenology_block
+from defile_passage.phenology import passage_draws, phenology_block
 
 
 def test_known_linear_change_and_joint_offsets():

@@ -42,7 +42,7 @@ to the same file.
 - `public/qa.css`: report-specific styles, inlined with the theme and shared header styles by the Python viewer.
 - `../scripts/build_site.py`: assemble the frontend, QA, comparison and legacy redirects.
 
-Methods describe production code in `src/defile_explore/`, not experimental models under `scripts/research/`. Update the relevant explanation when a method changes. The model-fitting subsection explains the implementation; the README documents the export blocks. The dataset manifest identifies the actual observations and code behind the examples; historical benchmark summaries are not hardcoded.
+Methods describe production code in `src/defile_passage/`, not experimental models under `scripts/research/`. Update the relevant explanation when a method changes. The model-fitting subsection explains the implementation; the README documents the export blocks. The dataset manifest identifies the actual observations and code behind the examples; historical benchmark summaries are not hardcoded.
 
 ## Links and checks
 

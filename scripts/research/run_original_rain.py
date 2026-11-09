@@ -10,9 +10,9 @@ import pandas as pd
 from compare_production import interval_slots, training_profile
 from original_rain_model import ORIGINAL_DESIGN, RAIN_TERMS, rain_design
 
-from defile_explore import export as E
-from defile_explore import profile as P
-from defile_explore import trend as T
+from defile_passage import export as E
+from defile_passage import profile as P
+from defile_passage import trend as T
 
 SOURCE = Path("logs/history-episode")
 OUT = Path("logs/original-rain")
