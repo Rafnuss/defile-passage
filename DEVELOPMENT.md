@@ -10,8 +10,8 @@ storks, cranes and other large birds; passerines. A fix is a better rule (prefer
 override with its reason. The viewer stays a model-inspection tool (everything that helps judge a
 fit, in detail); the visitors' page is designed in defileViz. What the first full build shows:
 
-- Windows (`DECISIONS.md` -> Pipeline): re-run `scripts/benchmark_trend.py` on the extended model
-  windows (it uses the default one).
+- Windows (`DECISIONS.md` -> Pipeline, `window@3`): re-run `scripts/benchmark_trend.py` (it reads
+  each taxon's model window) on the shared window, 14 Jul - 1 Dec.
 - `wide_intervals` (12 taxa): median q90/q10 of the gap-filled totals above 2.
 - `borrowed_profile` (205 taxa, most of them rare): the time of day of a group, not the taxon's.
 - Age and sex (`demography@4`): Red Kite's single pooled year (2018, 489 birds, 66% young) and
