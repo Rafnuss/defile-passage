@@ -26,7 +26,10 @@ To edit the guide's prose in the rendered page, open it on the dev server with `
 URL (`http://127.0.0.1:5173/?edit`). Text blocks become editable (formulas, links and live readouts
 stay fixed), and each edited block is saved within a second to ignored `logs/guide-edits.json` with
 its original and edited text, maths as TeX between ⟨ ⟩. Edits come back on reload. The `.vue`
-templates are not written: carry the edits into them, then empty the file.
+templates are not written: carry the edits into them, then empty the file. Review notes in
+ignored `logs/guide-notes.json` (`id`, `section`: an element id, `find`: words of the passage the note
+follows, `topic`, `note`, `reply`) show under their passage in edit mode, each with a reply box saved
+to the same file.
 
 ## Sources
 
