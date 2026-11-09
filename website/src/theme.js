@@ -30,7 +30,7 @@ export const COLORS = {
   plum: "#7a4f7f", // sex, demography
   sage: "#6f8a3a", // model fit, increase
   red: "#a83a24", // decrease, warnings
-  teal: "#3f8a8c", // the day's weather (the trend model's weather term)
+  pink: "#c2477d", // the day's weather (the trend model's weather term): a colour everyone can name
 
   // Sequential slate-blues, light to dark, for ordered classes (e.g. ≥1, ≥10, ≥100, ≥1000 birds)
   blues: ["#b3c7d8", "#7a9cb9", "#3d6a8f", "#1f3c56"],
@@ -79,6 +79,6 @@ export const MODEL_COLORS = {
   season: COLORS.sage,
   shift: COLORS.plum,
   episode: COLORS.ochre,
-  weather: COLORS.teal,
+  weather: COLORS.pink,
 };
 export const PASSAGE_COLORS = [COLORS.sage, COLORS.plum, COLORS.ochre];

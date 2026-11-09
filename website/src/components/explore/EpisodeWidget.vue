@@ -6,7 +6,7 @@
     <div ref="plotDiv" class="plot"></div>
     <figcaption class="figure-caption">
       <strong>Figure 2.6.</strong> {{ name }}, {{ year }}: coverage-adjusted counts (points),
-      baseline expectation (grey dashed), then weather (teal) and weather plus episodes (ochre).
+      baseline expectation (grey dashed), then weather (pink) and weather plus episodes (orange).
       Lower panels show their multipliers. Each legend label gives the cumulative percentage of
       count-model deviance explained for this season, relative to a constant full-day passage rate.
     </figcaption>
@@ -36,7 +36,7 @@ const props = defineProps({
 });
 
 const C_EPISODE = COLORS.ochre;
-const C_WEATHER = COLORS.teal;
+const C_WEATHER = COLORS.pink;
 const C_BASE = alpha(COLORS.ink, 0.6);
 const C_POINT = alpha(COLORS.counted, 0.65);
 const DATE_TICKS = [213, 244, 274, 305];

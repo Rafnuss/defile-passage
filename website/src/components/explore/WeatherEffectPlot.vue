@@ -35,8 +35,8 @@
       />
       <polygon
         :points="rosePolygon"
-        :fill="alpha(COLORS.teal, 0.15)"
-        stroke="var(--dv-teal)"
+        :fill="alpha(COLORS.pink, 0.15)"
+        stroke="var(--dv-pink)"
         stroke-width="2"
       />
       <g v-for="(row, i) in effect.rose" :key="`interval-${row.from}`">
@@ -50,14 +50,14 @@
           :y1="point(row.lo, i).y"
           :x2="point(row.hi, i).x"
           :y2="point(row.hi, i).y"
-          stroke="var(--dv-teal)"
+          stroke="var(--dv-pink)"
           stroke-width="3"
         />
         <circle
           :cx="point(row.effect, i).x"
           :cy="point(row.effect, i).y"
           r="3"
-          fill="var(--dv-teal)"
+          fill="var(--dv-pink)"
         />
       </g>
       <circle cx="150" cy="138" r="2" fill="var(--dv-faint)" />
@@ -140,7 +140,7 @@ function plot() {
       x: [...x, ...x.slice().reverse()],
       y: [...high, ...low.slice().reverse()],
       fill: "toself",
-      fillcolor: alpha(COLORS.teal, 0.15),
+      fillcolor: alpha(COLORS.pink, 0.15),
       line: { width: 0 },
       mode: "lines",
       hoverinfo: "skip",
@@ -149,7 +149,7 @@ function plot() {
       x,
       y: x.map((v) => multiplier(e.effect, v)),
       mode: "lines",
-      line: { color: COLORS.teal, width: 2 },
+      line: { color: COLORS.pink, width: 2 },
       hovertemplate: "%{x:.2f}: ×%{y:.2f}<extra></extra>",
     },
   ];
