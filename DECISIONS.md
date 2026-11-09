@@ -15,6 +15,28 @@ moved (`raphaelnussbaumer.com/defile-passage/`; the old path is a 404, release d
 redirect). Still to rename: the Python package `defile_explore` and the distribution names in
 `pyproject.toml` and `website/package.json`, in one change once the working tree is committed.
 
+**Built from a dataset release; passage tables published with the export (2026-11-09, requested
+by the user).** One flow, in this order: defile-dataset builds and tags a release (`vYYYY.N`,
+`dataset.zip`: its Zenodo upload and `metadata.json` with each file's sha256, by
+`scripts/release_dataset.py` there); the Zenodo counts record and the GBIF export are made from
+those files, by hand; this repo builds with `--dataset vYYYY.N`, which downloads the zip and checks
+the hashes; `publish_explore.py` uploads `explore.zip` (defileViz), `viewer.zip` (the methods site)
+and `passage.zip` (the passage tables, uploaded to a second Zenodo record by hand). An export
+from a local dataset folder (`--dataset ../defile-dataset/output`) is for trying only: its manifest
+has no `dataset_release` and publishing refuses it. This replaces copying whatever was in the
+sibling `output/` (which recorded the dataset's commit but not which files) and the check on the
+dataset's commit. The text extracts (`report_text`, `paper_text`) are not in the release (not CC
+BY): `scripts/accounts/` reads them from `../defile-dataset/output/text/`. Rejected: merging
+the two repos (the dataset would wait on the model, and each model change would version the
+counts), and one combined Zenodo deposit (it needs an assembly step, the hand-made combination
+this avoids).
+
+**Passage tables (`passage-tables@1`).** Only taxa with a trend; four tables (`taxa`,
+`daily_passage`, `season_totals`, `passage_dates`) read from the species files, so they hold what
+the page draws. Values classed `hide` are kept with their class, not removed: a user filters
+them as the page does. Time-of-day profiles, weather effects and age and sex shares are left out:
+they serve the page but would each need their own description in the paper.
+
 **Methods move to the Explore documentation site (2026-10-26, requested by the user).** The illustrated methods formerly in defileViz's six modals now belong to `website/` in this repository, as a continuous homepage with a species selector and stable chapter/section anchors. The site uses defileViz's palette and typography, with equations and implementation references for a technical audience. QA remains a full diagnostic viewer under `qa/`, with species comparison alongside it. defileViz's information links preserve the taxon and open the relevant documentation section. This supersedes the 2026-10-09 decision to keep method modals in defileViz. `scripts/build_site.py` assembles the frontend, existing export and Python QA pages into `logs/site/`; publication keeps the `viewer.zip` release asset name and existing export checks. Site-only changes need no model fitting for local preview; publication continues to require a full export matching HEAD and a site built from committed code. Legacy root-level taxon and comparison pages redirect to `qa/`.
 
 **Methods narrative and seasonal windows (2026-10-26, requested by the user).** Keep only a basic description of the standardised input dataset; recording and cleaning conventions belong to defile-dataset. Open with a branching diagram that distinguishes observed totals, reconstructed seasons, smooth long-term passage and the separate classified-bird summaries. Species selection belongs in the first chapter alongside eligibility, comparable years and windows. Illustrate windows with one selectable complete season: standard and analysis periods, actual daily survey hours and raw species counts on one date axis. Windows are chosen across comparable years and stay fixed when the example year changes. Explain the derived results before their reliability checks.

@@ -582,12 +582,19 @@ def partial_years(days: pd.DataFrame) -> list[int]:
     return [int(last.year)] if (last.month, last.day) < (m1, d1) else []
 
 
-def manifest(metadata: dict, days: pd.DataFrame, effort: pd.DataFrame, git_sha: str) -> dict:
-    """When and from what the export was built, and the definitions it uses."""
+def manifest(
+    metadata: dict, days: pd.DataFrame, effort: pd.DataFrame, git_sha: str, dataset_release
+) -> dict:
+    """When and from what the export was built, and the definitions it uses.
+
+    `dataset_release` is the defile-dataset tag (None: a local dataset build, which cannot be
+    published).
+    """
     return {
         "definitions_version": DEFINITIONS_VERSION,
         "built_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "git_sha": git_sha,
+        "dataset_release": dataset_release,
         "dataset_built_at": metadata.get("built_at"),
         "dataset_git_sha": metadata.get("git_sha"),
         "first_date": effort["date"].min(),

@@ -5,18 +5,35 @@ A copy, not a shared module: taken from defile-migration-forecast `src/data/coun
 forecast's survey-period processing stays there. The two repos are deliberately independent: a
 change to one copy is carried to the other by hand, as a decision (DECISIONS.md -> Repository).
 
-The release (`count.csv`, `survey.csv`, `taxonomy.csv`, `report_text.csv`, `paper_text.csv`,
-`README.md`, `datapackage.json`, and the build's `metadata.json`) is copied into
-`data/count/dataset/` by `scripts/build_explore.py --dataset <defile-dataset output folder>`. The
-build reads the count tables only: the report and paper extracts are copied for the editors of
-`content/accounts/` (`scripts/accounts/`), whose written accounts the page shows instead.
+The release is defile-dataset's `dataset.zip` on its GitHub release `vYYYY.N`: the Zenodo upload
+(`count.csv`, `survey.csv`, `taxonomy.csv`, `datapackage.json` and its guides) and the build's
+`metadata.json` (the sha256 of each file). `scripts/build_explore.py --dataset vYYYY.N` downloads
+it into `data/count/dataset/` (`fetch_dataset`); `--dataset <defile-dataset output folder>` copies
+a local build instead, to try one before it is released, and such an export cannot be published.
+`release.json` beside the tables says which it was.
 """
 
+import hashlib
+import io
+import json
 import os
+import re
+import shutil
+import urllib.error
+import urllib.request
+import zipfile
 
 import numpy as np
 import pandas as pd
 from suncalc import get_position
+
+# defile-dataset's releases (`defile_dataset.release` there).
+DATASET_REPO = "Rafnuss/defile-dataset"
+DATASET_ASSET = "dataset.zip"
+DATASET_URL = "https://github.com/{repo}/releases/download/{tag}/{asset}"
+DATASET_TAG = re.compile(r"^v\d{4}\.\d+$")
+DATASET_UPLOAD_DIR = "zenodo"  # in a defile-dataset output folder, and in metadata.json's hashes
+RELEASE_FILE = "release.json"  # beside the tables: the tag they came from, or the local folder
 
 # The site's local time: the dataset's dates are local calendar dates.
 TIMEZONE = "Europe/Paris"
@@ -24,17 +41,6 @@ TIMEZONE = "Europe/Paris"
 SITE = (46.117215, 5.914877)
 
 DATASET_DIR = os.path.join("count", "dataset")  # under the data dir
-# Release tables, in the release's `dataset/` folder; `metadata.json` sits one level up. The text
-# extracts are sources for `content/accounts/`, not read by the build.
-DATASET_FILES = (
-    "count.csv",
-    "survey.csv",
-    "taxonomy.csv",
-    "report_text.csv",
-    "paper_text.csv",
-    "datapackage.json",
-    "README.md",
-)
 METADATA_FILE = "metadata.json"
 
 # The main migration direction (`count.csv` `count_category`); `reverse` and `local` are other
@@ -129,3 +135,74 @@ def civil_twilight(dates: pd.Series) -> tuple[pd.Series, pd.Series]:
     dawn = dict(zip(days, midnight + pd.to_timedelta(first, unit="min")))
     dusk = dict(zip(days, midnight + pd.to_timedelta(last + 1, unit="min")))
     return dates.map(dawn), dates.map(dusk)
+
+
+# --- Where the tables come from ---------------------------------------------
+
+
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _verified(files: dict[str, bytes]) -> dict[str, bytes]:
+    """`files` (name -> bytes, `metadata.json` among them), after checking each table against the
+    sha256 the dataset build gave it."""
+    hashes = json.loads(files[METADATA_FILE])["table_sha256"]
+    expected = {
+        k.split("/", 1)[1]: v for k, v in hashes.items() if k.startswith(DATASET_UPLOAD_DIR + "/")
+    }
+    names = sorted(n for n in files if n != METADATA_FILE)
+    if names != sorted(expected):
+        raise SystemExit(f"The dataset holds {names}, its metadata.json lists {sorted(expected)}")
+    changed = [n for n in names if _sha256(files[n]) != expected[n]]
+    if changed:
+        raise SystemExit(f"Not the files the dataset build wrote: {changed}")
+    return files
+
+
+def fetch_dataset(source: str, data_dir: str) -> dict:
+    """Put a defile-dataset release in `<data_dir>/count/dataset/`, replacing what was there.
+
+    `source` is a tag (`vYYYY.N`, downloaded from defile-dataset's GitHub release) or a defile-
+    dataset output folder (its `zenodo/` and `metadata.json`). Returns what `release.json` records:
+    `tag` (None for a folder), `source` and `git_sha`.
+    """
+    if DATASET_TAG.match(source):
+        url = DATASET_URL.format(repo=DATASET_REPO, tag=source, asset=DATASET_ASSET)
+        try:
+            with urllib.request.urlopen(url) as r, zipfile.ZipFile(io.BytesIO(r.read())) as z:
+                files = {n: z.read(n) for n in z.namelist()}
+        except urllib.error.HTTPError as e:
+            raise SystemExit(f"No dataset release {source} ({e.code} for {url})") from e
+        tag = source
+    elif os.path.isdir(source):
+        folder = os.path.join(source, DATASET_UPLOAD_DIR)
+        files = {n: open(os.path.join(folder, n), "rb").read() for n in os.listdir(folder)}
+        files[METADATA_FILE] = open(os.path.join(source, METADATA_FILE), "rb").read()
+        tag, source = None, os.path.abspath(source)
+    else:
+        raise SystemExit(f"--dataset {source}: neither a tag vYYYY.N nor a folder")
+    files = _verified(files)
+    out = os.path.join(data_dir, DATASET_DIR)
+    shutil.rmtree(out, ignore_errors=True)
+    os.makedirs(out)
+    for name, data in files.items():
+        with open(os.path.join(out, name), "wb") as f:
+            f.write(data)
+    release = {
+        "tag": tag,
+        "source": source,
+        "git_sha": json.loads(files[METADATA_FILE]).get("git_sha"),
+    }
+    with open(os.path.join(out, RELEASE_FILE), "w", encoding="utf-8") as f:
+        json.dump(release, f, indent=2)
+    return release
+
+
+def dataset_release(data_dir: str) -> dict:
+    """What `fetch_dataset` put in `<data_dir>/count/dataset/` (`tag` None when unknown)."""
+    path = os.path.join(data_dir, DATASET_DIR, RELEASE_FILE)
+    if not os.path.exists(path):
+        return {"tag": None, "source": None, "git_sha": None}
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)

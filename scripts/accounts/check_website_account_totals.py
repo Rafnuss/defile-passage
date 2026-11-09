@@ -62,7 +62,7 @@ with (destination / "data-checks.csv").open("w", newline="", encoding="utf-8") a
     writer = csv.DictWriter(handle, fieldnames=fields)
     writer.writeheader()
     for row in csv.DictReader(
-        (root / "data/count/dataset/report_text.csv").open(encoding="utf-8-sig")
+        (root / "../defile-dataset/output/text/report_text.csv").open(encoding="utf-8-sig")
     ):
         if row["category"] != "species":
             continue

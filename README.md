@@ -29,15 +29,24 @@ uv run pytest
 
 ## Build the export
 
-The release comes from defile-dataset, so rebuild it there first (`uv run python scripts/build_dataset.py`): `--dataset` copies whatever is in its `output/` at that moment, and
-the build is only as current as that copy. A release without `parent_taxon_id` in `taxonomy.csv`
-is refused.
+The counts come from a defile-dataset release: `dataset.zip` on its GitHub release `vYYYY.N`
+(made there by `scripts/release_dataset.py`). `--dataset vYYYY.N` downloads it into
+`data/count/dataset/`, checks each table against the sha256 the dataset build gave it, and records
+the tag in `release.json` and in the export's manifest. To try a dataset build before it is
+released, `--dataset ../defile-dataset/output` copies it instead; such an export cannot be
+published. A release without `parent_taxon_id` in `taxonomy.csv` is refused.
+
+A full build writes the Explore export (`data/explore/`) and the passage tables (`data/passage/`,
+`defile_explore.passage`): daily passage, season totals and passage dates of the 96 taxa with a
+trend, as a Frictionless data package for Zenodo. Both come from the same species files.
 
 ```bash
-# copy a defile-dataset release into data/count/dataset/, then build data/explore/
+# download a dataset release into data/count/dataset/, then build data/explore/ and data/passage/
+uv run python scripts/build_explore.py --dataset v2026.1 > logs/build.log 2>&1
+# or try a local dataset build (not publishable)
 uv run python scripts/build_explore.py --dataset ../defile-dataset/output > logs/build.log 2>&1
 
-# rebuild from the copied release (cached: seconds when only a block changed)
+# rebuild from the same dataset (cached: seconds when only a block changed)
 uv run python scripts/build_explore.py > logs/build.log 2>&1
 uv run python scripts/build_explore.py --taxa "Red Kite" "Hen Harrier"   # only these taxa
 
@@ -67,12 +76,12 @@ uv run python scripts/publish_explore.py --dry-run   # the checks and the zips o
 uv run python scripts/publish_explore.py
 ```
 
-It uploads `explore.zip` (the export) and `viewer.zip` (the documentation homepage, QA viewer, comparison and their data) to
+It uploads `explore.zip` (the export), `passage.zip` (the passage tables, the Zenodo upload) and `viewer.zip` (the documentation homepage, QA viewer, comparison and their data) to
 the rolling `dev` pre-release of this repo, replacing the previous ones, and starts
 `.github/workflows/pages.yml`, which deploys the complete documentation site to GitHub Pages. defileViz downloads
-`explore.zip` from that release when it deploys. It refuses an export built from uncommitted code
-here or in defile-dataset (the manifest says so), from another commit than HEAD, from a `--taxa`
-build, or with an older site. The site must also be built from committed code at HEAD and from the same export. A versioned release later is `--tag`.
+`explore.zip` from that release when it deploys. It refuses an export built from a local
+defile-dataset folder instead of a dataset release, from uncommitted code, from another commit than
+HEAD or from a `--taxa` build, and passage tables or a site from another build. The site must also be built from committed code at HEAD and from the same export. A versioned release later is `--tag`.
 
 Time, on a 12-core Mac (all cores, `--workers` to change): a build after a new release or a
 code change in the model takes about 5.5 minutes (the shared stage of time-of-day profiles,

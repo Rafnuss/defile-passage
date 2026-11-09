@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """Builds the Explore export for defileViz from the defile-dataset release tables.
 
-Reads the release in `data/count/dataset/` (copied there with `--dataset <dir>`) and writes
+Reads the defile-dataset release in `data/count/dataset/` (put there with `--dataset`) and writes
 `data/explore/`: `manifest.json`, `taxa.json` (with the picker's fields, `defile_explore.catalogue`),
 `effort.json` and `species/<taxon_id>.json` (`defile_explore.pipeline.build_taxon`), with French names from the eBird taxonomy (downloaded
 once, no key) and the written accounts from `content/accounts/`. The shared stage (~2.5 min of time-of-day profiles) and
 each taxon's trend fit and benchmark are cached in `data/cache/`, so a rebuild after a change to one block
-refits nothing: ~5.5 min in full on 12 cores, ~15 s with nothing changed. Rebuild the release in
-defile-dataset first: `--dataset` copies what is there. Publish it with `scripts/publish_explore.py`.
+refits nothing: ~5.5 min in full on 12 cores, ~15 s with nothing changed. A full build also writes
+the passage tables (`data/passage/`, `defile_explore.passage`). `--dataset vYYYY.N` downloads a
+dataset release; `--dataset <defile-dataset output folder>` copies a local build to try it, and an
+export from one cannot be published. Publish with `scripts/publish_explore.py`.
 
 Usage:
-    python scripts/build_explore.py --dataset ../defile-dataset/output   # copy a release, then build
+    python scripts/build_explore.py --dataset v2026.1     # download a dataset release, then build
+    python scripts/build_explore.py --dataset ../defile-dataset/output   # a local dataset build
     python scripts/build_explore.py                       # rebuild from data/count/dataset/
     python scripts/build_explore.py --taxa "Red Kite" avibase-ED5A7E8F   # only these species files
     python scripts/build_explore.py --skip-trend          # without the trend model
@@ -30,6 +33,7 @@ import pandas as pd
 from defile_explore import accounts as A
 from defile_explore import catalogue as C
 from defile_explore import export as E
+from defile_explore import passage as P
 from defile_explore import pipeline as L
 from defile_explore import release as R
 from defile_explore import settings as X
@@ -52,17 +56,6 @@ def git(*args: str) -> str:
     return subprocess.run(["git", *args], capture_output=True, text=True, cwd=ROOT).stdout.strip()
 
 
-def copy_release(release: str, data_dir: str) -> None:
-    """Copy a defile-dataset release (its `dataset/` tables and `metadata.json`) into
-    `<data_dir>/count/dataset/`."""
-    folder = os.path.join(data_dir, R.DATASET_DIR)
-    os.makedirs(folder, exist_ok=True)
-    for f in R.DATASET_FILES:
-        shutil.copy2(os.path.join(release, "dataset", f), os.path.join(folder, f))
-    shutil.copy2(os.path.join(release, R.METADATA_FILE), os.path.join(folder, R.METADATA_FILE))
-    print(f"Copied the release from {release} to {folder}")
-
-
 def select(taxa: pd.DataFrame, wanted: list[str] | None) -> list[str]:
     """Taxon ids from ids or English names (all taxa when `wanted` is None)."""
     if not wanted:
@@ -79,7 +72,9 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--data-dir", default=os.path.join(ROOT, "data"))
     ap.add_argument("--out", default=os.path.join(ROOT, "data", "explore"))
-    ap.add_argument("--dataset", help="defile-dataset output folder to copy the release from")
+    ap.add_argument(
+        "--dataset", help="defile-dataset release tag (vYYYY.N), or a local output folder"
+    )
     ap.add_argument("--taxa", nargs="+", help="only these taxa (ids or English names)")
     ap.add_argument(
         "--refresh-names", action="store_true", help="download the eBird taxonomy again"
@@ -94,7 +89,9 @@ def main(argv=None) -> int:
     t0 = time.time()
 
     if args.dataset:
-        copy_release(args.dataset, args.data_dir)
+        dataset = R.fetch_dataset(args.dataset, args.data_dir)
+        print(f"Dataset {dataset['tag'] or 'from ' + dataset['source']} in data/count/dataset/")
+    dataset = R.dataset_release(args.data_dir)
     names_path = os.path.join(args.data_dir, E.EBIRD_TAXONOMY_FILE)
     if args.refresh_names or not os.path.exists(names_path):
         urllib.request.urlretrieve(E.EBIRD_TAXONOMY_URL, names_path)
@@ -138,7 +135,7 @@ def main(argv=None) -> int:
         sizes = {
             "manifest.json": write(
                 os.path.join(args.out, "manifest.json"),
-                E.manifest(shared.metadata, days, effort, git_sha)
+                E.manifest(shared.metadata, days, effort, git_sha, dataset["tag"])
                 | {"accounts_sha256": A.fingerprint()},
             ),
             "effort.json": write(
@@ -161,6 +158,9 @@ def main(argv=None) -> int:
         # Each taxon's links, for the list of a group's members in defileViz
         taxa["links"] = taxa["taxon_id"].map(lambda i: pages[i]["links"])
         sizes["taxa.json"] = write(os.path.join(args.out, "taxa.json"), E.records(taxa))
+        passage_dir = os.path.join(os.path.dirname(args.out), P.PASSAGE_DIR)
+        rows = P.write(args.out, passage_dir)
+        print(f"Passage tables -> {passage_dir}: {rows}")
 
     print(f"Explore export -> {args.out} in {time.time() - t0:.0f} s")
     for name, n in sizes.items():

@@ -49,6 +49,10 @@ Each block names its `method` (`name@version`): bump the version when what the b
 changes. Hours of the day are solar time (`export.solar_shift`); defileViz converts them to the
 clock with the same formula (`solarShift`). The files are strict JSON (`export.dumps`: no NaN).
 
+The passage tables (`data/passage/`, `passage.py`) are a second contract, with the Zenodo record
+and the data paper. They are read from the species files, never from a model of their own: a column
+renamed or changed in meaning bumps `passage.METHOD`.
+
 `reliability` classes each trend claim (`totals`, `trend`, `season`) as `show`, `caveat` or `hide`
 with reason codes, and `elements` gives each drawn field resting on a claim its class
 (`reliability.ELEMENTS`). The rule and its thresholds live in `reliability.py`; defileViz only
@@ -77,11 +81,13 @@ done for all taxa; otherwise add an exception to `src/defile_explore/overrides.y
   what is open.
 - Before treating a change as done: `uv run pytest` and `pre-commit run --all-files` (black and
   isort at line length 99, docformatter, mdformat, codespell).
-- `data/` and `logs/` are generated: never commit them. The release is copied into
-  `data/count/dataset/` by `scripts/build_explore.py --dataset <dir>`.
+- `data/` and `logs/` are generated: never commit them. The counts are a defile-dataset release:
+  `scripts/build_explore.py --dataset vYYYY.N` downloads its `dataset.zip` into
+  `data/count/dataset/` (`release.fetch_dataset`); a local dataset folder is for trying only.
 - The build runs locally, never in CI (30-40 min on a runner): `scripts/publish_explore.py`
-  uploads the export and the viewer to a release, from which Pages and defileViz deploy. It
-  refuses a build from uncommitted code; never loosen that check to publish.
+  uploads the export, the passage tables and the viewer to a release, from which Pages and
+  defileViz deploy and the passage tables go to Zenodo. It refuses a build from uncommitted code
+  or from a dataset that is not a release; never loosen those checks to publish.
 - Builds are verbose (pygam warnings, per-taxon progress): redirect to `logs/` and grep.
 - `data/cache/` holds the shared stage and each taxon's trend fit, keyed by the release and by
   the source code of the modules that made them, so a code change invalidates them by itself.

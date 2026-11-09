@@ -16,9 +16,9 @@ review = folder / "review"  # ledgers, CSV exports, manifest, source snapshots
 reading = folder / "reading"  # Markdown reading copies
 
 # Read the maintained sources and authored drafts.
-with (root / "data/count/dataset/report_text.csv").open(encoding="utf-8-sig") as handle:
+with (root / "../defile-dataset/output/text/report_text.csv").open(encoding="utf-8-sig") as handle:
     annual_source = list(csv.DictReader(handle))
-with (root / "data/count/dataset/paper_text.csv").open(encoding="utf-8-sig") as handle:
+with (root / "../defile-dataset/output/text/paper_text.csv").open(encoding="utf-8-sig") as handle:
     paper_source = list(csv.DictReader(handle))
 with (folder / "year-accounts.tsv").open(encoding="utf-8-sig") as handle:
     annual_drafts = list(csv.DictReader(handle, delimiter="\t"))
@@ -239,8 +239,8 @@ for language in ("fr", "en"):
     (reading / f"years-{language}.md").write_text("\n".join(yearly).rstrip() + "\n")
 
 paths = [
-    "data/count/dataset/report_text.csv",
-    "data/count/dataset/paper_text.csv",
+    "../defile-dataset/output/text/report_text.csv",
+    "../defile-dataset/output/text/paper_text.csv",
     "content/accounts/review/reference/annual-totals.csv",
     "content/accounts/review/reference/source_taxa.csv",
     "data/count/dataset/taxonomy.csv",
